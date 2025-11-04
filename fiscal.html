@@ -1,87 +1,9 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Fiscal — Sistema de Produção</title>
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
-  <div class="wrap" id="conteudo" style="display:none">
-    <h1>Painel do Fiscal</h1>
-    <div class="sub">
-      Registre seus serviços.
-      <span id="who"></span> |
-      <button id="btnSair" class="link">Sair</button>
-    </div>
-
-    <div id="msg" class="msg"></div>
-
-    <div class="card">
-      <div class="hd">
-        <span id="tituloForm">Novo lançamento</span>
-        <span></span>
-      </div>
-
-      <div class="bd">
-        <div class="form-grid">
-          <div><label>Data</label><input id="fData" type="date"></div>
-          <div><label>Empresa / Contribuinte</label><input id="fEmpresa" type="text"></div>
-          <div><label>CNPJ / CPF</label><input id="fCnpjCpf" type="text" maxlength="18" placeholder="00.000.000/0000-00 ou 000.000.000-00"></div>
-          <div><label>Descrição</label><input id="fDesc" type="text"></div>
-          <div><label>Quantidade</label><input id="fQtd" type="number" min="1" step="1" value="1"></div>
-          <div><label>Valor (R$)</label><input id="fValor" type="text" placeholder="R$ 0,00"></div>
-          <div>
-            <label>Destino</label>
-            <select id="fDestino">
-              <option value="">Selecione</option>
-              <option value="Gerência">Gerência</option>
-              <option value="Contribuinte">Contribuinte</option>
-              <option value="Outro">Outro</option>
-            </select>
-          </div>
-          <div>
-            <label>Descrição Resumida</label>
-            <input id="fResumo" list="listaServicos" placeholder="Digite ou selecione o tipo de serviço">
-            <datalist id="listaServicos"></datalist>
-          </div>
-          <div><button id="btnAdd" type="button">Adicionar</button></div>
-        </div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="hd"><span>Filtrar lançamentos por mês e ano</span></div>
-      <div class="bd">
-        <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
-          <label>Ano:</label>
-          <input id="anoFiltro" type="number" min="2020" max="2100" style="width:100px">
-          <div id="mesBtns" style="display:flex;flex-wrap:wrap;gap:6px;margin-left:10px"></div>
-        </div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="hd">Meus lançamentos</div>
-      <div class="bd">
-        <div class="scroll table-wrap">
-          <table id="tab" class="table">
-            <thead>
-              <tr>
-                <th>Data</th><th>Empresa</th><th>CNPJ/CPF</th><th>Descrição</th>
-                <th>Qtd</th><th>Valor</th><th>Destino</th><th>Resumo</th><th>Ações</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </div>
-
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-  import { getFirestore, collection, addDoc, serverTimestamp, query, where, orderBy, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+  import { 
+    getFirestore, collection, addDoc, serverTimestamp, 
+    query, where, orderBy, getDocs, deleteDoc, doc, updateDoc 
+  } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyANrr4R5JtJ9GmO0j-1X8-9CvBmYkC4oCI",
@@ -97,10 +19,16 @@
   const db = getFirestore(app);
 
   const $ = s => document.querySelector(s);
-  const showMsg = (t, cls='ok')=>{ const m=$('#msg'); m.textContent=t; m.className='msg '+cls; m.style.display='block'; setTimeout(()=>m.style.display='none',2500); };
+  const showMsg = (t, cls='ok') => {
+    const m=$('#msg');
+    m.textContent=t;
+    m.className='msg '+cls;
+    m.style.display='block';
+    setTimeout(()=>m.style.display='none',2500);
+  };
   const numberToBRL = n => (Number(n||0)).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
 
-  let sess=null, mesAtivo=null, anoAtivo=null;
+  let sess=null, mesAtivo=null, anoAtivo=null, editandoId=null;
 
   function validarSessao(){
     try{ sess = JSON.parse(localStorage.getItem('sessao_usuario')||'null'); }catch(e){ sess=null; }
@@ -113,7 +41,7 @@
   }
   validarSessao();
 
-  // Lista oficial (igual à sua)
+  // === Lista oficial de serviços ===
   const TIPOS = [
     "Apuração de TFLF","Auto de Infração","Bancos TIAF (Início)","Bancos TEAF (Encerramento)",
     "Bloqueio Inscrição/Movimentação","Cadastro Municipal - Inscrição","Cadastro Municipal - Alteração",
@@ -126,19 +54,27 @@
     "Serviços Especiais","Serviços Especiais (Sec. Fazenda)","Verifiação de Livro Fiscal/Contábil",
     "Verificação de NFS-e/Documentos","Viagem (por Dia)","Vistoria in loco"
   ];
-  const datalist = $('#listaServicos'); datalist.innerHTML=''; TIPOS.forEach(t=>{ const o=document.createElement('option'); o.value=t; datalist.appendChild(o); });
+  const datalist = $('#listaServicos');
+  datalist.innerHTML='';
+  TIPOS.forEach(t=>{ const o=document.createElement('option'); o.value=t; datalist.appendChild(o); });
 
-  // Máscaras
+  // === Máscaras ===
   const cnpjEl = $('#fCnpjCpf');
   cnpjEl.addEventListener('input', ()=>{
     let v = cnpjEl.value.replace(/\D/g,'');
     if (v.length<=11){
-      v = v.replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d{1,2})$/,'$1-$2');
+      v = v.replace(/(\d{3})(\d)/,'$1.$2')
+           .replace(/(\d{3})(\d)/,'$1.$2')
+           .replace(/(\d{3})(\d{1,2})$/,'$1-$2');
     }else{
-      v = v.replace(/(\d{2})(\d)/,'$1.$2').replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d)/,'$1/$2').replace(/(\d{4})(\d{1,2})$/,'$1-$2');
+      v = v.replace(/(\d{2})(\d)/,'$1.$2')
+           .replace(/(\d{3})(\d)/,'$1.$2')
+           .replace(/(\d{3})(\d)/,'$1/$2')
+           .replace(/(\d{4})(\d{1,2})$/,'$1-$2');
     }
     cnpjEl.value = v;
   });
+
   $('#fValor').addEventListener('input', e=>{
     let v = e.target.value.replace(/\D/g,'');
     v = (v/100).toFixed(2)+'';
@@ -147,23 +83,24 @@
     e.target.value = 'R$ '+v;
   });
 
-  // Meses
+  // === Meses ===
   const meses = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
-  const mesBtns = $('#mesBtns'); mesBtns.innerHTML='';
+  const mesBtns = $('#mesBtns');
+  mesBtns.innerHTML='';
   meses.forEach((m,i)=>{
     const b = document.createElement('button');
     b.textContent = m; b.className = 'pill'; b.dataset.mes = i+1;
-    b.onclick = ()=> {
+    b.onclick = ()=>{
       document.querySelectorAll('#mesBtns button').forEach(x=>{x.style.background='';x.style.color='';});
-      b.style.background = '#3b82f6'; b.style.color='#fff';
-      mesAtivo = i+1;
-      anoAtivo = parseInt($('#anoFiltro').value,10);
+      b.style.background='#3b82f6'; b.style.color='#fff';
+      mesAtivo=i+1;
+      anoAtivo=parseInt($('#anoFiltro').value,10);
       renderMeus();
     };
     mesBtns.appendChild(b);
   });
 
-  // Adicionar
+  // === Adicionar / Salvar Alterações ===
   $('#btnAdd').onclick = async ()=>{
     const d = $('#fData').value,
           empresa = $('#fEmpresa').value.trim(),
@@ -173,52 +110,52 @@
           valor = parseFloat($('#fValor').value.replace(/[^\d,]/g,'').replace(',','.')) || 0,
           destino = $('#fDestino').value,
           resumo = $('#fResumo').value;
+
     if(!d || !resumo){ showMsg('Informe a Data e a Descrição Resumida.','err'); return; }
 
     try{
-      await addDoc(collection(db,'lancamentos'), {
-        usuario: sess.nome,
-        data: d, // ISO yyyy-mm-dd (facilita filtros lexicográficos)
-        empresa, cnpj: cnpjcpf, descricao: desc,
-        quantidade: qtd, valor, destino, descricaoResumida: resumo,
-        criadoEm: serverTimestamp()
-      });
-      showMsg('Lançamento salvo.','ok');
+      if(editandoId){
+        // Atualiza
+        await updateDoc(doc(db,'lancamentos', editandoId), {
+          data:d, empresa, cnpj:cnpjcpf, descricao:desc, quantidade:qtd,
+          valor, destino, descricaoResumida:resumo
+        });
+        showMsg('Lançamento atualizado.','ok');
+        $('#tituloForm').textContent='Novo lançamento';
+        $('#btnAdd').textContent='Adicionar';
+        editandoId=null;
+      }else{
+        // Novo
+        await addDoc(collection(db,'lancamentos'), {
+          usuario: sess.nome,
+          data:d,
+          empresa, cnpj:cnpjcpf, descricao:desc,
+          quantidade:qtd, valor, destino, descricaoResumida:resumo,
+          criadoEm: serverTimestamp()
+        });
+        showMsg('Lançamento salvo.','ok');
+      }
       $('#fEmpresa').value = $('#fCnpjCpf').value = $('#fDesc').value = $('#fValor').value = '';
       $('#fQtd').value='1'; $('#fDestino').value=''; $('#fResumo').value='';
       renderMeus();
-    }catch(e){
-      console.error(e); showMsg('Erro ao salvar.','err');
-    }
+    }catch(e){ console.error(e); showMsg('Erro ao salvar.','err'); }
   };
 
-  // Listagem (do próprio usuário; filtra ano/mês em memória após buscar por ano)
+  // === Listagem ===
   async function renderMeus(){
     if(!sess) return;
-    const anoSel = parseInt($('#anoFiltro').value,10);
-    const ini = `${anoSel}-01-01`, fim = `${anoSel}-12-31`;
-
-    const q = query(
-      collection(db,'lancamentos'),
-      where('usuario','==',sess.nome),
-      where('data','>=', ini),
-      where('data','<=', fim),
-      orderBy('data','desc')
-    );
+    const q = query(collection(db,'lancamentos'), where('usuario','==',sess.nome), orderBy('data','desc'));
     const snap = await getDocs(q);
-
     const tbody = document.querySelector('#tab tbody');
     tbody.innerHTML='';
+
     snap.forEach(docSnap=>{
       const r = docSnap.data();
-      // filtro por mês (se selecionado)
-      if (mesAtivo){
-        const m = parseInt((r.data||'0000-00-00').split('-')[1] || '0', 10);
-        if (m !== mesAtivo) return;
-      }
       const [y,mm,dd] = (r.data||'').split('-');
-      const dataBR = (dd&&mm&&y) ? `${dd}-${mm}-${y}` : '';
-      const tr = document.createElement('tr');
+      if(anoAtivo && parseInt(y)!=anoAtivo) return;
+      if(mesAtivo && parseInt(mm)!=mesAtivo) return;
+      const dataBR = (dd&&mm&&y)?`${dd}-${mm}-${y}`:'';
+      const tr=document.createElement('tr');
       tr.innerHTML = `
         <td>${dataBR}</td>
         <td>${r.empresa||''}</td>
@@ -229,17 +166,41 @@
         <td>${r.destino||''}</td>
         <td>${r.descricaoResumida||''}</td>
         <td style="white-space:nowrap">
+          <button class="link" data-edit="${docSnap.id}">✏️</button>
           <button class="link" data-del="${docSnap.id}" style="color:#dc2626">❌</button>
-        </td>
-      `;
+        </td>`;
       tbody.appendChild(tr);
+    });
+
+    // Editar
+    document.querySelectorAll('[data-edit]').forEach(btn=>{
+      btn.onclick = async ()=>{
+        const id = btn.getAttribute('data-edit');
+        const ref = doc(db,'lancamentos',id);
+        const all = await getDocs(query(collection(db,'lancamentos'), where('__name__','==',id)));
+        if(!all.empty){
+          const r = all.docs[0].data();
+          $('#fData').value = r.data || '';
+          $('#fEmpresa').value = r.empresa || '';
+          $('#fCnpjCpf').value = r.cnpj || '';
+          $('#fDesc').value = r.descricao || '';
+          $('#fQtd').value = r.quantidade || 1;
+          $('#fValor').value = r.valor ? 'R$ '+r.valor.toFixed(2).replace('.',',') : '';
+          $('#fDestino').value = r.destino || '';
+          $('#fResumo').value = r.descricaoResumida || '';
+          $('#tituloForm').textContent='Editar lançamento';
+          $('#btnAdd').textContent='Salvar Alterações';
+          editandoId = id;
+          showMsg('Editando lançamento...','ok');
+        }
+      };
     });
 
     // Excluir
     document.querySelectorAll('[data-del]').forEach(btn=>{
       btn.onclick = async ()=>{
         if(confirm('Deseja excluir este lançamento?')){
-          await deleteDoc(doc(db,'lancamentos', btn.getAttribute('data-del')));
+          await deleteDoc(doc(db,'lancamentos',btn.getAttribute('data-del')));
           showMsg('Lançamento excluído.','ok');
           renderMeus();
         }
@@ -250,5 +211,3 @@
   renderMeus();
   $('#btnSair').onclick = ()=>{ localStorage.removeItem('sessao_usuario'); location.href='index.html'; };
 </script>
-</body>
-</html>
