@@ -204,71 +204,74 @@
     $('#resTipo').innerHTML = Array.from(porTipo.entries()).map(([k,v])=>`<div>• <strong>${k}:</strong> ${v}</div>`).join('') || '<em>—</em>';
   }
 
-  // PDF (margem do topo reduzida)
-  $('#btnPDF').onclick = ()=>{
-    const dIni = $('#dIni').value, dFim = $('#dFim').value;
-    const tBody = $('#tabLanc tbody');
-    if(!tBody.children.length){ alert('Nenhum lançamento no período.'); return; }
+  // PDF (sem espaço extra no topo)
+$('#btnPDF').onclick = () => {
+  const dIni = $('#dIni').value, dFim = $('#dFim').value;
+  const tBody = $('#tabLanc tbody');
+  if(!tBody.children.length){ alert('Nenhum lançamento no período.'); return; }
 
-    // Resumo por tipo
-    const resumoTipo = {};
-    Array.from(tBody.children).forEach(tr=>{
-      const serv = tr.children[7].textContent.trim();
-      const qtd = parseInt(tr.children[4].textContent.trim() || '0',10);
-      resumoTipo[serv] = (resumoTipo[serv]||0) + qtd;
-    });
+  // Resumo por tipo
+  const resumoTipo = {};
+  Array.from(tBody.children).forEach(tr=>{
+    const serv = tr.children[7].textContent.trim();
+    const qtd = parseInt(tr.children[4].textContent.trim() || '0',10);
+    resumoTipo[serv] = (resumoTipo[serv]||0) + qtd;
+  });
 
-    // Total arrecadado
-    let totalArrec = 0;
-    Array.from(tBody.children).forEach(tr=>{
-      const valTxt = tr.children[5].textContent.trim().replace(/[R$\.\s]/g,'').replace(',','.');
-      totalArrec += parseFloat(valTxt||'0')||0;
-    });
+  // Total arrecadado
+  let totalArrec = 0;
+  Array.from(tBody.children).forEach(tr=>{
+    const valTxt = tr.children[5].textContent.trim().replace(/[R$\.\s]/g,'').replace(',','.');
+    totalArrec += parseFloat(valTxt||'0')||0;
+  });
 
-    const hoje = new Date();
-    const dataGer = hoje.toLocaleDateString('pt-BR');
-    const ano = hoje.getFullYear();
-    let numInput = parseInt($('#numRel')?.value.trim() || '0',10);
-    let num = numInput > 0 ? numInput : (Number(localStorage.getItem('numero_relatorio')||'0') + 1);
-    if(numInput <= 0) localStorage.setItem('numero_relatorio', num);
+  const hoje = new Date();
+  const dataGer = hoje.toLocaleDateString('pt-BR');
+  const ano = hoje.getFullYear();
+  let numInput = parseInt($('#numRel')?.value.trim() || '0',10);
+  let num = numInput > 0 ? numInput : (Number(localStorage.getItem('numero_relatorio')||'0') + 1);
+  if(numInput <= 0) localStorage.setItem('numero_relatorio', num);
 
-    const relatorio = `
-    <div style="font-family:Arial;max-width:750px;line-height:1.6;word-wrap:break-word;">
-      <h3 style="text-align:center;margin:0;">PREFEITURA MUNICIPAL DIAMANTINA</h3>
-      <h4 style="text-align:center;margin:0;">SECRETARIA MUNICIPAL DE FAZENDA</h4>
-      <h4 style="text-align:center;margin:0;">Diretoria de Fiscalização e Tributação</h4>
-      <hr style="margin:10px 0;">
-      <h3 style="text-align:center;">RELATÓRIO PRODUTIVIDADE ${String(num).padStart(3,'0')}/${ano}</h3>
-      <p><strong>DE:</strong> Diretoria de Fiscalização e Tributação<br>
-      <strong>PARA:</strong> Secretaria da Fazenda<br>
-      <strong>ASSUNTO:</strong> Produtividade Fiscal<br>
-      <strong>DATA:</strong> ${dataGer}</p>
-      <p style="margin-top:12px;">Atividades realizadas entre <strong>${new Date(dIni+'T00:00:00').toLocaleDateString('pt-BR')}</strong> e <strong>${new Date(dFim+'T00:00:00').toLocaleDateString('pt-BR')}</strong>:</p>
-      <table style="width:100%;border-collapse:collapse;margin-top:10px;">
-        ${Object.entries(resumoTipo).map(([serv,q])=>`
-          <tr>
-            <td style="border-bottom:1px dotted #999;padding:4px 6px;">${serv}</td>
-            <td style="text-align:right;border-bottom:1px dotted #999;padding:4px 6px;">${q}</td>
-          </tr>`).join('')}
-      </table>
-      <p style="margin-top:20px;"><strong>Valor arrecadado no período:</strong> ${numberToBRL(totalArrec)}</p>
-      <p style="margin-top:20px;">Sendo o que temos para o momento, nos colocamos à disposição para maiores esclarecimentos.</p>
-      <p style="margin-top:40px;text-align:center;">Atenciosamente,<br><br><strong>Gerência de Fiscalização Tributária</strong><br>Prefeitura Municipal de Diamantina/MG</p>
-      <hr style="margin:30px 0;">
-      <p style="text-align:center;font-size:12px;margin-top:30px;">
-        <strong>Data de geração:</strong> ${dataGer}<br>
-        <strong>Gerente:</strong> ${sess.nome}
-      </p>
-    </div>`;
+  // === conteúdo do relatório (com margens zeradas) ===
+  const relatorio = `
+  <div style="font-family:Arial;max-width:750px;line-height:1.6;word-wrap:break-word;margin:0;padding:0;">
+    <h3 style="text-align:center;margin:0;">PREFEITURA MUNICIPAL DE DIAMANTINA</h3>
+    <h4 style="text-align:center;margin:0;">SECRETARIA MUNICIPAL DE FAZENDA</h4>
+    <h4 style="text-align:center;margin:0;">Diretoria de Fiscalização e Tributação</h4>
+    <hr style="margin:10px 0;">
+    <h3 style="text-align:center;margin:0;">RELATÓRIO PRODUTIVIDADE ${String(num).padStart(3,'0')}/${ano}</h3>
+    <p style="margin:6px 0 0 0;"><strong>DE:</strong> Diretoria de Fiscalização e Tributação<br>
+    <strong>PARA:</strong> Secretaria da Fazenda<br>
+    <strong>ASSUNTO:</strong> Produtividade Fiscal<br>
+    <strong>DATA:</strong> ${dataGer}</p>
+    <p style="margin-top:10px;">Atividades realizadas entre <strong>${new Date(dIni+'T00:00:00').toLocaleDateString('pt-BR')}</strong> e <strong>${new Date(dFim+'T00:00:00').toLocaleDateString('pt-BR')}</strong>:</p>
+    <table style="width:100%;border-collapse:collapse;margin-top:5px;">
+      ${Object.entries(resumoTipo).map(([serv,q])=>`
+        <tr>
+          <td style="border-bottom:1px dotted #999;padding:4px 6px;">${serv}</td>
+          <td style="text-align:right;border-bottom:1px dotted #999;padding:4px 6px;">${q}</td>
+        </tr>`).join('')}
+    </table>
+    <p style="margin-top:15px;"><strong>Valor arrecadado no período:</strong> ${numberToBRL(totalArrec)}</p>
+    <p style="margin-top:15px;">Sendo o que temos para o momento, nos colocamos à disposição para maiores esclarecimentos.</p>
+    <p style="margin-top:35px;text-align:center;">Atenciosamente,<br><br><strong>Gerência de Fiscalização Tributária</strong><br>Prefeitura Municipal de Diamantina/MG</p>
+    <hr style="margin:25px 0;">
+    <p style="text-align:center;font-size:12px;margin-top:20px;">
+      <strong>Data de geração:</strong> ${dataGer}<br>
+      <strong>Gerente:</strong> ${sess.nome}
+    </p>
+  </div>`;
 
-    html2pdf().set({
-      margin: [5,10,10,10],
-      filename: `Relatorio_${String(num).padStart(3,'0')}_${ano}.pdf`,
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-    }).from(relatorio).save();
-  };
+  html2pdf().set({
+    margin: [5,10,10,10],               // 🔹 topo reduzido
+    pagebreak: { mode: ['avoid-all'] },
+    filename: `Relatorio_${String(num).padStart(3,'0')}_${ano}.pdf`,
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 1.6, useCORS: true, scrollY: 0, windowWidth: 850 }, // 🔹 escala controlada
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+  }).from(relatorio).save();
+};
+
 
   // Gestão de Usuários (Firestore: coleção 'usuarios')
   let editUserId = null;
