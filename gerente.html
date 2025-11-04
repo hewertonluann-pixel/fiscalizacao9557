@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Gerente — Sistema de Produção</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+</head>
+<body>
+<div class="wrap">
+  <h1>Painel do Gerente</h1>
+  <div class="sub">
+    Relatórios e gestão de usuários.
+    <span id="who"></span> |
+    <button id="btnSair" class="link">Sair</button>
+  </div>
+
+  <div id="msg" class="msg"></div>
+
+  <!-- =================== RELATÓRIOS =================== -->
+  <div class="card">
+    <div class="hd">
+      <span>Relatório por período</span>
+      <div class="form-grid">
+        <div><label>De</label><input id="dIni" type="date"></div>
+        <div><label>Até</label><input id="dFim" type="date"></div>
+        <div><label>&nbsp;</label><button id="btnFiltrar">Filtrar</button></div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <span class="pill">Atalhos:</span>
+          <button class="pill" id="pSem">Semanal</button>
+          <button class="pill" id="pQzn">Quinzenal</button>
+          <button class="pill" id="pMns">Mensal</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="bd">
+      <div class="scroll table-wrap">
+        <table id="tabLanc" class="table">
+          <thead>
+            <tr>
+              <th>Data</th><th>Fiscal</th><th>Empresa</th><th>Descrição</th>
+              <th>Qtd</th><th>Valor</th><th>Destino</th><th>Resumo</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:8px">
+        <div><strong>Total registros:</strong> <span id="tRegs">0</span></div>
+        <div><strong>Total Quantidade:</strong> <span id="tQtd">0</span></div>
+        <div><strong>Total Valor:</strong> <span id="tVal">R$ 0,00</span></div>
+      </div>
+
+      <div style="margin-top:20px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+        <label for="numRel" style="font-weight:600;">Nº Relatório:</label>
+        <input id="numRel" type="number" min="1" placeholder="(automático)" style="width:120px;padding:6px 8px;border:1px solid #ccc;border-radius:6px;">
+        <button id="btnPDF" class="pill" style="background:#10b981;color:#fff">🖨️ Gerar Relatório PDF (modelo oficial)</button>
+      </div>
+
+      <div style="margin-top:20px">
+        <h3>Resumo por Fiscal</h3>
+        <div id="resFiscal"></div>
+        <h3>Resumo por Tipo de Serviço</h3>
+        <div id="resTipo"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =================== GESTÃO DE USUÁRIOS =================== -->
+  <div class="card">
+    <div class="hd">
+      <span>Gestão de usuários (Fiscais e Gerentes)</span>
+      <button id="btnNovo" class="pill">➕ Novo Usuário</button>
+    </div>
+    <div class="bd">
+      <div class="scroll table-wrap">
+        <table id="tabUsers" class="table">
+          <thead><tr><th>Nome</th><th>Tipo</th><th>Senha</th><th>Ações</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <div class="sep"></div>
+      <div class="form-grid">
+        <div>
+          <label>Importar planilhas (.xlsx) por Fiscal (nome-do-fiscal-*.xlsx)</label>
+          <input id="fileInput" type="file" multiple accept=".xlsx,.xls">
+        </div>
+        <div><button id="btnImportar">Importar</button></div>
+        <pre id="importLog" style="white-space:pre-wrap"></pre>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal usuário -->
+<div id="modalUser" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);justify-content:center;align-items:center;">
+  <div style="background:#fff;padding:20px;border-radius:12px;max-width:400px;width:90%;box-shadow:0 4px 12px rgba(0,0,0,.3);">
+    <h3 id="modalTitulo">Novo Usuário</h3>
+    <div style="display:grid;gap:10px;margin-top:10px">
+      <div><label>Nome</label><input id="uNome" type="text"></div>
+      <div><label>Senha</label><input id="uSenha" type="password"></div>
+      <div><label>Tipo</label>
+        <select id="uTipo">
+          <option value="fiscal">Fiscal</option>
+          <option value="gerente">Gerente</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:10px">
+        <button id="btnSalvarUser">Salvar</button>
+        <button id="btnCancelarUser" class="ghost">Cancelar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SheetJS -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+  import { getFirestore, collection, addDoc, getDocs, query, where, orderBy, doc, updateDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyANrr4R5JtJ9GmO0j-1X8-9CvBmYkC4oCI",
+    authDomain: "fiscalizacao9557.firebaseapp.com",
+    projectId: "fiscalizacao9557",
+    storageBucket: "fiscalizacao9557.firebasestorage.app",
+    messagingSenderId: "98041336495",
+    appId: "1:98041336495:web:0475dfd9c0490cc0a17a5a",
+    measurementId: "G-7PY1G1JTKL"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  const $ = s => document.querySelector(s);
+  const numberToBRL = n => Number(n||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+  const showMsg = (t,c='ok')=>{ const m=$('#msg'); m.textContent=t; m.className='msg '+c; m.style.display='block'; setTimeout(()=>m.style.display='none',2500); };
+
+  // Sessão
+  let sess=null;
+  function validarSessao(){
+    try{ sess = JSON.parse(localStorage.getItem('sessao_usuario')||'null'); }catch(e){ sess=null; }
+    if(!sess || sess.tipo!=='gerente'){ location.href='index.html'; return; }
+    $('#who').textContent = `${sess.nome} (Gerente)`;
+  }
+  validarSessao();
+  $('#btnSair').onclick = ()=>{ localStorage.removeItem('sessao_usuario'); location.href='index.html'; };
+
+  // Atalhos de período
+  function setPeriodo(dias){
+    const fim=new Date(), ini=new Date(); ini.setDate(ini.getDate()-dias+1);
+    $('#dIni').value = ini.toISOString().slice(0,10);
+    $('#dFim').value = fim.toISOString().slice(0,10);
+  }
+  $('#pSem').onclick=()=>{ setPeriodo(7); filtrar(); };
+  $('#pQzn').onclick=()=>{ setPeriodo(15); filtrar(); };
+  $('#pMns').onclick=()=>{ setPeriodo(30); filtrar(); };
+  $('#btnFiltrar').onclick=filtrar;
+
+  // Carregar lançamentos por período (Firestore)
+  async function filtrar(){
+    const dIni = $('#dIni').value || null;
+    const dFim = $('#dFim').value || null;
+    if(!dIni || !dFim){ showMsg('Informe De e Até.','err'); return; }
+
+    // Busca por data como string ISO (range lexicográfico funciona)
+    const qLanc = query(
+      collection(db,'lancamentos'),
+      where('data','>=', dIni),
+      where('data','<=', dFim),
+      orderBy('data','asc')
+    );
+
+    const snap = await getDocs(qLanc);
+    const rows = [];
+    snap.forEach(d=> rows.push({ id:d.id, ...d.data() }) );
+    renderLanc(rows);
+  }
+
+  function renderLanc(rows){
+    const tb=$('#tabLanc tbody'); tb.innerHTML='';
+    let tRegs=0,tQtd=0,tVal=0;
+    const porFiscal=new Map(), porTipo=new Map();
+
+    rows.forEach(r=>{
+      tRegs++; tQtd += Number(r.quantidade||0); tVal += Number(r.valor||0);
+      const tr=document.createElement('tr');
+      tr.innerHTML = `<td>${r.data||''}</td><td>${r.usuario||''}</td><td>${r.empresa||''}</td><td>${r.descricao||''}</td>
+                      <td>${r.quantidade||0}</td><td>${r.valor?numberToBRL(r.valor):''}</td><td>${r.destino||''}</td><td>${r.descricaoResumida||''}</td>`;
+      tb.appendChild(tr);
+      porFiscal.set(r.usuario,(porFiscal.get(r.usuario)||0)+Number(r.quantidade||0));
+      porTipo.set(r.descricaoResumida,(porTipo.get(r.descricaoResumida)||0)+Number(r.quantidade||0));
+    });
+
+    $('#tRegs').textContent=tRegs;
+    $('#tQtd').textContent=tQtd;
+    $('#tVal').textContent=numberToBRL(tVal);
+    $('#resFiscal').innerHTML = Array.from(porFiscal.entries()).map(([k,v])=>`<div>• <strong>${k}:</strong> ${v}</div>`).join('') || '<em>—</em>';
+    $('#resTipo').innerHTML = Array.from(porTipo.entries()).map(([k,v])=>`<div>• <strong>${k}:</strong> ${v}</div>`).join('') || '<em>—</em>';
+  }
+
+  // PDF (margem do topo reduzida)
+  $('#btnPDF').onclick = ()=>{
+    const dIni = $('#dIni').value, dFim = $('#dFim').value;
+    const tBody = $('#tabLanc tbody');
+    if(!tBody.children.length){ alert('Nenhum lançamento no período.'); return; }
+
+    // Resumo por tipo
+    const resumoTipo = {};
+    Array.from(tBody.children).forEach(tr=>{
+      const serv = tr.children[7].textContent.trim();
+      const qtd = parseInt(tr.children[4].textContent.trim() || '0',10);
+      resumoTipo[serv] = (resumoTipo[serv]||0) + qtd;
+    });
+
+    // Total arrecadado
+    let totalArrec = 0;
+    Array.from(tBody.children).forEach(tr=>{
+      const valTxt = tr.children[5].textContent.trim().replace(/[R$\.\s]/g,'').replace(',','.');
+      totalArrec += parseFloat(valTxt||'0')||0;
+    });
+
+    const hoje = new Date();
+    const dataGer = hoje.toLocaleDateString('pt-BR');
+    const ano = hoje.getFullYear();
+    let numInput = parseInt($('#numRel')?.value.trim() || '0',10);
+    let num = numInput > 0 ? numInput : (Number(localStorage.getItem('numero_relatorio')||'0') + 1);
+    if(numInput <= 0) localStorage.setItem('numero_relatorio', num);
+
+    const relatorio = `
+    <div style="font-family:Arial;max-width:750px;line-height:1.6;word-wrap:break-word;">
+      <h3 style="text-align:center;margin:0;">PREFEITURA MUNICIPAL DIAMANTINA</h3>
+      <h4 style="text-align:center;margin:0;">SECRETARIA MUNICIPAL DE FAZENDA</h4>
+      <h4 style="text-align:center;margin:0;">Diretoria de Fiscalização e Tributação</h4>
+      <hr style="margin:10px 0;">
+      <h3 style="text-align:center;">RELATÓRIO PRODUTIVIDADE ${String(num).padStart(3,'0')}/${ano}</h3>
+      <p><strong>DE:</strong> Diretoria de Fiscalização e Tributação<br>
+      <strong>PARA:</strong> Secretaria da Fazenda<br>
+      <strong>ASSUNTO:</strong> Produtividade Fiscal<br>
+      <strong>DATA:</strong> ${dataGer}</p>
+      <p style="margin-top:12px;">Atividades realizadas entre <strong>${new Date(dIni+'T00:00:00').toLocaleDateString('pt-BR')}</strong> e <strong>${new Date(dFim+'T00:00:00').toLocaleDateString('pt-BR')}</strong>:</p>
+      <table style="width:100%;border-collapse:collapse;margin-top:10px;">
+        ${Object.entries(resumoTipo).map(([serv,q])=>`
+          <tr>
+            <td style="border-bottom:1px dotted #999;padding:4px 6px;">${serv}</td>
+            <td style="text-align:right;border-bottom:1px dotted #999;padding:4px 6px;">${q}</td>
+          </tr>`).join('')}
+      </table>
+      <p style="margin-top:20px;"><strong>Valor arrecadado no período:</strong> ${numberToBRL(totalArrec)}</p>
+      <p style="margin-top:20px;">Sendo o que temos para o momento, nos colocamos à disposição para maiores esclarecimentos.</p>
+      <p style="margin-top:40px;text-align:center;">Atenciosamente,<br><br><strong>Gerência de Fiscalização Tributária</strong><br>Prefeitura Municipal de Diamantina/MG</p>
+      <hr style="margin:30px 0;">
+      <p style="text-align:center;font-size:12px;margin-top:30px;">
+        <strong>Data de geração:</strong> ${dataGer}<br>
+        <strong>Gerente:</strong> ${sess.nome}
+      </p>
+    </div>`;
+
+    html2pdf().set({
+      margin: [5,10,10,10],
+      filename: `Relatorio_${String(num).padStart(3,'0')}_${ano}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    }).from(relatorio).save();
+  };
+
+  // Gestão de Usuários (Firestore: coleção 'usuarios')
+  let editUserId = null;
+  $('#btnNovo').onclick=()=>{
+    $('#modalUser').style.display='flex';
+    $('#modalTitulo').textContent='Novo Usuário';
+    $('#uNome').value=''; $('#uSenha').value=''; $('#uTipo').value='fiscal';
+    editUserId=null;
+  };
+  $('#btnCancelarUser').onclick=()=>$('#modalUser').style.display='none';
+
+  $('#btnSalvarUser').onclick=async ()=>{
+    const nome = $('#uNome').value.trim();
+    const senha = $('#uSenha').value.trim();
+    const tipo = $('#uTipo').value;
+    if(!nome || !senha){ showMsg('Preencha nome e senha','err'); return; }
+    try{
+      if(!editUserId){
+        await addDoc(collection(db,'usuarios'), { nome, nomeLower: nome.toLowerCase(), senha, tipo });
+        showMsg('Usuário adicionado','ok');
+      }else{
+        await updateDoc(doc(db,'usuarios', editUserId), { nome, nomeLower: nome.toLowerCase(), senha, tipo });
+        showMsg('Usuário atualizado','ok');
+      }
+      $('#modalUser').style.display='none';
+      carregarUsuarios();
+    }catch(e){ console.error(e); showMsg('Erro ao salvar usuário','err'); }
+  };
+
+  async function carregarUsuarios(){
+    const snap = await getDocs(collection(db,'usuarios'));
+    const tb=$('#tabUsers tbody'); tb.innerHTML='';
+    snap.forEach(d=>{
+      const u = d.data();
+      const tr=document.createElement('tr');
+      tr.innerHTML = `<td>${u.nome}</td><td>${u.tipo}</td><td>${u.senha}</td>
+        <td style="white-space:nowrap">
+          <button data-e="${d.id}" class="link">✏️</button>
+          <button data-x="${d.id}" class="link" style="color:#dc2626">❌</button>
+        </td>`;
+      tb.appendChild(tr);
+    });
+
+    tb.querySelectorAll('[data-e]').forEach(b=>{
+      b.onclick=async ()=>{
+        const id=b.getAttribute('data-e');
+        editUserId=id;
+        const all = await getDocs(query(collection(db,'usuarios'), where('__name__','==', id)));
+        if(!all.empty){
+          const u = all.docs[0].data();
+          $('#modalUser').style.display='flex';
+          $('#modalTitulo').textContent='Editar Usuário';
+          $('#uNome').value=u.nome; $('#uSenha').value=u.senha; $('#uTipo').value=u.tipo;
+        }
+      };
+    });
+
+    tb.querySelectorAll('[data-x]').forEach(b=>{
+      b.onclick=async ()=>{
+        const id=b.getAttribute('data-x');
+        if(confirm('Excluir este usuário?')){
+          await deleteDoc(doc(db,'usuarios', id));
+          showMsg('Usuário removido','ok');
+          carregarUsuarios();
+        }
+      };
+    });
+  }
+  carregarUsuarios();
+
+  // Importar XLSX -> gravar em 'lancamentos'
+  const fileInput = document.getElementById("fileInput");
+  const btnImportar = document.getElementById("btnImportar");
+  const importLog = document.getElementById("importLog");
+
+  function formatarData(valor) {
+    if (!valor) return "";
+    if (typeof valor === "number") {
+      const date = XLSX.SSF.parse_date_code(valor);
+      if (date) {
+        const yyyy = date.y; const mm = String(date.m).padStart(2,"0"); const dd = String(date.d).padStart(2,"0");
+        return `${yyyy}-${mm}-${dd}`;
+      }
+    }
+    if (typeof valor === "string") {
+      const parts = valor.split(/[\/\-]/);
+      if (parts.length === 3) {
+        const [p1,p2,p3] = parts;
+        if (p3.length === 4) return `${p3}-${p2.padStart(2,"0")}-${p1.padStart(2,"0")}`;
+        if (p1.length === 4) return `${p1}-${p2.padStart(2,"0")}-${p3.padStart(2,"0")}`;
+      }
+    }
+    return valor;
+  }
+
+  btnImportar.addEventListener("click", async () => {
+    const files = fileInput.files;
+    if (!files.length) { importLog.textContent = "Nenhum arquivo selecionado."; return; }
+
+    let totalGeral = 0;
+    let logTxt = "=== Importação iniciada ===\n";
+
+    for (const file of files) {
+      const fiscalNome = file.name.split("-")[0].trim();
+      logTxt += `\n📄 ${file.name}\n`;
+      const data = await file.arrayBuffer();
+      const wb = XLSX.read(data, { type: "array" });
+      const sheetsValidas = wb.SheetNames.filter(n => !["LEGENDA","LEGENDA ","RELATÓRIO","GRÁFICO","GRÁFICOS"].includes(n.toUpperCase()));
+      let totalArquivo = 0;
+
+      for (const nomeAba of sheetsValidas) {
+        const ws = wb.Sheets[nomeAba];
+        const rows = XLSX.utils.sheet_to_json(ws, { defval: "" });
+
+        for (const r of rows) {
+          const dataLanc = r["Data"] || r["DATA"] || "";
+          const empresa = r["EMPRESA/CONTRIBUINTE"] || "";
+          const cnpj = r["CNPJ / CPF"] || "";
+          const descricao = r["DESCRIÇÃO"] || "";
+          const qtd = Number(r["QUANTIDADE"] || 1);
+          const valor = parseFloat(String(r["VALOR"] || "0").replace(/[^\d,]/g, "").replace(",", ".")) || 0;
+          const destino = (r["DESTINO"] || "").trim() || "Gerência";
+          const resumo = r["DESCRIÇÃO RESUMIDA"] || "";
+          if (!empresa && !descricao) continue;
+
+          await addDoc(collection(db,'lancamentos'), {
+            usuario: fiscalNome,
+            data: formatarData(dataLanc),
+            empresa, cnpj, descricao,
+            quantidade: qtd, valor, destino,
+            descricaoResumida: resumo,
+            criadoEm: serverTimestamp()
+          });
+          totalArquivo++;
+        }
+      }
+
+      logTxt += `   → ${totalArquivo} lançamentos importados\n`;
+      totalGeral += totalArquivo;
+    }
+
+    logTxt += `\n✅ Total geral importado: ${totalGeral} lançamentos.\n=== Importação concluída ===`;
+    importLog.textContent = logTxt;
+    showMsg("Importação concluída!","ok");
+  });
+
+  // Inicializa período padrão e carrega
+  (function init(){
+    setPeriodo(7);
+    filtrar();
+  })();
+</script>
+</body>
+</html>

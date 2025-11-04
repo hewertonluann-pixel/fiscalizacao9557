@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Login — Sistema de Produção</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .perfil-toggle{display:flex;gap:8px;margin-top:4px}
+    .perfil-btn{flex:1;padding:10px 0;border-radius:8px;border:1px solid var(--border);background:#f3f4f6;color:var(--muted);font-weight:700;cursor:pointer;transition:.2s}
+    .perfil-btn:hover{background:#e0ecff}
+    .perfil-btn.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card" style="max-width:460px;margin:60px auto">
+    <div class="hd">Acesso</div>
+    <div class="bd" style="display:grid;gap:12px">
+      <div>
+        <label>Nome</label>
+        <input id="nome" type="text" placeholder="Seu nome">
+      </div>
+      <div>
+        <label>Senha</label>
+        <input id="senha" type="password" placeholder="Sua senha">
+      </div>
+      <div>
+        <label>Perfil</label>
+        <div class="perfil-toggle">
+          <button type="button" id="btnFiscal" class="perfil-btn active">Fiscal</button>
+          <button type="button" id="btnGerente" class="perfil-btn">Gerente</button>
+        </div>
+      </div>
+      <button id="btnEntrar" type="button">Entrar</button>
+      <div id="msg" class="msg"></div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  // ===== Firebase SDK (v9 modular) =====
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+  import { getFirestore, collection, query, where, getDocs, addDoc, limit } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyANrr4R5JtJ9GmO0j-1X8-9CvBmYkC4oCI",
+    authDomain: "fiscalizacao9557.firebaseapp.com",
+    projectId: "fiscalizacao9557",
+    storageBucket: "fiscalizacao9557.firebasestorage.app",
+    messagingSenderId: "98041336495",
+    appId: "1:98041336495:web:0475dfd9c0490cc0a17a5a",
+    measurementId: "G-7PY1G1JTKL"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  // ===== Util =====
+  const $ = s => document.querySelector(s);
+  const showMsg = (t, c='ok') => {
+    const m = $('#msg');
+    m.textContent = t;
+    m.className = 'msg ' + c;
+    m.style.display = 'block';
+    setTimeout(()=>m.style.display='none', 2500);
+  };
+
+  // Perfil local
+  let perfil = 'fiscal';
+  $('#btnFiscal').onclick = ()=>{perfil='fiscal'; $('#btnFiscal').classList.add('active'); $('#btnGerente').classList.remove('active');};
+  $('#btnGerente').onclick = ()=>{perfil='gerente'; $('#btnGerente').classList.add('active'); $('#btnFiscal').classList.remove('active');};
+
+  // Garante gerente padrão (Alexon) se não existir
+  async function ensureDefaultGerente(){
+    const q1 = query(collection(db,'usuarios'), where('nome','==','Alexon'), where('tipo','==','gerente'), limit(1));
+    const snap = await getDocs(q1);
+    if (snap.empty){
+      await addDoc(collection(db,'usuarios'), {
+        nome: 'Alexon',
+        nomeLower: 'alexon',
+        senha: 'gerente1234',
+        tipo: 'gerente'
+      });
+    }
+  }
+  ensureDefaultGerente().catch(console.error);
+
+  // Login local validando no Firestore
+  $('#btnEntrar').onclick = async ()=>{
+    const nome = ($('#nome').value||'').trim();
+    const senha = ($('#senha').value||'').trim();
+    if(!nome || !senha){ showMsg('Preencha nome e senha','err'); return; }
+
+    try{
+      // Busca por nome exato (case-sensitive). Caso deseje, adicione campo nomeLower e pesquise por ele.
+      const qUser = query(collection(db,'usuarios'), where('nome','==',nome), where('tipo','==', perfil), limit(1));
+      const snap = await getDocs(qUser);
+
+      if (snap.empty){ showMsg('Usuário não encontrado para este perfil.','err'); return; }
+
+      const doc = snap.docs[0];
+      const u = doc.data();
+      if (u.senha !== senha){ showMsg('Senha incorreta.','err'); return; }
+
+      localStorage.setItem('sessao_usuario', JSON.stringify({ nome: u.nome, tipo: u.tipo }));
+      setTimeout(()=>{ location.href = (perfil==='gerente' ? 'gerente.html' : 'fiscal.html'); }, 150);
+    }catch(e){
+      console.error(e);
+      showMsg('Falha ao autenticar.','err');
+    }
+  };
+</script>
+</body>
+</html>

@@ -1,0 +1,96 @@
+:root {
+  --bg: #f6f9fc;
+  --card: #ffffff;
+  --ink: #111827;
+  --muted: #6b7280;
+  --primary: #3b82f6;
+  --border: #e5e7eb;
+  --ok: #16a34a;
+  --err: #dc2626;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Arial;
+  background: var(--bg);
+  color: var(--ink);
+}
+.wrap {
+  max-width: 1400px;
+  margin: 24px auto;
+  padding: 0 16px;
+}
+h1 { margin: 0 0 8px; font-size: 22px; }
+.sub { color: var(--muted); margin-bottom: 16px; }
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: 0 6px 16px rgba(17,24,39,.06);
+  margin-bottom: 16px;
+}
+.hd {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.bd { padding: 16px; }
+input, select, button { font: inherit; }
+input, select, textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #fff;
+}
+button {
+  padding: 10px 14px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--primary);
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+}
+button:hover { background: #2563eb; }
+.table { width: 100%; border-collapse: separate; border-spacing: 0; }
+th, td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  font-size: 14px;
+}
+th { color: var(--muted); background: var(--card); position: sticky; top: 0; }
+.scroll { max-height: 500px; overflow-y: auto; }
+.msg {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 10px 16px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,.15);
+  display: none;
+  font-weight: 700;
+}
+.ok { background: #d1fae5; color: #065f46; }
+.err { background: #fee2e2; color: #991b1b; }
+.link {
+  color: var(--primary);
+  background: transparent;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+.form-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.form-grid > div {
+  flex: 1 1 250px;
+  min-width: 200px;
+}
