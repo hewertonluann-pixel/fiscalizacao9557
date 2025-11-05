@@ -57,7 +57,7 @@
       <div style="margin-top:20px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
         <label for="numRel" style="font-weight:600;">Nº Relatório:</label>
         <input id="numRel" type="number" min="1" placeholder="(automático)" style="width:120px;padding:6px 8px;border:1px solid #ccc;border-radius:6px;">
-        <button id="btnPDF" class="pill" style="background:#10b981;color:#fff">🖨️ Gerar Relatório PDF (modelo oficial)</button>
+        <button id="btnPDF" class="pill" style="background:#10b981;color:#fff">🖨️ Gerar Relatório PDF</button>
       </div>
 
       <div style="margin-top:20px">
@@ -68,62 +68,13 @@
       </div>
     </div>
   </div>
-
-  <!-- =================== GESTÃO DE USUÁRIOS =================== -->
-  <div class="card">
-    <div class="hd">
-      <span>Gestão de usuários (Fiscais e Gerentes)</span>
-      <button id="btnNovo" class="pill">➕ Novo Usuário</button>
-    </div>
-    <div class="bd">
-      <div class="scroll table-wrap">
-        <table id="tabUsers" class="table">
-          <thead><tr><th>Nome</th><th>Tipo</th><th>Senha</th><th>Ações</th></tr></thead>
-          <tbody></tbody>
-        </table>
-      </div>
-
-      <div class="sep"></div>
-      <div class="form-grid">
-        <div>
-          <label>Importar planilhas (.xlsx) por Fiscal (nome-do-fiscal-*.xlsx)</label>
-          <input id="fileInput" type="file" multiple accept=".xlsx,.xls">
-        </div>
-        <div><button id="btnImportar">Importar</button></div>
-        <pre id="importLog" style="white-space:pre-wrap"></pre>
-      </div>
-    </div>
-  </div>
 </div>
-
-<!-- Modal usuário -->
-<div id="modalUser" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);justify-content:center;align-items:center;">
-  <div style="background:#fff;padding:20px;border-radius:12px;max-width:400px;width:90%;box-shadow:0 4px 12px rgba(0,0,0,.3);">
-    <h3 id="modalTitulo">Novo Usuário</h3>
-    <div style="display:grid;gap:10px;margin-top:10px">
-      <div><label>Nome</label><input id="uNome" type="text"></div>
-      <div><label>Senha</label><input id="uSenha" type="password"></div>
-      <div><label>Tipo</label>
-        <select id="uTipo">
-          <option value="fiscal">Fiscal</option>
-          <option value="gerente">Gerente</option>
-        </select>
-      </div>
-      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:10px">
-        <button id="btnSalvarUser">Salvar</button>
-        <button id="btnCancelarUser" class="ghost">Cancelar</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- SheetJS -->
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-  import { getFirestore, collection, addDoc, getDocs, query, where, orderBy, doc, updateDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+  import { getFirestore, collection, getDocs, query, where, orderBy } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
+  // =================== FIREBASE ===================
   const firebaseConfig = {
     apiKey: "AIzaSyANrr4R5JtJ9GmO0j-1X8-9CvBmYkC4oCI",
     authDomain: "fiscalizacao9557.firebaseapp.com",
@@ -137,11 +88,12 @@
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
 
+  // =================== UTIL ===================
   const $ = s => document.querySelector(s);
   const numberToBRL = n => Number(n||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
   const showMsg = (t,c='ok')=>{ const m=$('#msg'); m.textContent=t; m.className='msg '+c; m.style.display='block'; setTimeout(()=>m.style.display='none',2500); };
 
-  // Sessão
+  // =================== SESSÃO ===================
   let sess=null;
   function validarSessao(){
     try{ sess = JSON.parse(localStorage.getItem('sessao_usuario')||'null'); }catch(e){ sess=null; }
@@ -149,24 +101,33 @@
     $('#who').textContent = `${sess.nome} (Gerente)`;
   }
   validarSessao();
-  $('#btnSair').onclick = ()=>{ localStorage.removeItem('sessao_usuario'); location.href='index.html'; };
+  $('#btnSair').onclick=()=>{ localStorage.removeItem('sessao_usuario'); location.href='index.html'; };
 
-  // ===== Atalhos =====
+  // =================== FILTRAR LANÇAMENTOS ===================
+  let cacheLanc = [];
+
   function setPeriodo(dias){
     const fim=new Date(), ini=new Date(); ini.setDate(ini.getDate()-dias+1);
     $('#dIni').value = ini.toISOString().slice(0,10);
     $('#dFim').value = fim.toISOString().slice(0,10);
   }
+
   $('#pSem').onclick=()=>{ setPeriodo(7); filtrar(); };
   $('#pQzn').onclick=()=>{ setPeriodo(15); filtrar(); };
   $('#pMns').onclick=()=>{ setPeriodo(30); filtrar(); };
   $('#btnFiltrar').onclick=filtrar;
 
-  // ===== Dados =====
-  let cacheLanc = [];
   async function filtrar(){
-    const q = query(collection(db,'lancamentos'), orderBy('data','asc'));
-    const snap = await getDocs(q);
+    const dIni = $('#dIni').value, dFim = $('#dFim').value;
+    if(!dIni || !dFim){ showMsg('Informe o período.','err'); return; }
+
+    const qLanc = query(
+      collection(db,'lancamentos'),
+      where('data','>=', dIni),
+      where('data','<=', dFim),
+      orderBy('data','asc')
+    );
+    const snap = await getDocs(qLanc);
     cacheLanc = snap.docs.map(d=>({id:d.id, ...d.data()}));
     renderLanc(cacheLanc);
   }
@@ -193,88 +154,80 @@
     $('#resTipo').innerHTML = Array.from(porTipo.entries()).map(([k,v])=>`<div>• <strong>${k}:</strong> ${v}</div>`).join('') || '<em>—</em>';
   }
 
-  function loadLanc(){ return cacheLanc; }
+  // =================== PDF (CÓDIGO SEPARADO) ===================
+  async function gerarPDF(){
+    const dIni = $('#dIni').value, dFim = $('#dFim').value;
+    if(!dIni || !dFim){ alert('Informe o período.'); return; }
+    if(cacheLanc.length===0){ alert('Nenhum dado carregado.'); return; }
 
-  // ================= RELATÓRIO PDF =================
-  $('#btnPDF').onclick = ()=>{
-    const dIni = $('#dIni').value;
-    const dFim = $('#dFim').value;
-    const all = loadLanc();
-    const filtrado = all.filter(r=>{
-      if(!r.data) return false;
+    const filtrado = cacheLanc.filter(r=>{
       const d = new Date(r.data);
-      const di = dIni? new Date(dIni): null;
-      const df = dFim? new Date(dFim): null;
-      if(di && d<di) return false;
-      if(df && d>df) return false;
-      return true;
+      return (!dIni || d>=new Date(dIni)) && (!dFim || d<=new Date(dFim));
     });
 
     if(filtrado.length===0){ alert('Nenhum lançamento no período.'); return; }
 
-    const resumo = {};
-    let totalArrecadado = 0;
+    // Agrupamento por Fiscal
+    const porFiscal = {};
     filtrado.forEach(r=>{
-      resumo[r.descricaoResumida] = (resumo[r.descricaoResumida]||0) + Number(r.quantidade||0);
-      totalArrecadado += Number(r.valor||0);
+      if(!porFiscal[r.usuario]) porFiscal[r.usuario] = {};
+      porFiscal[r.usuario][r.descricaoResumida] = (porFiscal[r.usuario][r.descricaoResumida]||0) + Number(r.quantidade||0);
     });
 
-    let numInput = parseInt($('#numRel')?.value.trim() || '0');
-    let num = numInput > 0 ? numInput : (Number(localStorage.getItem('numero_relatorio')||'0') + 1);
-    if(numInput <= 0) localStorage.setItem('numero_relatorio', num);
+    // Totais
+    let totalGeral = 0, totalArrec = 0;
+    filtrado.forEach(r=>{
+      totalGeral += Number(r.quantidade||0);
+      totalArrec += Number(r.valor||0);
+    });
 
-    const formatarDataBR = d => d ? new Date(d + 'T00:00:00').toLocaleDateString('pt-BR') : '—';
-    const dIniFmt = formatarDataBR(dIni);
-    const dFimFmt = formatarDataBR(dFim);
-
-    const hoje = new Date();
-    const dataGer = hoje.toLocaleDateString('pt-BR');
-    const ano = hoje.getFullYear();
-    const periodo = `${dIniFmt} a ${dFimFmt}`;
+    const dataGer = new Date().toLocaleDateString('pt-BR');
+    const ano = new Date().getFullYear();
     const gerente = sess.nome;
-    const totalBRL = numberToBRL(totalArrecadado);
+    const totalBRL = numberToBRL(totalArrec);
+    const formatarData = d=>new Date(d+'T00:00:00').toLocaleDateString('pt-BR');
+    const periodo = `${formatarData(dIni)} a ${formatarData(dFim)}`;
+
+    // Conteúdo HTML
+    let blocos = Object.entries(porFiscal).map(([fiscal, servicos])=>{
+      const linhas = Object.entries(servicos).map(([s,q])=>
+        `<tr><td style="border-bottom:1px dotted #999;padding:4px 6px;">${s}</td><td style="text-align:right;border-bottom:1px dotted #999;padding:4px 6px;">${q}</td></tr>`
+      ).join('');
+      return `<h4 style="margin-top:20px;">${fiscal}</h4><table style="width:100%;border-collapse:collapse;margin-top:6px;">${linhas}</table>`;
+    }).join('');
 
     const relatorio = `
-    <div style="font-family:Arial;max-width:750px;margin:auto;line-height:1.6;word-wrap:break-word;">
+    <div style="font-family:Arial;max-width:750px;margin:0 auto;line-height:1.5;word-wrap:break-word;">
       <h3 style="text-align:center;margin:0;">PREFEITURA MUNICIPAL DE DIAMANTINA</h3>
       <h4 style="text-align:center;margin:0;">SECRETARIA MUNICIPAL DE FAZENDA</h4>
       <h4 style="text-align:center;margin:0;">Diretoria de Fiscalização e Tributação</h4>
-      <hr style="margin:10px 0;">
-      <h3 style="text-align:center;">RELATÓRIO PRODUTIVIDADE ${String(num).padStart(3,'0')}/${ano}</h3>
+      <hr style="margin:6px 0;">
+      <h3 style="text-align:center;margin:0;">RELATÓRIO PRODUTIVIDADE ${ano}</h3>
       <p><strong>DE:</strong> Diretoria de Fiscalização e Tributação<br>
       <strong>PARA:</strong> Secretaria da Fazenda<br>
       <strong>ASSUNTO:</strong> Produtividade Fiscal<br>
       <strong>DATA:</strong> ${dataGer}</p>
-      <p style="margin-top:12px;">Em resposta à solicitação, segue planilha das atividades realizadas neste setor entre <strong>${periodo}</strong>:</p>
-      <table style="width:100%;border-collapse:collapse;margin-top:10px;">
-        ${Object.entries(resumo).map(([serv,q])=>`
-          <tr>
-            <td style="border-bottom:1px dotted #999;padding:4px 6px;">${serv}</td>
-            <td style="text-align:right;border-bottom:1px dotted #999;padding:4px 6px;">${q}</td>
-          </tr>`).join('')}
-      </table>
-      <p style="margin-top:20px;"><strong>Valor arrecadado no período:</strong> ${totalBRL}</p>
-      <p style="margin-top:20px;">Sendo o que temos para o momento, nos colocamos à disposição para maiores esclarecimentos.</p>
-      <p style="margin-top:40px;text-align:center;">Atenciosamente,<br><br><strong>Gerência de Fiscalização Tributária</strong><br>Prefeitura Municipal de Diamantina/MG</p>
-      <hr style="margin:30px 0;">
-      <p style="text-align:center;font-size:12px;margin-top:30px;">
-        <strong>Data de geração:</strong> ${dataGer}<br>
-        <strong>Gerente:</strong> ${gerente}
-      </p>
+      <p style="margin-top:12px;">Atividades realizadas entre <strong>${periodo}</strong>:</p>
+      ${blocos}
+      <p style="margin-top:20px;"><strong>Total geral:</strong> ${totalGeral} atividades<br>
+      <strong>Valor arrecadado:</strong> ${totalBRL}</p>
+      <p style="margin-top:30px;text-align:center;">Atenciosamente,<br><br><strong>Gerência de Fiscalização Tributária</strong><br>Prefeitura Municipal de Diamantina/MG</p>
+      <hr style="margin:20px 0;">
+      <p style="text-align:center;font-size:12px;"><strong>Gerente:</strong> ${gerente} — ${dataGer}</p>
     </div>`;
 
     html2pdf().set({
-      margin: [5,10,10,10],
-      filename: `Relatorio_${String(num).padStart(3,'0')}_${ano}.pdf`,
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true },
+      margin: [0,10,5,10],
+      filename: `Relatorio_${ano}.pdf`,
+      image: { type: 'jpeg', quality: 1 },
+      html2canvas: { scale: 1.5, useCORS: true },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
     }).from(relatorio).save();
-  };
+  }
 
-  // Gestão de Usuários + Importação XLSX permanecem iguais
-  // (mantidos da tua versão anterior — não alterei essa parte)
-  // ...
+  $('#btnPDF').onclick = gerarPDF;
+
+  // =================== INICIAL ===================
   (function init(){
     setPeriodo(7);
     filtrar();
