@@ -296,12 +296,12 @@ $('#btnPDF').onclick = () => {
 
   // --- Geração do PDF ---
   html2pdf().set({
-    margin: [10, 10, 10, 10],                   // margens simétricas
+    margin: [5, 10, 10, 10],                   // margens simétricas
     pagebreak: { mode: ['avoid-all'] },
     filename: `Relatorio_${String(num).padStart(3, '0')}_${ano}.pdf`,
     image: { type: 'jpeg', quality: 0.98 },
     html2canvas: {
-      scale: 1.4,                               // reduz zoom -> evita corte lateral
+      scale: 2,                               // reduz zoom -> evita corte lateral
       useCORS: true,
       scrollY: 0,
       windowWidth: 900                          // força captura com largura adequada
