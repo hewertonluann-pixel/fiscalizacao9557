@@ -4,30 +4,132 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Fiscal — Sistema de Produção</title>
-  <link rel="stylesheet" href="style.css">
+
+  <!-- Fonte & Reset visual -->
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --bg:#f6f7fb; --card:#fff; --ink:#111827; --muted:#6b7280;
+      --primary:#2563eb; --primary-ink:#fff; --border:#e5e7eb;
+      --good:#16a34a; --bad:#dc2626; --chip:#eef2ff; --chip-ink:#1e40af;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; font-family:Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      background:var(--bg); color:var(--ink);
+    }
+
+    /* Header fixo */
+    .header{
+      position:fixed; top:0; left:0; right:0; z-index:50;
+      background:#fff; border-bottom:1px solid var(--border);
+      display:flex; align-items:center; gap:12px;
+      padding:12px 16px;
+    }
+    .header .title{font-weight:700}
+    .header .sub{color:var(--muted); font-size:14px}
+    .header .right{margin-left:auto; display:flex; align-items:center; gap:10px}
+    .btn-ghost{
+      background:#eef2ff; color:#1e40af; border:0; border-radius:10px;
+      padding:8px 12px; cursor:pointer; font-weight:600;
+    }
+    .who-badge{
+      background:#f3f4f6; color:#111827; border-radius:999px; padding:6px 10px; font-size:12px; font-weight:600;
+    }
+
+    .wrap{max-width:1100px; margin:0 auto; padding:98px 16px 24px;} /* padding-top para não ficar sob o header */
+    h1{font-size:22px; margin:0 0 4px}
+    .sub{color:var(--muted); margin:0 0 12px}
+    .msg{display:none; margin:10px 0; font-weight:600}
+    .msg.ok{color:var(--good)} .msg.err{color:var(--bad)}
+
+    .card{
+      background:var(--card); border:1px solid var(--border);
+      border-radius:14px; box-shadow:0 4px 14px rgba(17,24,39,.05);
+      margin-bottom:16px; overflow:hidden;
+    }
+    .card .hd{
+      padding:14px 16px; border-bottom:1px solid var(--border); font-weight:700; display:flex; align-items:center; gap:12px;
+    }
+    .card .bd{padding:16px}
+    .toolbar{display:flex; flex-wrap:wrap; gap:8px; align-items:center}
+    .right{margin-left:auto}
+
+    label{font-size:12px; color:var(--muted); display:block; margin-bottom:6px}
+    input,select,button{font:inherit}
+    input,select{
+      width:100%; padding:10px 12px; border:1px solid var(--border);
+      border-radius:10px; background:#fff;
+    }
+    button{
+      padding:10px 14px; border:0; border-radius:10px;
+      background:var(--primary); color:var(--primary-ink); cursor:pointer; font-weight:600;
+    }
+    button.link{background:transparent; color:var(--primary); padding:0}
+
+    .form-grid{
+      display:grid; gap:12px;
+      grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));
+    }
+
+    /* Chips de meses */
+    #mesBtns{display:flex; flex-wrap:wrap; gap:6px}
+    .pill{
+      background:var(--chip); color:var(--chip-ink);
+      border:0; border-radius:999px; padding:8px 12px; cursor:pointer; font-weight:600; font-size:13px;
+    }
+    .pill.is-active{background:var(--primary); color:#fff}
+
+    /* Tabela */
+    .table-wrap{overflow:auto} /* rolagem horizontal em telas pequenas */
+    table{width:100%; border-collapse:separate; border-spacing:0}
+    th, td{padding:10px 12px; border-bottom:1px solid var(--border); text-align:left; font-size:14px; white-space:nowrap}
+    thead th{background:#f3f4f6; color:var(--muted); font-weight:600}
+    tbody tr:nth-child(even){background:#f9fafb}
+    tfoot td{font-weight:700; background:#fafafa}
+
+    /* Ações com ícones */
+    .act{background:transparent; color:var(--primary); border:0; cursor:pointer; padding:6px}
+    .act.del{color:var(--bad)}
+    .act[title]{position:relative}
+
+    /* Responsividade: empilhar cards no mobile já é natural pelo grid auto-fit */
+  </style>
 </head>
 <body>
-  <div class="wrap" id="conteudo" style="display:none">
-    <h1>Painel do Fiscal</h1>
-    <div class="sub">
-      Registre seus serviços.
-      <span id="who"></span> |
-      <button id="btnSair" class="link">Sair</button>
+  <!-- Cabeçalho fixo padrão -->
+  <header class="header">
+    <div>
+      <div class="title">Sistema de Produção Tributário — Painel do Fiscal</div>
+      <div class="sub">Registre seus serviços e acompanhe seus lançamentos</div>
     </div>
+    <div class="right">
+      <span id="who" class="who-badge">Conectando…</span>
+      <button id="btnSair" class="btn-ghost">Sair</button>
+    </div>
+  </header>
 
+  <div class="wrap" id="conteudo" style="display:none">
     <div id="msg" class="msg"></div>
 
+    <!-- Lançamento -->
     <div class="card">
       <div class="hd">
         <span id="tituloForm">Novo lançamento</span>
+        <div class="right toolbar">
+          <small class="sub">Campos obrigatórios: Data e Tipo de serviço (Resumo)</small>
+        </div>
       </div>
 
       <div class="bd">
         <div class="form-grid">
           <div><label>Data</label><input id="fData" type="date"></div>
-          <div><label>Empresa / Contribuinte</label><input id="fEmpresa" type="text"></div>
+          <div><label>Nome do Contribuinte</label><input id="fEmpresa" type="text" placeholder="Ex.: Empresa XPTO LTDA"></div>
           <div><label>CNPJ / CPF</label><input id="fCnpjCpf" type="text" maxlength="18" placeholder="00.000.000/0000-00 ou 000.000.000-00"></div>
-          <div><label>Descrição</label><input id="fDesc" type="text"></div>
+          <div><label>Detalhamento do serviço</label><input id="fDesc" type="text" placeholder="Ex.: emissão de guia, liberação de acesso…"></div>
           <div><label>Quantidade</label><input id="fQtd" type="number" min="1" step="1" value="1"></div>
           <div><label>Valor (R$)</label><input id="fValor" type="text" placeholder="R$ 0,00"></div>
           <div>
@@ -40,30 +142,39 @@
             </select>
           </div>
           <div>
-            <label>Descrição Resumida</label>
+            <label>Tipo de serviço</label>
             <input id="fResumo" list="listaServicos" placeholder="Digite ou selecione o tipo de serviço">
             <datalist id="listaServicos"></datalist>
           </div>
-          <div><button id="btnAdd" type="button">Adicionar</button></div>
+          <div style="align-self:end">
+            <button id="btnAdd" type="button">Adicionar</button>
+          </div>
         </div>
       </div>
     </div>
 
+    <!-- Filtros -->
     <div class="card">
       <div class="hd"><span>Filtrar lançamentos por mês e ano</span></div>
       <div class="bd">
-        <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
-          <label>Ano:</label>
-          <input id="anoFiltro" type="number" min="2020" max="2100" style="width:100px">
-          <div id="mesBtns" style="display:flex;flex-wrap:wrap;gap:6px;margin-left:10px"></div>
+        <div class="toolbar">
+          <label for="anoFiltro">Ano:</label>
+          <input id="anoFiltro" type="number" min="2020" max="2100" style="width:120px">
+          <div id="mesBtns"></div>
         </div>
       </div>
     </div>
 
+    <!-- Lista -->
     <div class="card">
-      <div class="hd">Meus lançamentos</div>
+      <div class="hd">
+        <span>Meus lançamentos</span>
+        <div class="right toolbar">
+          <small id="totalMes" class="sub"></small>
+        </div>
+      </div>
       <div class="bd">
-        <div class="scroll table-wrap">
+        <div class="table-wrap">
           <table id="tab" class="table">
             <thead>
               <tr>
@@ -72,6 +183,11 @@
               </tr>
             </thead>
             <tbody></tbody>
+            <tfoot>
+              <tr>
+                <td colspan="9" id="tfootTotal">Total do mês: R$ 0,00</td>
+              </tr>
+            </tfoot>
           </table>
         </div>
       </div>
@@ -81,8 +197,8 @@
   <!-- =================== SCRIPT PRINCIPAL =================== -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-    import { 
-      getFirestore, collection, addDoc, serverTimestamp, query, where, orderBy, getDocs, deleteDoc, doc, updateDoc 
+    import {
+      getFirestore, collection, addDoc, serverTimestamp, query, where, orderBy, getDocs, deleteDoc, doc, updateDoc
     } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
     window.addEventListener('DOMContentLoaded', () => {
@@ -99,7 +215,10 @@
 
       const app = initializeApp(firebaseConfig);
       const db = getFirestore(app);
-      const $ = s => document.querySelector(s);
+
+      // Helpers
+      const $  = s => document.querySelector(s);
+      const $$ = s => Array.from(document.querySelectorAll(s));
       const showMsg = (t, cls='ok') => {
         const m=$('#msg'); m.textContent=t; m.className='msg '+cls;
         m.style.display='block'; setTimeout(()=>m.style.display='none',2500);
@@ -120,7 +239,7 @@
       }
       validarSessao();
 
-      // ======= SERVIÇOS =======
+      // ======= TIPOS (datalist) =======
       const TIPOS = [
         "Apuração de TFLF","Auto de Infração","Bancos TIAF (Início)","Bancos TEAF (Encerramento)",
         "Bloqueio Inscrição/Movimentação","Cadastro Municipal - Inscrição","Cadastro Municipal - Alteração",
@@ -142,29 +261,34 @@
       cnpjEl.addEventListener('input', ()=>{
         let v = cnpjEl.value.replace(/\D/g,'');
         if (v.length<=11){
-          v = v.replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d{1,2})$/,'$1-$2');
+          v = v.replace(/(\d{3})(\d)/,'$1.$2')
+               .replace(/(\d{3})(\d)/,'$1.$2')
+               .replace(/(\d{3})(\d{1,2})$/,'$1-$2');
         }else{
-          v = v.replace(/(\d{2})(\d)/,'$1.$2').replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d)/,'$1/$2').replace(/(\d{4})(\d{1,2})$/,'$1-$2');
+          v = v.replace(/(\d{2})(\d)/,'$1.$2')
+               .replace(/(\d{3})(\d)/,'$1.$2')
+               .replace(/(\d{3})(\d)/,'$1/$2')
+               .replace(/(\d{4})(\d{1,2})$/,'$1-$2');
         }
         cnpjEl.value = v;
       });
 
       $('#fValor').addEventListener('input', e=>{
         let v = e.target.value.replace(/\D/g,'');
-        v = (v/100).toFixed(2)+'';
-        v = v.replace('.',',');
+        v = (v/100).toFixed(2)+''; v = v.replace('.',',');
         v = v.replace(/\B(?=(\d{3})+(?!\d))/g,'.');
         e.target.value = 'R$ '+v;
       });
 
-      // ======= MESES =======
+      // ======= MESES (chips) =======
       const meses = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
       const mesBtns = $('#mesBtns');
       meses.forEach((m,i)=>{
         const b = document.createElement('button');
-        b.textContent=m; b.className='pill'; b.onclick=()=>{
-          document.querySelectorAll('#mesBtns button').forEach(x=>{x.style.background='';x.style.color='';});
-          b.style.background='#3b82f6'; b.style.color='#fff';
+        b.textContent=m; b.className='pill';
+        b.onclick=()=>{
+          $$('#mesBtns .pill').forEach(x=>x.classList.remove('is-active'));
+          b.classList.add('is-active');
           mesAtivo=i+1; anoAtivo=parseInt($('#anoFiltro').value,10);
           renderMeus();
         };
@@ -181,7 +305,7 @@
               valor = parseFloat($('#fValor').value.replace(/[^\d,]/g,'').replace(',','.'))||0,
               destino = $('#fDestino').value,
               resumo = $('#fResumo').value;
-        if(!d || !resumo){ showMsg('Informe a Data e a Descrição Resumida.','err'); return; }
+        if(!d || !resumo){ showMsg('Informe a Data e o Tipo de serviço.','err'); return; }
 
         try{
           if(editandoId){
@@ -200,8 +324,10 @@
             });
             showMsg('Lançamento salvo.','ok');
           }
+          // limpar campos
           $('#fEmpresa').value=$('#fCnpjCpf').value=$('#fDesc').value=$('#fValor').value='';
           $('#fQtd').value='1'; $('#fDestino').value=''; $('#fResumo').value='';
+          $('#fEmpresa').focus();
           renderMeus();
         }catch(e){ console.error(e); showMsg('Erro ao salvar.','err'); }
       };
@@ -213,32 +339,41 @@
         const snap = await getDocs(q);
         const tbody = document.querySelector('#tab tbody');
         tbody.innerHTML='';
+        let soma = 0;
+
         snap.forEach(docSnap=>{
           const r = docSnap.data();
           const [y,mm,dd]=(r.data||'').split('-');
           if(anoAtivo && parseInt(y)!=anoAtivo) return;
           if(mesAtivo && parseInt(mm)!=mesAtivo) return;
+          soma += Number(r.valor||0);
+
           const tr=document.createElement('tr');
           tr.innerHTML=`
             <td>${dd}-${mm}-${y}</td>
-            <td>${r.empresa||''}</td>
+            <td title="${r.empresa||''}">${r.empresa||''}</td>
             <td>${r.cnpj||''}</td>
-            <td>${r.descricao||''}</td>
+            <td title="${r.descricao||''}">${r.descricao||''}</td>
             <td>${r.quantidade||0}</td>
             <td>${numberToBRL(r.valor)}</td>
             <td>${r.destino||''}</td>
             <td>${r.descricaoResumida||''}</td>
             <td style="white-space:nowrap">
-              <button class="link" data-edit="${docSnap.id}">✏️</button>
-              <button class="link" data-del="${docSnap.id}" style="color:#dc2626">❌</button>
+              <button class="act" title="Editar" data-edit="${docSnap.id}">✏️</button>
+              <button class="act del" title="Excluir" data-del="${docSnap.id}">🗑️</button>
             </td>`;
           tbody.appendChild(tr);
         });
+
+        // Totais
+        $('#tfootTotal').textContent = `Total do mês: ${numberToBRL(soma)}`;
+        $('#totalMes').textContent = `Total filtrado: ${numberToBRL(soma)}`;
 
         // Editar
         document.querySelectorAll('[data-edit]').forEach(btn=>{
           btn.onclick = async ()=>{
             const id = btn.getAttribute('data-edit');
+            // pega pelo id
             const lancSnap = await getDocs(query(collection(db,'lancamentos'), where('__name__','==',id)));
             if(!lancSnap.empty){
               const r = lancSnap.docs[0].data();
@@ -247,13 +382,14 @@
               $('#fCnpjCpf').value=r.cnpj||'';
               $('#fDesc').value=r.descricao||'';
               $('#fQtd').value=r.quantidade||1;
-              $('#fValor').value=r.valor?'R$ '+r.valor.toFixed(2).replace('.',','):'';
+              $('#fValor').value=r.valor?'R$ '+Number(r.valor).toFixed(2).replace('.',','):'';
               $('#fDestino').value=r.destino||'';
               $('#fResumo').value=r.descricaoResumida||'';
               editandoId=id;
               $('#tituloForm').textContent='Editar lançamento';
-              $('#btnAdd').textContent='Salvar Alterações';
+              $('#btnAdd').textContent='Salvar alterações';
               showMsg('Editando lançamento...','ok');
+              window.scrollTo({top:0, behavior:'smooth'});
             }
           };
         });
@@ -271,6 +407,8 @@
       }
 
       renderMeus();
+
+      // Sair
       $('#btnSair').onclick=()=>{ localStorage.removeItem('sessao_usuario'); location.href='index.html'; };
     });
   </script>
