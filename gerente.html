@@ -68,65 +68,87 @@
       </div>
     </div>
   </div>
+
+  <!-- =================== GESTÃO DE USUÁRIOS =================== -->
+  <div class="card">
+    <div class="hd">
+      <span>Gestão de Usuários (Fiscais e Gerentes)</span>
+      <button id="btnNovoUser" class="pill">➕ Novo Usuário</button>
+    </div>
+    <div class="bd">
+      <div class="scroll table-wrap">
+        <table id="tabUsers" class="table">
+          <thead><tr><th>Nome</th><th>Tipo</th><th>Senha</th><th>Ações</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
 </div>
 
+<!-- Modal de Usuário -->
+<div id="modalUser" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);justify-content:center;align-items:center;">
+  <div style="background:#fff;padding:20px;border-radius:12px;max-width:400px;width:90%;box-shadow:0 4px 12px rgba(0,0,0,.3);">
+    <h3 id="modalTitulo">Novo Usuário</h3>
+    <div style="display:grid;gap:10px;margin-top:10px">
+      <div><label>Nome</label><input id="uNome" type="text"></div>
+      <div><label>Senha</label><input id="uSenha" type="password"></div>
+      <div><label>Tipo</label>
+        <select id="uTipo">
+          <option value="fiscal">Fiscal</option>
+          <option value="gerente">Gerente</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:10px">
+        <button id="btnSalvarUser">Salvar</button>
+        <button id="btnCancelarUser" class="ghost">Cancelar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =================== SCRIPTS =================== -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
   import { getFirestore, collection, getDocs, query, where, orderBy } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
-  import { gerarPDF } from "./relatorio.js"; // 🔹 módulo externo
+  import { gerarPDF } from "./relatorio.js";
+  import { inicializarUsuarios } from "./usuarios.js";
 
-  // =================== FIREBASE ===================
+  // === Firebase ===
   const firebaseConfig = {
     apiKey: "AIzaSyANrr4R5JtJ9GmO0j-1X8-9CvBmYkC4oCI",
     authDomain: "fiscalizacao9557.firebaseapp.com",
     projectId: "fiscalizacao9557",
     storageBucket: "fiscalizacao9557.firebasestorage.app",
     messagingSenderId: "98041336495",
-    appId: "1:98041336495:web:0475dfd9c0490cc0a17a5a",
-    measurementId: "G-7PY1G1JTKL"
+    appId: "1:98041336495:web:0475dfd9c0490cc0a17a5a"
   };
 
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
 
-  // =================== UTIL ===================
   const $ = s => document.querySelector(s);
   const numberToBRL = n => Number(n||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
-  const showMsg = (t,c='ok')=>{ const m=$('#msg'); m.textContent=t; m.className='msg '+c; m.style.display='block'; setTimeout(()=>m.style.display='none',2500); };
 
-  // =================== SESSÃO ===================
+  // Sessão
   let sess=null;
   try{ sess = JSON.parse(localStorage.getItem('sessao_usuario')||'null'); }catch(e){ sess=null; }
   if(!sess || sess.tipo!=='gerente'){ location.href='index.html'; }
   $('#who').textContent = `${sess.nome} (Gerente)`;
   $('#btnSair').onclick=()=>{ localStorage.removeItem('sessao_usuario'); location.href='index.html'; };
 
-  // =================== FILTRAR LANÇAMENTOS ===================
+  // ==== Relatórios ====
   let cacheLanc = [];
-
-  function setPeriodo(dias){
-    const fim=new Date(), ini=new Date(); ini.setDate(ini.getDate()-dias+1);
-    $('#dIni').value = ini.toISOString().slice(0,10);
-    $('#dFim').value = fim.toISOString().slice(0,10);
-  }
-
-  $('#pSem').onclick=()=>{ setPeriodo(7); filtrar(); };
-  $('#pQzn').onclick=()=>{ setPeriodo(15); filtrar(); };
-  $('#pMns').onclick=()=>{ setPeriodo(30); filtrar(); };
-  $('#btnFiltrar').onclick=filtrar;
-
   async function filtrar(){
     const dIni = $('#dIni').value, dFim = $('#dFim').value;
-    if(!dIni || !dFim){ showMsg('Informe o período.','err'); return; }
-
-    const qLanc = query(
-      collection(db,'lancamentos'),
+    if(!dIni || !dFim) return;
+    const qLanc = query(collection(db,'lancamentos'),
       where('data','>=', dIni),
       where('data','<=', dFim),
       orderBy('data','asc')
     );
     const snap = await getDocs(qLanc);
-    cacheLanc = snap.docs.map(d=>({id:d.id, ...d.data()}));
+    cacheLanc = snap.docs.map(d=>({id:d.id,...d.data()}));
     renderLanc(cacheLanc);
   }
 
@@ -134,31 +156,31 @@
     const tb=$('#tabLanc tbody'); tb.innerHTML='';
     let tRegs=0,tQtd=0,tVal=0;
     const porFiscal=new Map(), porTipo=new Map();
-
     rows.forEach(r=>{
       tRegs++; tQtd += Number(r.quantidade||0); tVal += Number(r.valor||0);
       const tr=document.createElement('tr');
-      tr.innerHTML = `<td>${r.data||''}</td><td>${r.usuario||''}</td><td>${r.empresa||''}</td><td>${r.descricao||''}</td>
-                      <td>${r.quantidade||0}</td><td>${r.valor?numberToBRL(r.valor):''}</td><td>${r.destino||''}</td><td>${r.descricaoResumida||''}</td>`;
+      tr.innerHTML=`<td>${r.data||''}</td><td>${r.usuario||''}</td><td>${r.empresa||''}</td><td>${r.descricao||''}</td>
+        <td>${r.quantidade||0}</td><td>${r.valor?numberToBRL(r.valor):''}</td><td>${r.destino||''}</td><td>${r.descricaoResumida||''}</td>`;
       tb.appendChild(tr);
       porFiscal.set(r.usuario,(porFiscal.get(r.usuario)||0)+Number(r.quantidade||0));
       porTipo.set(r.descricaoResumida,(porTipo.get(r.descricaoResumida)||0)+Number(r.quantidade||0));
     });
-
     $('#tRegs').textContent=tRegs;
     $('#tQtd').textContent=tQtd;
     $('#tVal').textContent=numberToBRL(tVal);
-    $('#resFiscal').innerHTML = Array.from(porFiscal.entries()).map(([k,v])=>`<div>• <strong>${k}:</strong> ${v}</div>`).join('') || '<em>—</em>';
-    $('#resTipo').innerHTML = Array.from(porTipo.entries()).map(([k,v])=>`<div>• <strong>${k}:</strong> ${v}</div>`).join('') || '<em>—</em>';
+    $('#resFiscal').innerHTML=Array.from(porFiscal.entries()).map(([k,v])=>`<div>• <strong>${k}:</strong> ${v}</div>`).join('')||'<em>—</em>';
+    $('#resTipo').innerHTML=Array.from(porTipo.entries()).map(([k,v])=>`<div>• <strong>${k}:</strong> ${v}</div>`).join('')||'<em>—</em>';
   }
 
-  // =================== PDF ===================
-  $('#btnPDF').onclick = ()=>gerarPDF(cacheLanc, sess, $('#dIni').value, $('#dFim').value, $('#numRel').value);
+  $('#btnFiltrar').onclick=filtrar;
+  $('#btnPDF').onclick=()=>gerarPDF(cacheLanc,sess,$('#dIni').value,$('#dFim').value,$('#numRel').value);
 
-  // =================== INICIAL ===================
   (function init(){
-    setPeriodo(7);
+    const fim=new Date(), ini=new Date(); ini.setDate(ini.getDate()-7);
+    $('#dIni').value=ini.toISOString().slice(0,10);
+    $('#dFim').value=fim.toISOString().slice(0,10);
     filtrar();
+    inicializarUsuarios(db); // ← inicializa módulo de usuários
   })();
 </script>
 </body>
