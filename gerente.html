@@ -297,7 +297,7 @@ $('#btnPDF').onclick = () => {
   </div>`;
 
   html2pdf().set({
-  margin: [5, 1, 1, 1], // aumenta margem para evitar corte
+  margin: [5, 20, 1, 1], // aumenta margem para evitar corte
   pagebreak: { mode: ['css', 'avoid-all', 'legacy'] },
   filename: `Relatorio_${String(num).padStart(3, '0')}_${ano}.pdf`,
   image: { type: 'jpeg', quality: 1 },
