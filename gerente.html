@@ -294,20 +294,20 @@ $('#btnPDF').onclick = () => {
     </p>
   </div>`;
 
-  // --- Geração do PDF ---
   html2pdf().set({
-    margin: [5, 10, 10, 10],                   // margens simétricas
-    pagebreak: { mode: ['avoid-all'] },
-    filename: `Relatorio_${String(num).padStart(3, '0')}_${ano}.pdf`,
-    image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: {
-      scale: 2,                               // reduz zoom -> evita corte lateral
-      useCORS: true,
-      scrollY: 0,
-      windowWidth: 900                          // força captura com largura adequada
-    },
-    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-  }).from(relatorio).save();
+  margin: [15, 15, 15, 15], // aumenta margem para evitar corte
+  pagebreak: { mode: ['css', 'avoid-all', 'legacy'] },
+  filename: `Relatorio_${String(num).padStart(3, '0')}_${ano}.pdf`,
+  image: { type: 'jpeg', quality: 1 },
+  html2canvas: {
+    scale: 1.5,           // reduz zoom
+    useCORS: true,
+    scrollY: 0,
+    windowWidth: 650      // igual à largura do conteúdo do relatório
+  },
+  jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+}).from(relatorio).save();
+
 };
 
 
