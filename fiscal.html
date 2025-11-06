@@ -392,7 +392,12 @@
               window.scrollTo({top:0, behavior:'smooth'});
             }
           };
-        });
+       
+import { inicializarConversor } from "./converter_xlsx.js";
+inicializarConversor(db, sess, addDoc, collection, serverTimestamp, renderMeus, showMsg);
+ 
+        
+       });
 
         // Excluir
         document.querySelectorAll('[data-del]').forEach(btn=>{
