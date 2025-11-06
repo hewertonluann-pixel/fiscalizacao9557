@@ -390,6 +390,35 @@ tfoot td{
               <button class="act del" title="Excluir" data-del="${docSnap.id}">🗑️</button>
             </td>`;
           tbody.appendChild(tr);
+
+
+// ======= ORDENAR TABELA LOCALMENTE =======
+const headers = document.querySelectorAll('#tab thead th');
+headers.forEach((th, idx) => {
+  th.style.cursor = 'pointer';
+  th.title = 'Clique para ordenar';
+  th.onclick = () => ordenarTabela(idx);
+});
+
+function ordenarTabela(colIndex) {
+  const tbody = document.querySelector('#tab tbody');
+  const rows = Array.from(tbody.querySelectorAll('tr'));
+  const asc = thUltimo !== colIndex ? true : !ascUltima;
+  thUltimo = colIndex; ascUltima = asc;
+
+  rows.sort((a, b) => {
+    const A = a.children[colIndex].innerText.trim();
+    const B = b.children[colIndex].innerText.trim();
+    if (!isNaN(A) && !isNaN(B)) return asc ? A - B : B - A;
+    return asc ? A.localeCompare(B) : B.localeCompare(A);
+  });
+
+  rows.forEach(r => tbody.appendChild(r));
+}
+let thUltimo = null, ascUltima = true;
+
+
+
         });
 
         // Totais
