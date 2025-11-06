@@ -359,9 +359,6 @@ tfoot td{
         }catch(e){ console.error(e); showMsg('Erro ao salvar.','err'); }
       };
 
-
-
-
       // ======= LISTAR =======
       async function renderMeus(){
         if(!sess) return;
@@ -389,11 +386,9 @@ tfoot td{
             <td>${r.destino||''}</td>
             <td>${r.descricaoResumida||''}</td>
             <td style="white-space:nowrap">
-  <button class="act" title="Editar" data-edit="${docSnap.id}">✏️</button>
-  <button class="act dup" title="Duplicar" data-dup="${docSnap.id}">➕</button>
-  <button class="act del" title="Excluir" data-del="${docSnap.id}">🗑️</button>
-</td>
-`;
+              <button class="act" title="Editar" data-edit="${docSnap.id}">✏️</button>
+              <button class="act del" title="Excluir" data-del="${docSnap.id}">🗑️</button>
+            </td>`;
           tbody.appendChild(tr);
 
 
@@ -497,33 +492,7 @@ function ordenarTabela(colIndex) {
             }
           };
         });
-      
-// Duplicar
-document.querySelectorAll('[data-dup]').forEach(btn=>{
-  btn.onclick = async ()=>{
-    const id = btn.getAttribute('data-dup');
-    const lancSnap = await getDocs(query(collection(db,'lancamentos'), where('__name__','==',id)));
-    if(!lancSnap.empty){
-      const r = lancSnap.docs[0].data();
-      // Preenche o formulário com os mesmos dados, mas não muda o editandoId
-      $('#fData').value = r.data || new Date().toISOString().slice(0,10);
-      $('#fEmpresa').value = r.empresa || '';
-      $('#fCnpjCpf').value = r.cnpj || '';
-      $('#fDesc').value = r.descricao || '';
-      $('#fQtd').value = r.quantidade || 1;
-      $('#fValor').value = r.valor ? 'R$ ' + Number(r.valor).toFixed(2).replace('.',',') : '';
-      $('#fDestino').value = r.destino || '';
-      $('#fResumo').value = r.descricaoResumida || '';
-      editandoId = null; // garante que será um novo registro
-      $('#tituloForm').textContent = 'Novo lançamento (duplicado)';
-      $('#btnAdd').textContent = 'Adicionar';
-      showMsg('Lançamento duplicado! Você pode alterar e salvar.','ok');
-      window.scrollTo({top:0, behavior:'smooth'});
-    }
-  };
-});
-
-}
+      }
 
       renderMeus();
 
