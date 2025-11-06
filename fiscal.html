@@ -392,7 +392,7 @@ tfoot td{
           tbody.appendChild(tr);
 
 
-// ======= ORDENAR TABELA LOCALMENTE =======
+// ======= ORDENAR TABELA LOCALMENTE (com suporte a R$ e datas) =======
 const headers = document.querySelectorAll('#tab thead th');
 headers.forEach((th, idx) => {
   th.style.cursor = 'pointer';
@@ -400,26 +400,58 @@ headers.forEach((th, idx) => {
   th.onclick = () => ordenarTabela(idx);
 });
 
+let thUltimo = null, ascUltima = true;
+
 function ordenarTabela(colIndex) {
   const tbody = document.querySelector('#tab tbody');
   const rows = Array.from(tbody.querySelectorAll('tr'));
   const asc = thUltimo !== colIndex ? true : !ascUltima;
-  thUltimo = colIndex; ascUltima = asc;
+  thUltimo = colIndex;
+  ascUltima = asc;
 
   rows.sort((a, b) => {
-    const A = a.children[colIndex].innerText.trim();
-    const B = b.children[colIndex].innerText.trim();
-    if (!isNaN(A) && !isNaN(B)) return asc ? A - B : B - A;
+    let A = a.children[colIndex].innerText.trim();
+    let B = b.children[colIndex].innerText.trim();
+
+    // 🔹 1. Tenta converter valores R$ corretamente
+    const parseBRL = v => parseFloat(v.replace(/[^\d,.-]/g, '').replace(/\./g, '').replace(',', '.')) || 0;
+    if (A.includes('R$') || B.includes('R$')) {
+      A = parseBRL(A);
+      B = parseBRL(B);
+      return asc ? A - B : B - A;
+    }
+
+    // 🔹 2. Tenta converter datas no formato dd-mm-aaaa
+    const parseDate = v => {
+      const parts = v.split(/[-/]/);
+      if (parts.length === 3) {
+        const [d, m, y] = parts.map(n => parseInt(n, 10));
+        if (!isNaN(d) && !isNaN(m) && !isNaN(y)) return new Date(y, m - 1, d).getTime();
+      }
+      return null;
+    };
+    const dateA = parseDate(A);
+    const dateB = parseDate(B);
+    if (dateA && dateB) return asc ? dateA - dateB : dateB - dateA;
+
+    // 🔹 3. Tenta converter para número simples (ex: quantidade)
+    const numA = parseFloat(A.replace(',', '.'));
+    const numB = parseFloat(B.replace(',', '.'));
+    if (!isNaN(numA) && !isNaN(numB)) return asc ? numA - numB : numB - numA;
+
+    // 🔹 4. Fallback: ordena como texto normal
     return asc ? A.localeCompare(B) : B.localeCompare(A);
   });
 
   rows.forEach(r => tbody.appendChild(r));
 }
-let thUltimo = null, ascUltima = true;
 
 
 
         });
+
+
+
 
         // Totais
         $('#tfootTotal').textContent = `Total do mês: ${numberToBRL(soma)}`;
