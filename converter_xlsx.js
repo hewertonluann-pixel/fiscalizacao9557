@@ -4,7 +4,7 @@ export function inicializarConversor(db, sess, addDoc, collection, serverTimesta
   btnConverter.className = 'btn-ghost';
   document.querySelector('.card .hd').appendChild(btnConverter);
 
-  // Modal de prévia
+  // ===== MODAL DE PRÉVIA =====
   const modal = document.createElement('div');
   modal.style.cssText = `
     position:fixed; inset:0; background:rgba(0,0,0,0.6);
@@ -26,6 +26,8 @@ export function inicializarConversor(db, sess, addDoc, collection, serverTimesta
     </div>
   `;
   document.body.appendChild(modal);
+
+  // ===== ELEMENTOS =====
   const tabelaDiv = modal.querySelector('#prevTabela');
   const btnCancelar = modal.querySelector('#btnCancelarPrev');
   const btnConfirmar = modal.querySelector('#btnConfirmarPrev');
@@ -34,6 +36,7 @@ export function inicializarConversor(db, sess, addDoc, collection, serverTimesta
   const info = modal.querySelector('#progInfo');
   btnCancelar.onclick = () => (modal.style.display = 'none');
 
+  // ===== BOTÃO PRINCIPAL =====
   btnConverter.onclick = async () => {
     const text = await navigator.clipboard.readText();
     if (!text.trim()) { showMsg('Nenhum texto copiado.', 'err'); return; }
@@ -63,10 +66,13 @@ export function inicializarConversor(db, sess, addDoc, collection, serverTimesta
       const idxQtd = cols.findIndex(p => /^\d+$/.test(p));
       if (idxQtd >= 0) qtd = parseInt(cols[idxQtd], 10);
 
-      // índice do valor
+      // índice do valor (corrigido para formato brasileiro)
       const idxValor = cols.findIndex(p => /R?\$/.test(p));
       if (idxValor >= 0) {
-        const raw = cols[idxValor].replace(/[^\d,.-]/g, "").replace(",", ".");
+        const raw = cols[idxValor]
+          .replace(/[^\d,.-]/g, '') // remove R$, espaços e outros símbolos
+          .replace(/\./g, '')       // remove pontos de milhar
+          .replace(',', '.');       // troca vírgula decimal por ponto
         valor = parseFloat(raw) || 0;
       }
 
@@ -114,7 +120,9 @@ export function inicializarConversor(db, sess, addDoc, collection, serverTimesta
               <td>${d.cnpj}</td>
               <td>${d.descricao}</td>
               <td style="text-align:center">${d.quantidade}</td>
-              <td style="text-align:right">${d.valor ? d.valor.toFixed(2).replace('.', ',') : '0,00'}</td>
+              <td style="text-align:right;${d.valor === 0 ? 'color:#dc2626;font-weight:600;' : ''}">
+                ${d.valor ? d.valor.toLocaleString('pt-BR', {minimumFractionDigits: 2}) : '0,00'}
+              </td>
               <td>${d.destino || '-'}</td>
               <td>${d.descricaoResumida}</td>
             </tr>`).join('')}
