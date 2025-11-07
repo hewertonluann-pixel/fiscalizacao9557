@@ -1,4 +1,4 @@
-// relatorio.js — Relatório PDF otimizado com gráfico horizontal e tabela dupla compacta
+// relatorio.js — Relatório PDF com duas tabelas lado a lado e gráfico horizontal
 export function gerarPDF(lancamentos, sess, dIni, dFim, numInput) {
   if (!lancamentos || lancamentos.length === 0) {
     alert('Nenhum dado carregado.');
@@ -25,7 +25,6 @@ export function gerarPDF(lancamentos, sess, dIni, dFim, numInput) {
   // ===== Totais
   let totalGeral = 0, totalArrec = 0;
   let totalISS = 0, totalTFLF = 0;
-  const outrosValores = {};
 
   filtrado.forEach(r => {
     const valor = Number(r.valor || 0);
@@ -37,9 +36,6 @@ export function gerarPDF(lancamentos, sess, dIni, dFim, numInput) {
       totalISS += valor;
     } else if (tipo.includes('apuração de tflf')) {
       totalTFLF += valor;
-    } else {
-      outrosValores[r.descricaoResumida || 'Outros'] =
-        (outrosValores[r.descricaoResumida || 'Outros'] || 0) + valor;
     }
   });
 
@@ -57,13 +53,13 @@ export function gerarPDF(lancamentos, sess, dIni, dFim, numInput) {
   const formatarData = d => new Date(d + 'T00:00:00').toLocaleDateString('pt-BR');
   const periodo = `${formatarData(dIni)} a ${formatarData(dFim)}`;
 
-  // ===== Compactar a tabela em duas colunas
+  // ===== Dividir os itens entre duas tabelas
   const pares = Object.entries(resumo).filter(([_, qtd]) => qtd > 0);
   const metade = Math.ceil(pares.length / 2);
   const col1 = pares.slice(0, metade);
   const col2 = pares.slice(metade);
 
-  // ===== HTML inicial
+  // ===== HTML do relatório
   let html = `
   <div style="font-family:Arial,Helvetica,sans-serif;max-width:700px;margin:0 auto;line-height:1.4;">
     <div style="display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:4px;">
@@ -89,32 +85,43 @@ export function gerarPDF(lancamentos, sess, dIni, dFim, numInput) {
       Seguem as atividades realizadas no período de <strong>${periodo}</strong>:
     </p>
 
-    <!-- ===== TABELA DUPLA COMPACTA ===== -->
-    <table style="width:100%;border-collapse:collapse;margin-top:10px;font-size:12px;">
-      <thead>
-        <tr style="background:#f1f5f9;">
-          <th style="text-align:left;padding:3px 6px;border-bottom:2px solid #444;">Tipo de Serviço</th>
-          <th style="text-align:right;padding:3px 6px;border-bottom:2px solid #444;">Qtd</th>
-          <th style="text-align:left;padding:3px 6px;border-bottom:2px solid #444;">Tipo de Serviço</th>
-          <th style="text-align:right;padding:3px 6px;border-bottom:2px solid #444;">Qtd</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${col1.map((c, i) => {
-          const direita = col2[i];
-          return `
+    <!-- ===== DUAS TABELAS LADO A LADO ===== -->
+    <div style="display:flex;gap:12px;justify-content:space-between;margin-top:10px;">
+      <table style="width:50%;border-collapse:collapse;font-size:12px;">
+        <thead>
+          <tr style="background:#f1f5f9;">
+            <th style="text-align:left;padding:3px 6px;border-bottom:2px solid #444;">Tipo de Serviço</th>
+            <th style="text-align:right;padding:3px 6px;border-bottom:2px solid #444;">Qtd</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${col1.map(([serv, qtd]) => `
             <tr>
-              <td style="padding:3px 6px;border-bottom:1px solid #ddd;">${c[0]}</td>
-              <td style="text-align:right;padding:3px 6px;border-bottom:1px solid #ddd;">${c[1]}</td>
-              <td style="padding:3px 6px;border-bottom:1px solid #ddd;">${direita ? direita[0] : ''}</td>
-              <td style="text-align:right;padding:3px 6px;border-bottom:1px solid #ddd;">${direita ? direita[1] : ''}</td>
-            </tr>`;
-        }).join('')}
-      </tbody>
-    </table>
+              <td style="padding:3px 6px;border-bottom:1px solid #ddd;">${serv}</td>
+              <td style="text-align:right;padding:3px 6px;border-bottom:1px solid #ddd;">${qtd}</td>
+            </tr>`).join('')}
+        </tbody>
+      </table>
+
+      <table style="width:50%;border-collapse:collapse;font-size:12px;">
+        <thead>
+          <tr style="background:#f1f5f9;">
+            <th style="text-align:left;padding:3px 6px;border-bottom:2px solid #444;">Tipo de Serviço</th>
+            <th style="text-align:right;padding:3px 6px;border-bottom:2px solid #444;">Qtd</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${col2.map(([serv, qtd]) => `
+            <tr>
+              <td style="padding:3px 6px;border-bottom:1px solid #ddd;">${serv}</td>
+              <td style="text-align:right;padding:3px 6px;border-bottom:1px solid #ddd;">${qtd}</td>
+            </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
 
     <!-- ===== RESUMO FINANCEIRO ===== -->
-    <div style="margin-top:14px;padding:10px;border:1px solid #ccc;border-radius:6px;background:#f9fafb;font-size:13px;">
+    <div style="margin-top:16px;padding:10px;border:1px solid #ccc;border-radius:6px;background:#f9fafb;font-size:13px;">
       <strong>Total de atividades:</strong> ${totalGeral}<br>
       <strong>Valor arrecadado:</strong> ${totalBRL}<br><br>
       <strong>Composição do valor arrecadado:</strong><br>
@@ -126,29 +133,27 @@ export function gerarPDF(lancamentos, sess, dIni, dFim, numInput) {
     <h4 style="text-align:center;margin-top:20px;">Composição visual do valor arrecadado</h4>
     <canvas id="graficoComposicao" width="600" height="220"></canvas>
 
-    ${totalOutros > 0 ? `
-      <h4 style="margin-top:22px;">Detalhamento dos "Outros Serviços"</h4>
-      <table style="width:100%;border-collapse:collapse;font-size:12px;">
-        <thead><tr style="background:#f1f5f9;">
-          <th style="text-align:left;padding:4px 6px;border-bottom:2px solid #444;">Tipo de Serviço</th>
-          <th style="text-align:right;padding:4px 6px;border-bottom:2px solid #444;">Valor (R$)</th>
-        </tr></thead>
-        <tbody>
-          ${Object.entries(outrosValores)
-            .map(([serv, val]) => `
-              <tr>
-                <td style="border-bottom:1px solid #ddd;padding:3px 6px;">${serv}</td>
-                <td style="text-align:right;border-bottom:1px solid #ddd;padding:3px 6px;">
-                  ${val.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}
-                </td>
-              </tr>`).join('')}
-        </tbody>
-      </table>
-    ` : ''}
+    <!-- ===== FECHAMENTO ===== -->
+    <p style="margin-top:24px;font-size:13px;">
+      Sendo o que tínhamos a relatar para o momento, colocamo-nos à disposição para eventuais esclarecimentos.
+    </p>
+
+    <p style="margin-top:36px;text-align:center;font-size:14px;line-height:1.6;">
+      <strong>Atenciosamente,</strong><br><br>
+      _______________________________<br>
+      <strong>${gerente}</strong><br>
+      Gerente de Fiscalização Tributária<br>
+      Prefeitura Municipal de Diamantina/MG
+    </p>
+
+    <hr style="margin:18px 0;border:0;border-top:1px solid #999;">
+    <p style="text-align:center;font-size:11px;color:#555;">
+      Gerado automaticamente pelo Sistema de Produção — ${dataGer}
+    </p>
   </div>
   `;
 
-  // ===== Renderizar gráfico com Chart.js
+  // ===== Renderizar gráfico Chart.js e gerar PDF
   const container = document.createElement('div');
   container.innerHTML = html;
   document.body.appendChild(container);
