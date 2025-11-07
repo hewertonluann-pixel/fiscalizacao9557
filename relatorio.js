@@ -1,4 +1,4 @@
-// relatorio.js — Relatório PDF com duas tabelas lado a lado e gráfico horizontal
+// relatorio.js — Relatório PDF com duas tabelas lado a lado, gráfico horizontal e fechamento em nova página
 export function gerarPDF(lancamentos, sess, dIni, dFim, numInput) {
   if (!lancamentos || lancamentos.length === 0) {
     alert('Nenhum dado carregado.');
@@ -53,7 +53,7 @@ export function gerarPDF(lancamentos, sess, dIni, dFim, numInput) {
   const formatarData = d => new Date(d + 'T00:00:00').toLocaleDateString('pt-BR');
   const periodo = `${formatarData(dIni)} a ${formatarData(dFim)}`;
 
-  // ===== Dividir os itens entre duas tabelas
+  // ===== Dividir os serviços em duas tabelas
   const pares = Object.entries(resumo).filter(([_, qtd]) => qtd > 0);
   const metade = Math.ceil(pares.length / 2);
   const col1 = pares.slice(0, metade);
@@ -62,6 +62,7 @@ export function gerarPDF(lancamentos, sess, dIni, dFim, numInput) {
   // ===== HTML do relatório
   let html = `
   <div style="font-family:Arial,Helvetica,sans-serif;max-width:700px;margin:0 auto;line-height:1.4;">
+    <!-- Cabeçalho -->
     <div style="display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:4px;">
       <img src="brasao.png" alt="Brasão" style="height:65px;">
       <div style="text-align:center;">
@@ -133,27 +134,29 @@ export function gerarPDF(lancamentos, sess, dIni, dFim, numInput) {
     <h4 style="text-align:center;margin-top:20px;">Composição visual do valor arrecadado</h4>
     <canvas id="graficoComposicao" width="600" height="220"></canvas>
 
-    <!-- ===== FECHAMENTO ===== -->
-    <p style="margin-top:24px;font-size:13px;">
-      Sendo o que tínhamos a relatar para o momento, colocamo-nos à disposição para eventuais esclarecimentos.
-    </p>
+    <!-- ===== NOVA PÁGINA PARA FECHAMENTO ===== -->
+    <div style="page-break-before: always; margin-top:40px;">
+      <p style="font-size:13px;">
+        Sendo o que tínhamos a relatar para o momento, colocamo-nos à disposição para eventuais esclarecimentos.
+      </p>
 
-    <p style="margin-top:36px;text-align:center;font-size:14px;line-height:1.6;">
-      <strong>Atenciosamente,</strong><br><br>
-      _______________________________<br>
-      <strong>${gerente}</strong><br>
-      Gerente de Fiscalização Tributária<br>
-      Prefeitura Municipal de Diamantina/MG
-    </p>
+      <p style="margin-top:60px;text-align:center;font-size:14px;line-height:1.6;">
+        <strong>Atenciosamente,</strong><br><br>
+        _______________________________<br>
+        <strong>${gerente}</strong><br>
+        Gerente de Fiscalização Tributária<br>
+        Prefeitura Municipal de Diamantina/MG
+      </p>
 
-    <hr style="margin:18px 0;border:0;border-top:1px solid #999;">
-    <p style="text-align:center;font-size:11px;color:#555;">
-      Gerado automaticamente pelo Sistema de Produção — ${dataGer}
-    </p>
+      <hr style="margin:18px 0;border:0;border-top:1px solid #999;">
+      <p style="text-align:center;font-size:11px;color:#555;">
+        Gerado automaticamente pelo Sistema de Produção — ${dataGer}
+      </p>
+    </div>
   </div>
   `;
 
-  // ===== Renderizar gráfico Chart.js e gerar PDF
+  // ===== Renderizar gráfico com Chart.js e gerar PDF
   const container = document.createElement('div');
   container.innerHTML = html;
   document.body.appendChild(container);
