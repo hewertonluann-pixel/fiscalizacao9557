@@ -7,6 +7,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <!-- Chart.js Global (necessário para o módulo do gráfico) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     :root{
       --bg:#f6f7fb;--card:#fff;--ink:#111827;--muted:#6b7280;
@@ -97,10 +99,22 @@
           <button id="btnPDF" class="pill" style="background:#10b981;color:#fff">🖨️ Gerar PDF</button>
         </div>
 
-        <h3>Resumo por Fiscal</h3>
-        <div id="resFiscal"></div>
-        <h3>Resumo por Tipo de Serviço</h3>
-        <div id="resTipo"></div>
+        <!-- ======= RESUMOS (ESQ) + GRÁFICO (DIR) ======= -->
+        <div style="display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap;margin-top:20px;">
+          <!-- Bloco de resumos -->
+          <div style="flex:1;min-width:320px">
+            <h3>Resumo por Fiscal</h3>
+            <div id="resFiscal"></div>
+            <h3>Resumo por Tipo de Serviço</h3>
+            <div id="resTipo"></div>
+          </div>
+          <!-- Gráfico -->
+          <div style="flex:1;min-width:320px;max-width:520px">
+            <h3 style="text-align:center;">Composição do Valor Arrecadado</h3>
+            <canvas id="graficoResumo" width="420" height="260"></canvas>
+          </div>
+        </div>
+        <!-- =============================================== -->
       </div>
     </div>
 
@@ -147,6 +161,7 @@
     import { getFirestore, collection, getDocs, query, where, orderBy } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
     import { gerarPDF } from "./relatorio.js";
     import { inicializarUsuarios } from "./usuarios.js";
+    import { gerarGraficoResumo } from "./graficoResumo.js";
 
     const firebaseConfig = {
       apiKey:"AIzaSyANrr4R5JtJ9GmO0j-1X8-9CvBmYkC4oCI",
@@ -172,34 +187,49 @@
     async function filtrar(){
       const dIni=$('#dIni').value, dFim=$('#dFim').value;
       if(!dIni||!dFim)return;
-      const qLanc=query(collection(db,'lancamentos'),
+
+      // OBS: Se 'data' no Firestore for Timestamp, é melhor trazer tudo e filtrar em memória.
+      // Mantive sua query original (strings). Ajuste se necessário.
+      const qLanc=query(
+        collection(db,'lancamentos'),
         where('data','>=',dIni),
         where('data','<=',dFim),
         orderBy('data','asc')
       );
+
       const snap=await getDocs(qLanc);
       cacheLanc=snap.docs.map(d=>({id:d.id,...d.data()}));
+
       renderLanc(cacheLanc);
+      // desenha/atualiza o gráfico ao lado dos resumos
+      gerarGraficoResumo(cacheLanc);
     }
 
     function renderLanc(rows){
       const tb=$('#tabLanc tbody'); tb.innerHTML='';
       let tRegs=0,tQtd=0,tVal=0;
       const porFiscal=new Map(), porTipo=new Map();
+
       rows.forEach(r=>{
         tRegs++; tQtd+=Number(r.quantidade||0); tVal+=Number(r.valor||0);
         const tr=document.createElement('tr');
         tr.innerHTML=`<td>${r.data||''}</td><td>${r.usuario||''}</td><td>${r.empresa||''}</td><td>${r.descricao||''}</td>
           <td>${r.quantidade||0}</td><td>${r.valor?numberToBRL(r.valor):''}</td><td>${r.destino||''}</td><td>${r.descricaoResumida||''}</td>`;
         tb.appendChild(tr);
+
         porFiscal.set(r.usuario,(porFiscal.get(r.usuario)||0)+Number(r.quantidade||0));
         porTipo.set(r.descricaoResumida,(porTipo.get(r.descricaoResumida)||0)+Number(r.quantidade||0));
       });
+
       $('#tRegs').textContent=tRegs;
       $('#tQtd').textContent=tQtd;
       $('#tVal').textContent=numberToBRL(tVal);
-      $('#resFiscal').innerHTML=Array.from(porFiscal.entries()).map(([k,v])=>`<div>• <strong>${k}:</strong> ${v}</div>`).join('')||'<em>—</em>';
-      $('#resTipo').innerHTML=Array.from(porTipo.entries()).map(([k,v])=>`<div>• <strong>${k}:</strong> ${v}</div>`).join('')||'<em>—</em>';
+
+      $('#resFiscal').innerHTML=Array.from(porFiscal.entries())
+        .map(([k,v])=>`<div>• <strong>${k}:</strong> ${v}</div>`).join('') || '<em>—</em>';
+
+      $('#resTipo').innerHTML=Array.from(porTipo.entries())
+        .map(([k,v])=>`<div>• <strong>${k}:</strong> ${v}</div>`).join('') || '<em>—</em>';
     }
 
     $('#btnFiltrar').onclick=filtrar;
@@ -209,8 +239,8 @@
       const fim=new Date(), ini=new Date(); ini.setDate(ini.getDate()-7);
       $('#dIni').value=ini.toISOString().slice(0,10);
       $('#dFim').value=fim.toISOString().slice(0,10);
-      filtrar();
-      inicializarUsuarios(db);
+      filtrar();               // já renderiza resumos e gráfico ao abrir
+      inicializarUsuarios(db); // mantém sua gestão de usuários
     })();
   </script>
 </body>
