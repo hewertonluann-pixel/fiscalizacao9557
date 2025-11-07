@@ -185,25 +185,26 @@
 
     let cacheLanc=[];
     async function filtrar(){
-      const dIni=$('#dIni').value, dFim=$('#dFim').value;
-      if(!dIni||!dFim)return;
+  const dIni = new Date($('#dIni').value + "T00:00:00");
+  const dFim = new Date($('#dFim').value + "T23:59:59");
+  const qLanc = query(collection(db,'lancamentos'), orderBy('data','asc'));
+  const snap = await getDocs(qLanc);
 
-      // OBS: Se 'data' no Firestore for Timestamp, é melhor trazer tudo e filtrar em memória.
-      // Mantive sua query original (strings). Ajuste se necessário.
-      const qLanc=query(
-        collection(db,'lancamentos'),
-        where('data','>=',dIni),
-        where('data','<=',dFim),
-        orderBy('data','asc')
-      );
-
-      const snap=await getDocs(qLanc);
-      cacheLanc=snap.docs.map(d=>({id:d.id,...d.data()}));
-
-      renderLanc(cacheLanc);
-      // desenha/atualiza o gráfico ao lado dos resumos
-      gerarGraficoResumo(cacheLanc);
+  const dados = [];
+  snap.forEach(doc => {
+    const r = doc.data();
+    const dataRegistro = r.data?.toDate ? r.data.toDate() : new Date(r.data);
+    if (dataRegistro >= dIni && dataRegistro <= dFim) {
+      r.data = dataRegistro.toLocaleDateString('pt-BR');
+      dados.push(r);
     }
+  });
+
+  cacheLanc = dados;
+  renderLanc(cacheLanc);
+  gerarGraficoResumo(cacheLanc);
+}
+
 
     function renderLanc(rows){
       const tb=$('#tabLanc tbody'); tb.innerHTML='';
