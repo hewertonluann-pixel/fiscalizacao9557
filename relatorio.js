@@ -42,7 +42,8 @@ export function gerarPDF(lancamentos, sess, dIni, dFim, numInput) {
     }
   });
 
-  const totalOutros = totalArrec - totalISS - totalTFLF - totalAuto;
+  // ===== Garante que "Outros" nunca seja negativo
+  const totalOutros = Math.max(0, totalArrec - totalISS - totalTFLF - totalAuto);
 
   // ===== Dados do relatório
   let num = parseInt(numInput || '0');
@@ -187,6 +188,7 @@ export function gerarPDF(lancamentos, sess, dIni, dFim, numInput) {
         scales: {
           x: {
             beginAtZero: true,
+            min: 0, // força início no zero
             ticks: { callback: v => 'R$ ' + v.toLocaleString('pt-BR') }
           }
         }
