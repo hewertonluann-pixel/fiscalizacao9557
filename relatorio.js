@@ -22,9 +22,9 @@ export function gerarPDF(lancamentos, sess, dIni, dFim, numInput) {
     resumo[tipo] = (resumo[tipo] || 0) + Number(r.quantidade || 0);
   });
 
-  // ===== Totais
+  // ===== Totais financeiros
   let totalGeral = 0, totalArrec = 0;
-  let totalISS = 0, totalTFLF = 0;
+  let totalISS = 0, totalTFLF = 0, totalAuto = 0;
 
   filtrado.forEach(r => {
     const valor = Number(r.valor || 0);
@@ -32,14 +32,17 @@ export function gerarPDF(lancamentos, sess, dIni, dFim, numInput) {
     totalArrec += valor;
 
     const tipo = (r.descricaoResumida || '').toLowerCase();
+
     if (tipo.includes('lançamento de tributo') || tipo.includes('emissão de guia de issqn')) {
       totalISS += valor;
-    } else if (tipo.includes('apuração de tflf')) {
+    } else if (tipo.includes('tflf') || tipo.includes('apuração de tflf')) {
       totalTFLF += valor;
+    } else if (tipo.includes('auto de infração')) {
+      totalAuto += valor;
     }
   });
 
-  const totalOutros = totalArrec - totalISS - totalTFLF;
+  const totalOutros = totalArrec - totalISS - totalTFLF - totalAuto;
 
   // ===== Dados do relatório
   let num = parseInt(numInput || '0');
@@ -128,6 +131,7 @@ export function gerarPDF(lancamentos, sess, dIni, dFim, numInput) {
       <strong>Composição do valor arrecadado:</strong><br>
       • ISSQN (Lançamento de Tributo): ${totalISS.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}<br>
       • TFLF (Apuração de TFLF): ${totalTFLF.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}<br>
+      • Auto de Infração: ${totalAuto.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}<br>
       • Outros serviços: ${totalOutros.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}
     </div>
 
@@ -169,11 +173,11 @@ export function gerarPDF(lancamentos, sess, dIni, dFim, numInput) {
     new Chart(ctx, {
       type: 'bar',
       data: {
-        labels: ['ISSQN', 'TFLF', 'Outros'],
+        labels: ['ISSQN', 'TFLF', 'Auto de Infração', 'Outros'],
         datasets: [{
           label: 'Valor arrecadado (R$)',
-          data: [totalISS, totalTFLF, totalOutros],
-          backgroundColor: ['#2563eb', '#16a34a', '#6b7280']
+          data: [totalISS, totalTFLF, totalAuto, totalOutros],
+          backgroundColor: ['#2563eb', '#16a34a', '#f59e0b', '#6b7280']
         }]
       },
       options: {
@@ -183,9 +187,7 @@ export function gerarPDF(lancamentos, sess, dIni, dFim, numInput) {
         scales: {
           x: {
             beginAtZero: true,
-            ticks: {
-              callback: v => 'R$ ' + v.toLocaleString('pt-BR')
-            }
+            ticks: { callback: v => 'R$ ' + v.toLocaleString('pt-BR') }
           }
         }
       }
