@@ -47,16 +47,22 @@
     #modalUser .box{background:#fff;padding:20px;border-radius:12px;max-width:400px;width:90%;box-shadow:0 4px 12px rgba(0,0,0,.3)}
     .msg.ok{color:var(--good)}.msg.err{color:var(--bad)}
 
-    /* === Novo layout do painel de resumos e gráfico === */
+    /* === Painel de resumos e gráfico === */
     #painelResumo {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      grid-template-columns: auto auto 1fr; /* duas colunas dinâmicas e o gráfico flexível */
       gap: 16px;
       align-items: start;
       margin-top: 16px;
     }
     #painelResumo .card { margin-bottom: 0; }
-    #graficoResumo { width:100%; height:280px; }
+    #graficoResumo { width:100%; height:320px; }
+
+    @media (max-width: 960px) {
+      #painelResumo {
+        grid-template-columns: 1fr;
+      }
+    }
   </style>
 </head>
 <body>
