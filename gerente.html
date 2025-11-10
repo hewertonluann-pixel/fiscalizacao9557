@@ -6,6 +6,7 @@
   <title>Gerente — Sistema de Produção Tributário</title>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <style>
     :root{
@@ -45,6 +46,17 @@
     #modalUser{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);display:none;justify-content:center;align-items:center;z-index:100}
     #modalUser .box{background:#fff;padding:20px;border-radius:12px;max-width:400px;width:90%;box-shadow:0 4px 12px rgba(0,0,0,.3)}
     .msg.ok{color:var(--good)}.msg.err{color:var(--bad)}
+
+    /* === Novo layout do painel de resumos e gráfico === */
+    #painelResumo {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 16px;
+      align-items: start;
+      margin-top: 16px;
+    }
+    #painelResumo .card { margin-bottom: 0; }
+    #graficoResumo { width:100%; height:280px; }
   </style>
 </head>
 <body>
@@ -97,10 +109,21 @@
           <button id="btnPDF" class="pill" style="background:#10b981;color:#fff">🖨️ Gerar PDF</button>
         </div>
 
-        <h3>Resumo por Fiscal</h3>
-        <div id="resFiscal"></div>
-        <h3>Resumo por Tipo de Serviço</h3>
-        <div id="resTipo"></div>
+        <!-- Painel de resumos + gráfico -->
+        <div id="painelResumo">
+          <div class="card">
+            <div class="hd">Resumo por Fiscal</div>
+            <div class="bd" id="resFiscal"></div>
+          </div>
+          <div class="card">
+            <div class="hd">Resumo por Tipo de Serviço</div>
+            <div class="bd" id="resTipo"></div>
+          </div>
+          <div class="card">
+            <div class="hd">Composição do Valor Arrecadado</div>
+            <div class="bd"><canvas id="graficoResumo"></canvas></div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -147,6 +170,7 @@
     import { getFirestore, collection, getDocs, query, where, orderBy } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
     import { gerarPDF } from "./relatorio.js";
     import { inicializarUsuarios } from "./usuarios.js";
+    import { gerarGraficoResumo } from "./graficoResumo.js";
 
     const firebaseConfig = {
       apiKey:"AIzaSyANrr4R5JtJ9GmO0j-1X8-9CvBmYkC4oCI",
@@ -200,6 +224,9 @@
       $('#tVal').textContent=numberToBRL(tVal);
       $('#resFiscal').innerHTML=Array.from(porFiscal.entries()).map(([k,v])=>`<div>• <strong>${k}:</strong> ${v}</div>`).join('')||'<em>—</em>';
       $('#resTipo').innerHTML=Array.from(porTipo.entries()).map(([k,v])=>`<div>• <strong>${k}:</strong> ${v}</div>`).join('')||'<em>—</em>';
+
+      // Atualiza o gráfico sempre que renderizar
+      gerarGraficoResumo(rows);
     }
 
     $('#btnFiltrar').onclick=filtrar;
