@@ -117,19 +117,15 @@ tfoot td{
     /* Ações com ícones */
     .act{background:transparent; color:var(--primary); border:0; cursor:pointer; padding:6px}
     .act.del{color:var(--bad)}
-    .act[title]{position:relative}
-
-    /* Estilo para linhas com erro (tipos de serviço inválidos) */
-    tr.row-invalid{
-      background-color:#fee2e2 !important;
-      border-left:4px solid var(--bad);
+    .act[title]{position:relative}0px;
+        font-size: 12px;
+        background-color: var(--primary);
+        color: var(--primary-ink);
+        border: 0;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
     }
-    tr.row-invalid td{
-      color:var(--bad);
-      font-weight:600;
-    }
-
-    /* Badge de aviso */
     .badge-error{
       display:inline-block;
       background:var(--bad);
@@ -142,6 +138,19 @@ tfoot td{
     }
 
     /* Seção de erros no topo */
+    .error-item-details { flex-grow: 1; }
+    .error-item-actions { margin-left: 16px; }
+    .error-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 12px;
+      background: #fff;
+      border-left: 3px solid var(--bad);
+      margin-bottom: 8px;
+      border-radius: 4px;
+      font-size: 13px;
+    }
     .errors-section{
       margin-bottom:20px;
       padding:12px 16px;
@@ -454,54 +463,56 @@ tfoot td{
 
           // Se o tipo é inválido, adiciona ao array de erros
           if(!isValidServiceType(r.descricaoResumida)){
-            erros.push({
+            lancamentos.push({
               id: docSnap.id,
-              empresa: r.empresa || 'Sem empresa',
-              tipo: r.descricaoResumida || 'Sem tipo'
+              data: r.data,
+              dd, mm, y,
+              empresa: r.empresa,
+              cnpj: r.cnpj,
+              descricao: r.descricao,
+              quantidade: r.quantidade,
+              valor: r.valor,
+              destino: r.destino,
+              descricaoResumida: r.descricaoResumida,
+              isValid: false
             });
+          } else {
+            // Apenas lança os válidos para a lista principal
+            const tr=document.createElement('tr');
+            tr.innerHTML=`
+              <td>${dd}-${mm}-${y}</td>
+              <td title="${r.empresa||''}">${r.empresa||''}</td>
+              <td>${r.cnpj||''}</td>
+              <td title="${r.descricao||''}">${r.descricao||''}</td>
+              <td>${r.quantidade||0}</td>
+              <td>${numberToBRL(r.valor)}</td>
+              <td>${r.destino||''}</td>
+              <td>${r.descricaoResumida||''}</td>
+              <td style="white-space:nowrap">
+                <button class="act" title="Editar" data-edit="${docSnap.id}">✏️</button>
+                <button class="act del" title="Excluir" data-del="${docSnap.id}">🗑️</button>
+              </td>`;
+            tbody.appendChild(tr);
           }
         });
 
-        // Ordena: inválidos primeiro, depois válidos
-        lancamentos.sort((a, b) => {
-          if(a.isValid === b.isValid) return 0;
-          return a.isValid ? 1 : -1;
-        });
-
-        // Renderiza os lançamentos
-        lancamentos.forEach(r => {
-          const tr=document.createElement('tr');
-          if(!r.isValid){
-            tr.className='row-invalid';
-          }
-          tr.innerHTML=`
-            <td>${r.dd}-${r.mm}-${r.y}</td>
-            <td title="${r.empresa||''}">${r.empresa||''}</td>
-            <td>${r.cnpj||''}</td>
-            <td title="${r.descricao||''}">${r.descricao||''}</td>
-            <td>${r.quantidade||0}</td>
-            <td>${numberToBRL(r.valor)}</td>
-            <td>${r.destino||''}</td>
-            <td>
-              ${!r.isValid ? '<span class="badge-error">INVÁLIDO</span>' : ''}
-              ${r.descricaoResumida||''}
-            </td>
-            <td style="white-space:nowrap">
-              <button class="act" title="Editar" data-edit="${r.id}">✏️</button>
-              <button class="act del" title="Excluir" data-del="${r.id}">🗑️</button>
-            </td>`;
-          tbody.appendChild(tr);
-        });
+        // Filtra os lançamentos inválidos (que foram adicionados ao array 'lancamentos' no loop)
+        const lancamentosInvalidos = lancamentos.filter(l => !l.isValid);
 
         // Exibe a seção de erros se houver
         const errorsSection = $('#errorsSection');
         const errorsList = $('#errorsList');
-        if(erros.length > 0){
+        if(lancamentosInvalidos.length > 0){
           errorsSection.classList.add('show');
-          errorsList.innerHTML = erros.map(e => `
+          errorsList.innerHTML = lancamentosInvalidos.map(e => `
             <div class="error-item">
-              <strong>${e.empresa}</strong> — Tipo inválido: "<strong>${e.tipo}</strong>"
-              <br><small>Correção necessária! - Escolha um tipo de serviço válido</small>
+              <div class="error-item-details">
+                <strong>${e.empresa}</strong> — Tipo inválido: "<strong>${e.descricaoResumida}</strong>"
+                <br><small>Correção necessária! - Escolha um tipo de serviço válido. (Observação: Aproveite para revisar todos os campos)</small>
+              </div>
+              <div class="error-item-actions">
+                  <button class="btn-corrigir" data-edit="${e.id}">Corrigir</button>
+              </div>
             </div>
           `).join('');
         }else{
@@ -571,7 +582,23 @@ tfoot td{
         $('#tfootTotal').textContent = `Total do mês: ${numberToBRL(soma)}`;
         $('#totalMes').textContent = `Total filtrado: ${numberToBRL(soma)}`;
 
-        // Editar
+        // Anexa os eventos de clique aos botões 'Editar' e 'Corrigir'
+        attachEditListeners();
+        
+        // Excluir
+        document.querySelectorAll('[data-del]').forEach(btn=>{
+          btn.onclick=async ()=>{
+            if(confirm('Deseja excluir este lançamento?')){
+              await deleteDoc(doc(db,'lancamentos',btn.getAttribute('data-del')));
+              showMsg('Lançamento excluído.','ok');
+              renderMeus();
+            }
+          };
+        });
+      }
+
+      // Função para anexar os listeners de edição (usada após a renderização)
+      function attachEditListeners(){
         document.querySelectorAll('[data-edit]').forEach(btn=>{
           btn.onclick = async ()=>{
             const id = btn.getAttribute('data-edit');
@@ -589,19 +616,8 @@ tfoot td{
               editandoId=id;
               $('#tituloForm').textContent='Editar lançamento';
               $('#btnAdd').textContent='Salvar alterações';
-              showMsg('Editando lançamento...','ok');
+              showMsg('Corrigindo lançamento... Aproveite para revisar todos os campos.', 'ok');
               window.scrollTo({top:0, behavior:'smooth'});
-            }
-          };
-        });
-
-        // Excluir
-        document.querySelectorAll('[data-del]').forEach(btn=>{
-          btn.onclick=async ()=>{
-            if(confirm('Deseja excluir este lançamento?')){
-              await deleteDoc(doc(db,'lancamentos',btn.getAttribute('data-del')));
-              showMsg('Lançamento excluído.','ok');
-              renderMeus();
             }
           };
         });
