@@ -1,9 +1,10 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Fiscal — Sistema de Produção (Validação)</title>
+  <title>Fiscal — Sistema de Produção</title>
 
   <!-- Fonte & Reset visual -->
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -40,7 +41,7 @@
       background:#f3f4f6; color:#111827; border-radius:999px; padding:6px 10px; font-size:12px; font-weight:600;
     }
 
-    .wrap{max-width:1100px; margin:0 auto; padding:98px 16px 24px;}
+    .wrap{max-width:1100px; margin:0 auto; padding:98px 16px 24px;} /* padding-top para não ficar sob o header */
     h1{font-size:22px; margin:0 0 4px}
     .sub{color:var(--muted); margin:0 0 12px}
     .msg{display:none; margin:10px 0; font-weight:600}
@@ -86,22 +87,22 @@
     
 /* ======= TABELA OTIMIZADA PARA DESKTOP ======= */
 .table-wrap{
-  overflow:hidden;
+  overflow:hidden;           /* remove qualquer rolagem */
 }
 table{
   width:100%;
   border-collapse:collapse;
   border-spacing:0;
-  table-layout:fixed;
+  table-layout:fixed;        /* distribui as colunas proporcionalmente */
 }
 th, td{
   padding:10px 10px;
   border-bottom:1px solid var(--border);
   text-align:left;
   font-size:13.5px;
-  white-space:nowrap;
+  white-space:nowrap;        /* impede quebra de linha */
   overflow:hidden;
-  text-overflow:ellipsis;
+  text-overflow:ellipsis;    /* adiciona "..." se o texto for longo */
 }
 thead th{
   background:#f3f4f6;
@@ -114,79 +115,21 @@ tfoot td{
   background:#fafafa;
 }
 
+
     /* Ações com ícones */
     .act{background:transparent; color:var(--primary); border:0; cursor:pointer; padding:6px}
     .act.del{color:var(--bad)}
-    .act[title]{position:relative}0px;
-        font-size: 12px;
-        background-color: var(--primary);
-        color: var(--primary-ink);
-        border: 0;
-        border-radius: 8px;
-        cursor: pointer;
-        font-weight: 600;
-    }
-    .badge-error{
-      display:inline-block;
-      background:var(--bad);
-      color:#fff;
-      padding:4px 8px;
-      border-radius:6px;
-      font-size:11px;
-      font-weight:700;
-      margin-right:6px;
-    }
+    .act[title]{position:relative}
 
-    /* Seção de erros no topo */
-    .error-item-details { flex-grow: 1; }
-    .error-item-actions { margin-left: 16px; }
-    .error-item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 8px 12px;
-      background: #fff;
-      border-left: 3px solid var(--bad);
-      margin-bottom: 8px;
-      border-radius: 4px;
-      font-size: 13px;
-    }
-    .errors-section{
-      margin-bottom:20px;
-      padding:12px 16px;
-      background:#fef2f2;
-      border:1px solid #fecaca;
-      border-radius:10px;
-      display:none;
-    }
-    .errors-section.show{
-      display:block;
-    }
-    .errors-section h3{
-      margin:0 0 12px;
-      color:var(--bad);
-      font-size:14px;
-    }
-    .error-item{
-      padding:8px 12px;
-      background:#fff;
-      border-left:3px solid var(--bad);
-      margin-bottom:8px;
-      border-radius:4px;
-      font-size:13px;
-    }
-    .error-item:last-child{
-      margin-bottom:0;
-    }
-
+    /* Responsividade: empilhar cards no mobile já é natural pelo grid auto-fit */
   </style>
 </head>
 <body>
   <!-- Cabeçalho fixo padrão -->
   <header class="header">
     <div>
-      <div class="title">Sistema de Produção Tributário — Painel do Fiscal (Validação)</div>
-      <div class="sub">Registre seus serviços e valide tipos de serviço</div>
+      <div class="title">Sistema de Produção Tributário — Painel do Fiscal</div>
+      <div class="sub">Registre seus serviços e acompanhe seus lançamentos</div>
     </div>
     <div class="right">
       <span id="who" class="who-badge">Conectando…</span>
@@ -247,12 +190,6 @@ tfoot td{
       </div>
     </div>
 
-    <!-- Seção de Erros (Tipos de Serviço Inválidos) -->
-    <div id="errorsSection" class="errors-section">
-      <h3>⚠️ Correção Necessária - Tipos de Serviço Inválidos</h3>
-      <div id="errorsList"></div>
-    </div>
-
     <!-- Lista -->
     <div class="card">
       <div class="hd">
@@ -288,6 +225,9 @@ tfoot td{
     import {
       getFirestore, collection, addDoc, serverTimestamp, query, where, orderBy, getDocs, deleteDoc, doc, updateDoc
     } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+
+    import { inicializarConversor } from "./converter_xlsx.js";
+
 
     window.addEventListener('DOMContentLoaded', () => {
 
@@ -340,15 +280,9 @@ tfoot td{
         "Serviços Especiais","Serviços Especiais (Sec. Fazenda)","Verifiação de Livro Fiscal/Contábil",
         "Verificação de NFS-e/Documentos","Viagem (por Dia)","Vistoria in loco"
       ];
-      
       const datalist = $('#listaServicos');
       datalist.innerHTML='';
       TIPOS.forEach(t=>{ const o=document.createElement('option'); o.value=t; datalist.appendChild(o); });
-
-      // ======= FUNÇÃO DE VALIDAÇÃO DE TIPO DE SERVIÇO =======
-      function isValidServiceType(tipo) {
-        return TIPOS.includes(tipo);
-      }
 
       // ======= MÁSCARAS =======
       const cnpjEl = $('#fCnpjCpf');
@@ -426,7 +360,7 @@ tfoot td{
         }catch(e){ console.error(e); showMsg('Erro ao salvar.','err'); }
       };
 
-      // ======= LISTAR COM VALIDAÇÃO =======
+      // ======= LISTAR =======
       async function renderMeus(){
         if(!sess) return;
         const q = query(collection(db,'lancamentos'), where('usuario','==',sess.nome), orderBy('data','desc'));
@@ -435,11 +369,6 @@ tfoot td{
         tbody.innerHTML='';
         let soma = 0;
 
-        // Array para armazenar erros
-        let erros = [];
-
-        // Primeiro, processa todos os lançamentos
-        const lancamentos = [];
         snap.forEach(docSnap=>{
           const r = docSnap.data();
           const [y,mm,dd]=(r.data||'').split('-');
@@ -447,161 +376,93 @@ tfoot td{
           if(mesAtivo && parseInt(mm)!=mesAtivo) return;
           soma += Number(r.valor||0);
 
-          lancamentos.push({
-            id: docSnap.id,
-            data: r.data,
-            dd, mm, y,
-            empresa: r.empresa,
-            cnpj: r.cnpj,
-            descricao: r.descricao,
-            quantidade: r.quantidade,
-            valor: r.valor,
-            destino: r.destino,
-            descricaoResumida: r.descricaoResumida,
-            isValid: isValidServiceType(r.descricaoResumida)
-          });
+          const tr=document.createElement('tr');
+          tr.innerHTML=`
+            <td>${dd}-${mm}-${y}</td>
+            <td title="${r.empresa||''}">${r.empresa||''}</td>
+            <td>${r.cnpj||''}</td>
+            <td title="${r.descricao||''}">${r.descricao||''}</td>
+            <td>${r.quantidade||0}</td>
+            <td>${numberToBRL(r.valor)}</td>
+            <td>${r.destino||''}</td>
+            <td>${r.descricaoResumida||''}</td>
+            <td style="white-space:nowrap">
+              <button class="act" title="Editar" data-edit="${docSnap.id}">✏️</button>
+              <button class="act del" title="Excluir" data-del="${docSnap.id}">🗑️</button>
+            </td>`;
+          tbody.appendChild(tr);
 
-          // Se o tipo é inválido, adiciona ao array de erros
-          if(!isValidServiceType(r.descricaoResumida)){
-            lancamentos.push({
-              id: docSnap.id,
-              data: r.data,
-              dd, mm, y,
-              empresa: r.empresa,
-              cnpj: r.cnpj,
-              descricao: r.descricao,
-              quantidade: r.quantidade,
-              valor: r.valor,
-              destino: r.destino,
-              descricaoResumida: r.descricaoResumida,
-              isValid: false
-            });
-          } else {
-            // Apenas lança os válidos para a lista principal
-            const tr=document.createElement('tr');
-            tr.innerHTML=`
-              <td>${dd}-${mm}-${y}</td>
-              <td title="${r.empresa||''}">${r.empresa||''}</td>
-              <td>${r.cnpj||''}</td>
-              <td title="${r.descricao||''}">${r.descricao||''}</td>
-              <td>${r.quantidade||0}</td>
-              <td>${numberToBRL(r.valor)}</td>
-              <td>${r.destino||''}</td>
-              <td>${r.descricaoResumida||''}</td>
-              <td style="white-space:nowrap">
-                <button class="act" title="Editar" data-edit="${docSnap.id}">✏️</button>
-                <button class="act del" title="Excluir" data-del="${docSnap.id}">🗑️</button>
-              </td>`;
-            tbody.appendChild(tr);
-          }
+
+// ======= ORDENAR TABELA LOCALMENTE (com suporte a R$ e datas) =======
+const headers = document.querySelectorAll('#tab thead th');
+headers.forEach((th, idx) => {
+  th.style.cursor = 'pointer';
+  th.title = 'Clique para ordenar';
+  th.onclick = () => ordenarTabela(idx);
+});
+
+let thUltimo = null, ascUltima = true;
+
+function ordenarTabela(colIndex) {
+  const tbody = document.querySelector('#tab tbody');
+  const rows = Array.from(tbody.querySelectorAll('tr'));
+  const asc = thUltimo !== colIndex ? true : !ascUltima;
+  thUltimo = colIndex;
+  ascUltima = asc;
+
+  rows.sort((a, b) => {
+    let A = a.children[colIndex].innerText.trim();
+    let B = b.children[colIndex].innerText.trim();
+
+    // 🔹 1. Tenta converter valores R$ corretamente
+    const parseBRL = v => parseFloat(v.replace(/[^\d,.-]/g, '').replace(/\./g, '').replace(',', '.')) || 0;
+    if (A.includes('R$') || B.includes('R$')) {
+      A = parseBRL(A);
+      B = parseBRL(B);
+      return asc ? A - B : B - A;
+    }
+
+    // 🔹 2. Tenta converter datas no formato dd-mm-aaaa
+    const parseDate = v => {
+      const parts = v.split(/[-/]/);
+      if (parts.length === 3) {
+        const [d, m, y] = parts.map(n => parseInt(n, 10));
+        if (!isNaN(d) && !isNaN(m) && !isNaN(y)) return new Date(y, m - 1, d).getTime();
+      }
+      return null;
+    };
+    const dateA = parseDate(A);
+    const dateB = parseDate(B);
+    if (dateA && dateB) return asc ? dateA - dateB : dateB - dateA;
+
+    // 🔹 3. Tenta converter para número simples (ex: quantidade)
+    const numA = parseFloat(A.replace(',', '.'));
+    const numB = parseFloat(B.replace(',', '.'));
+    if (!isNaN(numA) && !isNaN(numB)) return asc ? numA - numB : numB - numA;
+
+    // 🔹 4. Fallback: ordena como texto normal
+    return asc ? A.localeCompare(B) : B.localeCompare(A);
+  });
+
+  rows.forEach(r => tbody.appendChild(r));
+}
+
+
+
         });
 
-        // Filtra os lançamentos inválidos (que foram adicionados ao array 'lancamentos' no loop)
-        const lancamentosInvalidos = lancamentos.filter(l => !l.isValid);
 
-        // Exibe a seção de erros se houver
-        const errorsSection = $('#errorsSection');
-        const errorsList = $('#errorsList');
-        if(lancamentosInvalidos.length > 0){
-          errorsSection.classList.add('show');
-          errorsList.innerHTML = lancamentosInvalidos.map(e => `
-            <div class="error-item">
-              <div class="error-item-details">
-                <strong>${e.empresa}</strong> — Tipo inválido: "<strong>${e.descricaoResumida}</strong>"
-                <br><small>Correção necessária! - Escolha um tipo de serviço válido. (Observação: Aproveite para revisar todos os campos)</small>
-              </div>
-              <div class="error-item-actions">
-                  <button class="btn-corrigir" data-edit="${e.id}">Corrigir</button>
-              </div>
-            </div>
-          `).join('');
-        }else{
-          errorsSection.classList.remove('show');
-          errorsList.innerHTML = '';
-        }
 
-        // ======= ORDENAR TABELA LOCALMENTE =======
-        const headers = document.querySelectorAll('#tab thead th');
-        headers.forEach((th, idx) => {
-          th.style.cursor = 'pointer';
-          th.title = 'Clique para ordenar';
-          th.onclick = () => ordenarTabela(idx);
-        });
-
-        let thUltimo = null, ascUltima = true;
-
-        function ordenarTabela(colIndex) {
-          const tbody = document.querySelector('#tab tbody');
-          const rows = Array.from(tbody.querySelectorAll('tr'));
-          const asc = thUltimo !== colIndex ? true : !ascUltima;
-          thUltimo = colIndex;
-          ascUltima = asc;
-
-          rows.sort((a, b) => {
-            let A = a.children[colIndex].innerText.trim();
-            let B = b.children[colIndex].innerText.trim();
-
-            // Remove badge de inválido para comparação
-            A = A.replace('INVÁLIDO', '').trim();
-            B = B.replace('INVÁLIDO', '').trim();
-
-            // Tenta converter valores R$ corretamente
-            const parseBRL = v => parseFloat(v.replace(/[^\d,.-]/g, '').replace(/\./g, '').replace(',', '.')) || 0;
-            if (A.includes('R$') || B.includes('R$')) {
-              A = parseBRL(A);
-              B = parseBRL(B);
-              return asc ? A - B : B - A;
-            }
-
-            // Tenta converter datas no formato dd-mm-aaaa
-            const parseDate = v => {
-              const parts = v.split(/[-/]/);
-              if (parts.length === 3) {
-                const [d, m, y] = parts.map(n => parseInt(n, 10));
-                if (!isNaN(d) && !isNaN(m) && !isNaN(y)) return new Date(y, m - 1, d).getTime();
-              }
-              return null;
-            };
-            const dateA = parseDate(A);
-            const dateB = parseDate(B);
-            if (dateA && dateB) return asc ? dateA - dateB : dateB - dateA;
-
-            // Tenta converter para número simples
-            const numA = parseFloat(A.replace(',', '.'));
-            const numB = parseFloat(B.replace(',', '.'));
-            if (!isNaN(numA) && !isNaN(numB)) return asc ? numA - numB : numB - numA;
-
-            // Fallback: ordena como texto normal
-            return asc ? A.localeCompare(B) : B.localeCompare(A);
-          });
-
-          rows.forEach(r => tbody.appendChild(r));
-        }
 
         // Totais
         $('#tfootTotal').textContent = `Total do mês: ${numberToBRL(soma)}`;
         $('#totalMes').textContent = `Total filtrado: ${numberToBRL(soma)}`;
 
-        // Anexa os eventos de clique aos botões 'Editar' e 'Corrigir'
-        attachEditListeners();
-        
-        // Excluir
-        document.querySelectorAll('[data-del]').forEach(btn=>{
-          btn.onclick=async ()=>{
-            if(confirm('Deseja excluir este lançamento?')){
-              await deleteDoc(doc(db,'lancamentos',btn.getAttribute('data-del')));
-              showMsg('Lançamento excluído.','ok');
-              renderMeus();
-            }
-          };
-        });
-      }
-
-      // Função para anexar os listeners de edição (usada após a renderização)
-      function attachEditListeners(){
+        // Editar
         document.querySelectorAll('[data-edit]').forEach(btn=>{
           btn.onclick = async ()=>{
             const id = btn.getAttribute('data-edit');
+            // pega pelo id
             const lancSnap = await getDocs(query(collection(db,'lancamentos'), where('__name__','==',id)));
             if(!lancSnap.empty){
               const r = lancSnap.docs[0].data();
@@ -616,14 +477,28 @@ tfoot td{
               editandoId=id;
               $('#tituloForm').textContent='Editar lançamento';
               $('#btnAdd').textContent='Salvar alterações';
-              showMsg('Corrigindo lançamento... Aproveite para revisar todos os campos.', 'ok');
+              showMsg('Editando lançamento...','ok');
               window.scrollTo({top:0, behavior:'smooth'});
+            }
+          };
+        });
+
+        // Excluir
+        document.querySelectorAll('[data-del]').forEach(btn=>{
+          btn.onclick=async ()=>{
+            if(confirm('Deseja excluir este lançamento?')){
+              await deleteDoc(doc(db,'lancamentos',btn.getAttribute('data-del')));
+              showMsg('Lançamento excluído.','ok');
+              renderMeus();
             }
           };
         });
       }
 
       renderMeus();
+
+// 🧩 Inicializa o botão "Converter texto copiado"
+  inicializarConversor(db, sess, addDoc, collection, serverTimestamp, renderMeus, showMsg);
 
       // Sair
       $('#btnSair').onclick=()=>{ localStorage.removeItem('sessao_usuario'); location.href='index.html'; };
