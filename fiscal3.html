@@ -234,8 +234,9 @@ tfoot td{
             <input id="fResumo" list="listaServicos" placeholder="Digite ou selecione o tipo de serviço">
             <datalist id="listaServicos"></datalist>
           </div>
-          <div style="align-self:end">
+          <div style="align-self:end; display:flex; gap:12px">
             <button id="btnAdd" type="button">Adicionar</button>
+            <button id="btnConverter" class="btn-ghost" type="button">Converter texto copiado (planilha)</button>
           </div>
         </div>
       </div>
@@ -296,6 +297,8 @@ tfoot td{
     import {
       getFirestore, collection, addDoc, serverTimestamp, query, where, orderBy, getDocs, deleteDoc, doc, updateDoc
     } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+
+    import { inicializarConversor } from "./converter_xlsx.js";
 
     window.addEventListener('DOMContentLoaded', () => {
 
@@ -679,6 +682,9 @@ tfoot td{
       }
 
       renderMeus();
+
+      // 🧩 Inicializa o botão "Converter texto copiado"
+      inicializarConversor(db, sess, addDoc, collection, serverTimestamp, renderMeus, showMsg);
 
       // Sair
       $('#btnSair').onclick=()=>{ localStorage.removeItem('sessao_usuario'); location.href='index.html'; };
