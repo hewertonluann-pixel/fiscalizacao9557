@@ -821,17 +821,54 @@ tfoot td{
         });
       }
 
-      // ======= EXCLUIR TODAS AS DUPLICIDADES =======
+      // ======= EXCLUIR TODAS AS DUPLICIDADES (mantendo um registro) =======
       $('#btnDeleteAllDuplicates').onclick = async ()=>{
-        const duplicateIds = $$('[data-delete-dup]').map(btn => btn.getAttribute('data-delete-dup'));
-        if(duplicateIds.length === 0) return;
-        if(!confirm(`Deseja excluir ${duplicateIds.length} duplicidade(s)? Esta ação não pode ser desfeita.`)) return;
+        // Recarrega os lançamentos para obter os dados atualizados
+        const q = query(collection(db,'lancamentos'), where('usuario','==',sess.nome), orderBy('data','desc'));
+        const snap = await getDocs(q);
+        const lancamentos = [];
+        snap.forEach(docSnap=>{
+          const r = docSnap.data();
+          lancamentos.push({
+            id: docSnap.id,
+            data: r.data,
+            empresa: r.empresa,
+            cnpj: r.cnpj,
+            descricao: r.descricao,
+            quantidade: r.quantidade,
+            valor: r.valor,
+            descricaoResumida: r.descricaoResumida
+          });
+        });
+
+        // Detecta duplicidades
+        const { groups } = detectDuplicates(lancamentos);
+        const idsToDelete = [];
+        let countToDelete = 0;
+
+        // Para cada grupo de duplicidades, mantém o primeiro e marca os outros para exclusão
+        Object.values(groups).forEach(group => {
+          if(group.length > 1){
+            // Mantém o primeiro (mais antigo ou primeiro na lista)
+            for(let i = 1; i < group.length; i++){
+              idsToDelete.push(group[i].id);
+              countToDelete++;
+            }
+          }
+        });
+
+        if(idsToDelete.length === 0){
+          showMsg('Nenhuma duplicidade para excluir.','ok');
+          return;
+        }
+
+        if(!confirm(`Deseja excluir ${countToDelete} cópia(s) de duplicidade(s)? Será mantido um registro de cada grupo. Esta ação não pode ser desfeita.`)) return;
 
         try{
-          for(const id of duplicateIds){
+          for(const id of idsToDelete){
             await deleteDoc(doc(db,'lancamentos',id));
           }
-          showMsg(`${duplicateIds.length} duplicidade(s) excluída(s).`,'ok');
+          showMsg(`${countToDelete} cópia(s) de duplicidade(s) excluída(s). Um registro de cada grupo foi mantido.`,'ok');
           renderMeus();
         }catch(e){
           console.error(e);
