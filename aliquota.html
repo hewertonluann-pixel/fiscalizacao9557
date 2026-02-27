@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Consulta de Alíquota ISSQN — Diamantina</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #0b1120;
+      color: #e2e8f0;
+      font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      padding: 24px 16px 48px;
+    }
+
+    /* ── CABEÇALHO ── */
+    .cabecalho {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+    .cabecalho h1 {
+      font-size: 1.55rem;
+      font-weight: 800;
+      color: #38bdf8;
+      line-height: 1.3;
+    }
+    .cabecalho p {
+      margin-top: 6px;
+      font-size: 0.88rem;
+      color: #94a3b8;
+      max-width: 560px;
+      margin-inline: auto;
+    }
+    .badge-lei {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 10px;
+      background: rgba(56,189,248,0.1);
+      border: 1px solid rgba(56,189,248,0.3);
+      border-radius: 999px;
+      padding: 4px 14px;
+      font-size: 0.75rem;
+      color: #7dd3fc;
+      font-weight: 600;
+    }
+
+    /* ── BUSCA ── */
+    .busca-wrap {
+      max-width: 680px;
+      margin: 0 auto 28px;
+      position: relative;
+    }
+    .busca-wrap input {
+      width: 100%;
+      padding: 14px 52px 14px 18px;
+      background: #1e293b;
+      border: 1.5px solid rgba(56,189,248,0.3);
+      border-radius: 12px;
+      color: #f1f5f9;
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .busca-wrap input:focus {
+      border-color: #38bdf8;
+      box-shadow: 0 0 0 3px rgba(56,189,248,0.15);
+    }
+    .busca-wrap input::placeholder { color: #64748b; }
+    .busca-icone {
+      position: absolute;
+      right: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 1.2rem;
+      pointer-events: none;
+    }
+    .busca-hint {
+      text-align: center;
+      font-size: 0.78rem;
+      color: #475569;
+      margin-top: 8px;
+    }
+
+    /* ── RESULTADOS ── */
+    #resultados {
+      max-width: 860px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .estado-vazio {
+      text-align: center;
+      color: #475569;
+      padding: 48px 20px;
+      font-size: 0.95rem;
+    }
+    .estado-vazio .icone { font-size: 2.5rem; margin-bottom: 10px; }
+
+    /* ── CARD RESULTADO ── */
+    .card-resultado {
+      background: linear-gradient(145deg, #0f172a, #0b1526);
+      border: 1px solid rgba(56,189,248,0.2);
+      border-radius: 14px;
+      padding: 18px 20px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      align-items: start;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .card-resultado:hover {
+      border-color: rgba(56,189,248,0.5);
+      box-shadow: 0 6px 24px rgba(0,0,0,0.4);
+    }
+
+    .card-esquerda { display: flex; flex-direction: column; gap: 8px; }
+
+    .card-subitem {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: #38bdf8;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    .card-descricao {
+      font-size: 0.97rem;
+      font-weight: 600;
+      color: #f1f5f9;
+      line-height: 1.45;
+    }
+    .card-grupo {
+      font-size: 0.78rem;
+      color: #64748b;
+    }
+    .card-grupo strong { color: #94a3b8; }
+
+    .card-cbo {
+      font-size: 0.75rem;
+      color: #94a3b8;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-top: 2px;
+    }
+    .tag-cbo {
+      background: rgba(99,102,241,0.12);
+      border: 1px solid rgba(99,102,241,0.3);
+      border-radius: 6px;
+      padding: 2px 7px;
+      font-size: 0.7rem;
+      color: #a5b4fc;
+    }
+
+    .card-direita {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+    .badge-aliquota {
+      font-size: 1.7rem;
+      font-weight: 900;
+      color: #f8fafc;
+      background: linear-gradient(135deg, #0ea5e9, #6366f1);
+      border-radius: 10px;
+      padding: 10px 18px;
+      line-height: 1;
+      white-space: nowrap;
+    }
+    .badge-aliquota-label {
+      font-size: 0.68rem;
+      color: #64748b;
+      text-align: center;
+    }
+
+    /* relevância */
+    .score-bar {
+      width: 100%;
+      height: 3px;
+      background: rgba(255,255,255,0.06);
+      border-radius: 999px;
+      overflow: hidden;
+      margin-top: 2px;
+    }
+    .score-fill {
+      height: 100%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #38bdf8, #818cf8);
+    }
+
+    /* destaque de texto encontrado */
+    mark {
+      background: rgba(250,204,21,0.25);
+      color: #fde68a;
+      border-radius: 3px;
+      padding: 0 2px;
+    }
+
+    /* aviso alíquota especial */
+    .aviso-minimo {
+      font-size: 0.72rem;
+      color: #fbbf24;
+      margin-top: 4px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* ── RODAPÉ ── */
+    .rodape {
+      text-align: center;
+      margin-top: 40px;
+      font-size: 0.75rem;
+      color: #334155;
+    }
+    .rodape a { color: #475569; }
+
+    @media (max-width: 520px) {
+      .card-resultado { grid-template-columns: 1fr; }
+      .card-direita { flex-direction: row; align-items: center; justify-content: flex-start; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="cabecalho">
+    <h1>📋 Consulta de Alíquota ISSQN</h1>
+    <p>Digite a atividade ou profissão que será descrita no documento fiscal para identificar a alíquota correta.</p>
+    <span class="badge-lei">⚖️ LC 112 — Art. 40 — Prefeitura de Diamantina/MG</span>
+  </div>
+
+  <div class="busca-wrap">
+    <input type="text" id="campoBusca"
+           placeholder="Ex: programação, médico, pedreiro, professor, advogado..."
+           autocomplete="off" spellcheck="false" />
+    <span class="busca-icone">🔍</span>
+    <div class="busca-hint">A busca cruza a descrição com a Lista de Serviços da LC 116 e com o CBO 2002</div>
+  </div>
+
+  <div id="resultados">
+    <div class="estado-vazio">
+      <div class="icone">📂</div>
+      <div>Digite uma atividade acima para consultar a alíquota de ISSQN aplicável.</div>
+    </div>
+  </div>
+
+  <div class="rodape">
+    Base: Lei Complementar nº 112 (Código Tributário Municipal de Diamantina) — Art. 40, Tabela II &bull;
+    Lista de Serviços LC Federal 116/2003 &bull; CBO 2002 (MTE)
+  </div>
+
+<script>
+// ================================================================
+//  BASE DE DADOS — Lista de Serviços LC 116 + Alíquotas LC 112/Art.40
+//  Estrutura: { sub, grupo, descricao, aliquota, cbo: ["código — título", ...], palavras: [] }
+// ================================================================
+const SERVICOS = [
+  // ── 1. INFORMÁTICA ──────────────────────────────────────────────
+  { sub:"1.01", grupo:"Informática e congêneres", descricao:"Análise e desenvolvimento de sistemas.", aliquota:3,
+    cbo:["2122-05 — Engenheiro de aplicativos em computação","2123-05 — Analista de sistemas","2124-05 — Analista de tecnologia da informação"],
+    palavras:["análise","desenvolvimento","sistemas","analista","software","ti","tecnologia informação"] },
+  { sub:"1.02", grupo:"Informática e congêneres", descricao:"Programação.", aliquota:3,
+    cbo:["2122-05 — Programador de sistemas","3171-10 — Programador de computador"],
+    palavras:["programação","programador","código","código","developer","desenvolvedor","web","app","mobile","frontend","backend"] },
+  { sub:"1.03", grupo:"Informática e congêneres", descricao:"Processamento, armazenamento ou hospedagem de dados, textos, imagens, vídeos, páginas eletrônicas, aplicativos e sistemas de informação.", aliquota:3,
+    cbo:["2123-10 — Administrador de banco de dados"],
+    palavras:["processamento","armazenamento","hospedagem","dados","cloud","servidor","hosting","banco dados"] },
+  { sub:"1.04", grupo:"Informática e congêneres", descricao:"Elaboração de programas de computadores, inclusive de jogos eletrônicos.", aliquota:3,
+    cbo:["2122-05 — Engenheiro de software","3172-05 — Técnico de suporte ao usuário de tecnologia da informação"],
+    palavras:["elaboração","programa","computador","jogo","game","software"] },
+  { sub:"1.05", grupo:"Informática e congêneres", descricao:"Licenciamento ou cessão de direito de uso de programas de computação.", aliquota:3,
+    cbo:["2122-05 — Engenheiro de software"],
+    palavras:["licenciamento","cessão","licença","saas","programa","computação"] },
+  { sub:"1.06", grupo:"Informática e congêneres", descricao:"Assessoria e consultoria em informática.", aliquota:3,
+    cbo:["2123-20 — Consultor de tecnologia da informação"],
+    palavras:["assessoria","consultoria","informática","consultor","ti"] },
+  { sub:"1.07", grupo:"Informática e congêneres", descricao:"Suporte técnico em informática, inclusive instalação, configuração e manutenção de programas de computação e bancos de dados.", aliquota:3,
+    cbo:["3172-05 — Técnico de suporte ao usuário","3171-05 — Técnico de redes"],
+    palavras:["suporte","técnico","manutenção","instalação","configuração","helpdesk","help desk","rede","computador"] },
+  { sub:"1.08", grupo:"Informática e congêneres", descricao:"Planejamento, confecção, manutenção e atualização de páginas eletrônicas.", aliquota:3,
+    cbo:["2124-25 — Web designer"],
+    palavras:["página","site","website","web","internet","blog","wordpress","atualização"] },
+  { sub:"1.09", grupo:"Informática e congêneres", descricao:"Disponibilização, sem cessão definitiva, de conteúdo de áudio, vídeo, imagem e texto por meio da internet.", aliquota:3,
+    cbo:["2534-10 — Influenciador digital","3741-05 — Técnico em produção de áudio"],
+    palavras:["streaming","conteúdo","digital","áudio","vídeo","imagem","texto","internet","influencer"] },
+
+  // ── 2. PESQUISA E DESENVOLVIMENTO ───────────────────────────────
+  { sub:"2.01", grupo:"Pesquisas e desenvolvimento", descricao:"Serviços de pesquisas e desenvolvimento de qualquer natureza.", aliquota:3,
+    cbo:["2031-05 — Pesquisador em ciências naturais e exatas","2032-05 — Especialista em engenharia civil"],
+    palavras:["pesquisa","desenvolvimento","p&d","r&d","inovação","laboratório","pesquisador"] },
+
+  // ── 3. LOCAÇÃO / CESSÃO ──────────────────────────────────────────
+  { sub:"3.02", grupo:"Locação, cessão de direito de uso", descricao:"Cessão de direito de uso de marcas e de sinais de propaganda.", aliquota:3,
+    cbo:["2534-10 — Especialista em marketing"],
+    palavras:["cessão","marca","propaganda","franquia","direito uso","sinal"] },
+  { sub:"3.03", grupo:"Locação, cessão de direito de uso", descricao:"Exploração de salões de festas, centro de convenções, escritórios virtuais, stands, quadras esportivas, estádios, ginásios, auditórios, casas de espetáculos, parques de diversões, canchas e congêneres, para realização de eventos ou negócios.", aliquota:5,
+    cbo:["3714-05 — Promotor de eventos"],
+    palavras:["salão","festas","convenções","auditório","ginásio","quadra","esportivo","stand","parque","diversão","escritório virtual"] },
+  { sub:"3.04", grupo:"Locação, cessão de direito de uso", descricao:"Locação, sublocação, arrendamento, direito de passagem ou permissão de uso, compartilhado ou não, de ferrovia, rodovia, postes, cabos, dutos e condutos de qualquer natureza.", aliquota:3,
+    cbo:[], palavras:["locação","duto","cabo","poste","rodovia","ferrovia","arrendamento"] },
+  { sub:"3.05", grupo:"Locação, cessão de direito de uso", descricao:"Cessão de andaimes, palcos, coberturas e outras estruturas de uso temporário.", aliquota:3,
+    cbo:[], palavras:["andaime","palco","cobertura","estrutura","temporário","locação"] },
+
+  // ── 4. SAÚDE / MEDICINA ──────────────────────────────────────────
+  { sub:"4.01", grupo:"Saúde, assistência médica", descricao:"Medicina e biomedicina.", aliquota:5,
+    cbo:["2251-04 — Médico clínico geral","2251-24 — Biomédico","2234-25 — Biomédico"],
+    palavras:["medicina","médico","clínico","biomedicina","biomédico","consulta","saúde"] },
+  { sub:"4.02", grupo:"Saúde, assistência médica", descricao:"Análises clínicas, patologia, eletricidade médica, radioterapia, quimioterapia, ultra-sonografia, ressonância magnética, radiologia, tomografia e congêneres.", aliquota:5,
+    cbo:["2252-10 — Médico radiologista","2252-35 — Médico patologista"],
+    palavras:["análise clínica","patologia","radiologia","radioterapia","quimioterapia","ultrassom","ressonância","tomografia","raio-x","exame"] },
+  { sub:"4.03", grupo:"Saúde, assistência médica", descricao:"Hospitais, clínicas, laboratórios, sanatórios, manicômios, casas de saúde, prontos-socorros, ambulatórios e congêneres.", aliquota:5,
+    cbo:["1312-10 — Gerente de serviços de saúde"],
+    palavras:["hospital","clínica","laboratório","pronto-socorro","ambulatório","internação"] },
+  { sub:"4.05", grupo:"Saúde, assistência médica", descricao:"Acupuntura.", aliquota:5,
+    cbo:["2236-10 — Acupunturista"],
+    palavras:["acupuntura","acupunturista","agulha","terapia"] },
+  { sub:"4.06", grupo:"Saúde, assistência médica", descricao:"Enfermagem, inclusive serviços auxiliares.", aliquota:5,
+    cbo:["2235-05 — Enfermeiro","3222-05 — Técnico de enfermagem"],
+    palavras:["enfermagem","enfermeiro","técnico enfermagem","auxiliar enfermagem","curativo","injeção","soro"] },
+  { sub:"4.07", grupo:"Saúde, assistência médica", descricao:"Serviços farmacêuticos.", aliquota:5,
+    cbo:["2234-05 — Farmacêutico"],
+    palavras:["farmácia","farmacêutico","manipulação","medicamento","dispensação"] },
+  { sub:"4.08", grupo:"Saúde, assistência médica", descricao:"Terapia ocupacional, fisioterapia e fonoaudiologia.", aliquota:5,
+    cbo:["2237-05 — Fisioterapeuta","2237-10 — Terapeuta ocupacional","2232-05 — Fonoaudiólogo"],
+    palavras:["fisioterapia","fisioterapeuta","terapia ocupacional","fonoaudiologia","fono","reabilitação","exercício"] },
+  { sub:"4.09", grupo:"Saúde, assistência médica", descricao:"Terapias de qualquer espécie destinadas ao tratamento físico, orgânico e mental.", aliquota:5,
+    cbo:["2263-05 — Terapeuta holístico","3227-25 — Facilitador de biodança"],
+    palavras:["terapia","tratamento","mental","orgânico","físico","holístico"] },
+  { sub:"4.10", grupo:"Saúde, assistência médica", descricao:"Nutrição.", aliquota:5,
+    cbo:["2241-05 — Nutricionista"],
+    palavras:["nutrição","nutricionista","dieta","alimentação","alimento"] },
+  { sub:"4.11", grupo:"Saúde, assistência médica", descricao:"Obstetrícia.", aliquota:5,
+    cbo:["2251-32 — Médico obstetra"],
+    palavras:["obstetrícia","obstetra","gestação","parto","gravidez"] },
+  { sub:"4.12", grupo:"Saúde, assistência médica", descricao:"Odontologia.", aliquota:5,
+    cbo:["2231-05 — Cirurgião-dentista"],
+    palavras:["odontologia","dentista","cirurgião dentista","dente","ortodontia","implante","prótese dentária"] },
+  { sub:"4.13", grupo:"Saúde, assistência médica", descricao:"Ortóptica.", aliquota:5,
+    cbo:["2236-20 — Ortoptista"],
+    palavras:["ortóptica","ortoptista","visão","olhos"] },
+  { sub:"4.14", grupo:"Saúde, assistência médica", descricao:"Próteses sob encomenda.", aliquota:5,
+    cbo:["3013-05 — Protético","7512-10 — Protético dental"],
+    palavras:["prótese","protético","órtese","implante","encomenda"] },
+  { sub:"4.15", grupo:"Saúde, assistência médica", descricao:"Psicanálise.", aliquota:5,
+    cbo:["2515-40 — Psicanalista"],
+    palavras:["psicanálise","psicanalista","inconsciente","freud","análise"] },
+  { sub:"4.16", grupo:"Saúde, assistência médica", descricao:"Psicologia.", aliquota:5,
+    cbo:["2515-05 — Psicólogo clínico","2515-10 — Psicólogo educacional","2515-20 — Psicólogo do trabalho"],
+    palavras:["psicologia","psicólogo","terapia","psicoterapia","saúde mental"] },
+  { sub:"4.17", grupo:"Saúde, assistência médica", descricao:"Casas de repouso e de recuperação, creches, asilos e congêneres.", aliquota:2,
+    cbo:["5162-05 — Cuidador de idosos","5162-10 — Acompanhante de idosos"],
+    palavras:["creche","asilo","repouso","recuperação","idoso","criança","cuidador","lar"] },
+  { sub:"4.22", grupo:"Saúde, assistência médica", descricao:"Planos de medicina de grupo ou individual e convênios para prestação de assistência médica, hospitalar, odontológica e congêneres.", aliquota:5,
+    cbo:[], palavras:["plano saúde","convênio","operadora","saúde suplementar","unimed"] },
+
+  // ── 5. VETERINÁRIA ──────────────────────────────────────────────
+  { sub:"5.01", grupo:"Medicina veterinária", descricao:"Medicina veterinária e zootecnia.", aliquota:5,
+    cbo:["2212-05 — Médico veterinário","2213-05 — Zootecnista"],
+    palavras:["veterinário","veterinária","animal","pet","zootecnia","zootecnista"] },
+  { sub:"5.08", grupo:"Medicina veterinária", descricao:"Guarda, tratamento, amestramento, embelezamento, alojamento e congêneres.", aliquota:5,
+    cbo:["5193-05 — Adestrador de animais","5193-10 — Esteticista de animais domésticos"],
+    palavras:["adestramento","adestrador","banho","tosa","embelezamento","pet shop","canil","hotel pet"] },
+
+  // ── 6. CUIDADOS PESSOAIS ─────────────────────────────────────────
+  { sub:"6.01", grupo:"Cuidados pessoais, estética, atividades físicas", descricao:"Barbearia, cabeleireiros, manicuros, pedicuros e congêneres.", aliquota:3,
+    cbo:["5161-05 — Cabeleireiro","5161-10 — Barbeiro","5161-15 — Manicure e pedicure"],
+    palavras:["barbearia","barbeiro","cabeleireiro","cabelo","corte","manicure","pedicure","salão","beleza"] },
+  { sub:"6.02", grupo:"Cuidados pessoais, estética, atividades físicas", descricao:"Esteticistas, tratamento de pele, depilação e congêneres.", aliquota:5,
+    cbo:["3221-30 — Esteticista"],
+    palavras:["estética","esteticista","depilação","pele","limpeza pele","peeling","spa"] },
+  { sub:"6.03", grupo:"Cuidados pessoais, estética, atividades físicas", descricao:"Banhos, duchas, sauna, massagens e congêneres.", aliquota:5,
+    cbo:["3227-05 — Massagista"],
+    palavras:["massagem","massagista","sauna","ducha","relaxamento","quiropraxia"] },
+  { sub:"6.04", grupo:"Cuidados pessoais, estética, atividades físicas", descricao:"Ginástica, dança, esportes, natação, artes marciais e demais atividades físicas.", aliquota:5,
+    cbo:["3714-25 — Instrutor de ginástica","3728-05 — Técnico desportivo","2625-10 — Professor de dança"],
+    palavras:["ginástica","dança","esporte","natação","academia","personal","artes marciais","judô","karatê","capoeira","pilates","yoga","crossfit"] },
+  { sub:"6.05", grupo:"Cuidados pessoais, estética, atividades físicas", descricao:"Centros de emagrecimento, spa e congêneres.", aliquota:5,
+    cbo:[], palavras:["emagrecimento","spa","estética","corpo","saúde","wellness"] },
+  { sub:"6.06", grupo:"Cuidados pessoais, estética, atividades físicas", descricao:"Aplicação de tatuagens, piercings e congêneres.", aliquota:3,
+    cbo:["5163-10 — Tatuador"],
+    palavras:["tatuagem","tatuador","piercing","body art","micropigmentação"] },
+
+  // ── 7. ENGENHARIA / CONSTRUÇÃO ───────────────────────────────────
+  { sub:"7.01", grupo:"Engenharia, arquitetura e congêneres", descricao:"Engenharia, agronomia, agrimensura, arquitetura, geologia, urbanismo, paisagismo e congêneres.", aliquota:5,
+    cbo:["2141-05 — Arquiteto de edificações","2142-05 — Engenheiro civil","2221-05 — Engenheiro agrônomo","2148-05 — Agrimensor"],
+    palavras:["engenharia","engenheiro","arquitetura","arquiteto","agronomia","agrônomo","agrimensura","agrimensor","geologia","geólogo","urbanismo","paisagismo"] },
+  { sub:"7.02", grupo:"Engenharia, arquitetura e congêneres", descricao:"Execução, por administração, empreitada ou subempreitada, de obras de construção civil, hidráulica ou elétrica e de outras obras semelhantes, inclusive sondagem, perfuração de poços, escavação, drenagem e irrigação, terraplanagem, pavimentação, concretagem.", aliquota:5,
+    cbo:["7111-05 — Pedreiro","7171-10 — Eletricista de instalações","7142-10 — Carpinteiro de obras"],
+    palavras:["construção","obra","empreitada","pedreiro","terraplanagem","pavimentação","concretagem","escavação","drenagem","sondagem","poço","alvenaria"] },
+  { sub:"7.03", grupo:"Engenharia, arquitetura e congêneres", descricao:"Elaboração de planos diretores, estudos de viabilidade, estudos organizacionais e outros, relacionados com obras e serviços de engenharia; elaboração de anteprojetos, projetos básicos e projetos executivos para trabalhos de engenharia.", aliquota:5,
+    cbo:["2141-05 — Arquiteto de edificações","2142-05 — Engenheiro civil"],
+    palavras:["projeto","plano diretor","viabilidade","anteprojeto","projeto básico","projeto executivo"] },
+  { sub:"7.04", grupo:"Engenharia, arquitetura e congêneres", descricao:"Demolição.", aliquota:5,
+    cbo:["7111-15 — Demolidor de edificações"],
+    palavras:["demolição","demolir","derrubada"] },
+  { sub:"7.05", grupo:"Engenharia, arquitetura e congêneres", descricao:"Reparação, conservação e reforma de edifícios, estradas, pontes, portos e congêneres.", aliquota:5,
+    cbo:["7111-05 — Pedreiro","7144-05 — Pintor de obras"],
+    palavras:["reforma","reparação","conservação","edifício","prédio","casa","manutenção predial","pintura predial"] },
+  { sub:"7.06", grupo:"Engenharia, arquitetura e congêneres", descricao:"Colocação e instalação de tapetes, carpetes, assoalhos, cortinas, revestimentos de parede, vidros, divisórias, placas de gesso e congêneres, com material fornecido pelo tomador do serviço.", aliquota:5,
+    cbo:["7152-05 — Telhador","7164-05 — Gesseiro"],
+    palavras:["instalação","tapete","assoalho","cortina","revestimento","gesso","divisória","piso","forro"] },
+  { sub:"7.07", grupo:"Engenharia, arquitetura e congêneres", descricao:"Recuperação, raspagem, polimento e lustração de pisos e congêneres.", aliquota:5,
+    cbo:["5143-05 — Polidor de pisos"],
+    palavras:["polimento","lustração","raspagem","piso","mármore","granito"] },
+  { sub:"7.08", grupo:"Engenharia, arquitetura e congêneres", descricao:"Calafetação.", aliquota:5,
+    cbo:[], palavras:["calafetação","vedação","impermeabilização","silicone"] },
+  { sub:"7.09", grupo:"Engenharia, arquitetura e congêneres", descricao:"Varrição, coleta, remoção, incineração, tratamento, reciclagem, separação e destinação final de lixo, rejeitos e outros resíduos.", aliquota:5,
+    cbo:["5142-05 — Coletador de lixo"],
+    palavras:["lixo","resíduo","coleta","reciclagem","destinação","limpeza urbana"] },
+  { sub:"7.10", grupo:"Engenharia, arquitetura e congêneres", descricao:"Limpeza, manutenção e conservação de vias e logradouros públicos, imóveis, chaminés, piscinas, parques, jardins e congêneres.", aliquota:3,
+    cbo:["5142-05 — Faxineiro","5142-10 — Zelador"],
+    palavras:["limpeza","conservação","piscina","jardim","faxina","zelador","condomínio"] },
+  { sub:"7.11", grupo:"Engenharia, arquitetura e congêneres", descricao:"Decoração e jardinagem, inclusive corte e poda de árvores.", aliquota:3,
+    cbo:["6220-05 — Jardineiro","5141-05 — Decorador de interiores"],
+    palavras:["decoração","jardinagem","jardineiro","poda","árvore","paisagismo","design interiores","decorador"] },
+  { sub:"7.13", grupo:"Engenharia, arquitetura e congêneres", descricao:"Dedetização, desinfecção, desinsetização, imunização, higienização, desratização, pulverização e congêneres.", aliquota:3,
+    cbo:["5142-25 — Dedetizador"],
+    palavras:["dedetização","desinsetização","desratização","pulverização","controle pragas","higienização"] },
+  { sub:"7.16", grupo:"Engenharia, arquitetura e congêneres", descricao:"Florestamento, reflorestamento, semeadura, adubação, reparação de solo, plantio, silagem, colheita, corte e descascamento de árvores, silvicultura, exploração florestal.", aliquota:5,
+    cbo:["6321-05 — Silvicultor","6221-05 — Trabalhador agroflorestal"],
+    palavras:["florestamento","reflorestamento","silvicultura","plantio","colheita","adubação","floresta"] },
+  { sub:"7.19", grupo:"Engenharia, arquitetura e congêneres", descricao:"Acompanhamento e fiscalização da execução de obras de engenharia, arquitetura e urbanismo.", aliquota:5,
+    cbo:["3121-05 — Técnico de obras civis"],
+    palavras:["fiscalização","acompanhamento","ART","laudo","vistoria","obra","engenharia"] },
+  { sub:"7.20", grupo:"Engenharia, arquitetura e congêneres", descricao:"Aerofotogrametria, cartografia, mapeamento, levantamentos topográficos, batimétricos, geográficos, geodésicos, geológicos, geofísicos e congêneres.", aliquota:5,
+    cbo:["2148-05 — Engenheiro agrimensor","3123-20 — Topógrafo"],
+    palavras:["topografia","topógrafo","mapeamento","cartografia","georreferenciamento","drone","gps","levantamento"] },
+
+  // ── 8. EDUCAÇÃO ──────────────────────────────────────────────────
+  { sub:"8.01", grupo:"Educação, ensino", descricao:"Ensino regular pré-escolar, fundamental, médio e superior.", aliquota:2,
+    cbo:["2312-05 — Professor de ensino fundamental","2313-05 — Professor de ensino médio","2321-05 — Professor de ensino superior","2311-05 — Professor de educação infantil"],
+    palavras:["escola","ensino","professor","docente","educação","aula","colégio","infantil","fundamental","médio","superior","faculdade","universidade"] },
+  { sub:"8.02", grupo:"Educação, ensino", descricao:"Instrução, treinamento, orientação pedagógica e educacional, avaliação de conhecimentos de qualquer natureza.", aliquota:2,
+    cbo:["2394-05 — Pedagogo","2394-25 — Tutor presencial e a distância","4110-10 — Instrutor de treinamento"],
+    palavras:["treinamento","instrução","pedagogia","pedagogo","orientação","curso","aula","capacitação","workshop","aula particular","reforço","tutor"] },
+
+  // ── 9. TURISMO / HOSPEDAGEM ──────────────────────────────────────
+  { sub:"9.01", grupo:"Hospedagem, turismo, viagens", descricao:"Hospedagem de qualquer natureza em hotéis, apart-service, flat, apart-hotéis, hotéis residência, motéis, pensões e congêneres; ocupação por temporada com fornecimento de serviço.", aliquota:5,
+    cbo:["1415-05 — Gerente de hotel","5101-05 — Recepcionista de hotel"],
+    palavras:["hotel","hospedagem","pousada","motel","flat","hostel","airbnb","alojamento","temporada"] },
+  { sub:"9.02", grupo:"Hospedagem, turismo, viagens", descricao:"Agenciamento, organização, promoção, intermediação e execução de programas de turismo, passeios, viagens, excursões, hospedagens e congêneres.", aliquota:5,
+    cbo:["3721-05 — Agente de viagens"],
+    palavras:["agência","turismo","viagem","excursão","passeio","tour","guia","agente de viagem"] },
+  { sub:"9.03", grupo:"Hospedagem, turismo, viagens", descricao:"Guias de turismo.", aliquota:2,
+    cbo:["5114-05 — Guia de turismo"],
+    palavras:["guia","turismo","guia turístico","condutor"] },
+
+  // ── 10. INTERMEDIAÇÃO ────────────────────────────────────────────
+  { sub:"10.01", grupo:"Intermediação, corretagem", descricao:"Agenciamento, corretagem ou intermediação de câmbio, de seguros, de cartões de crédito, de planos de saúde e de planos de previdência privada.", aliquota:5,
+    cbo:["3541-05 — Corretor de seguros","3541-25 — Agente de seguros"],
+    palavras:["corretor","corretagem","seguro","câmbio","plano saúde","previdência","agente"] },
+  { sub:"10.05", grupo:"Intermediação, corretagem", descricao:"Agenciamento, corretagem ou intermediação de bens móveis ou imóveis.", aliquota:5,
+    cbo:["3541-15 — Corretor de imóveis"],
+    palavras:["imóvel","imobiliária","corretor imóvel","CRECI","locação imóvel","venda imóvel"] },
+  { sub:"10.09", grupo:"Intermediação, corretagem", descricao:"Representação de qualquer natureza, inclusive comercial.", aliquota:5,
+    cbo:["3542-05 — Representante comercial"],
+    palavras:["representante","representação","comercial","agente comercial","vendedor externo"] },
+
+  // ── 11. VIGILÂNCIA / GUARDA ──────────────────────────────────────
+  { sub:"11.02", grupo:"Guarda, vigilância, armazenamento", descricao:"Vigilância, segurança ou monitoramento de bens, pessoas e semoventes.", aliquota:5,
+    cbo:["5173-20 — Vigilante","5173-30 — Guarda de segurança"],
+    palavras:["vigilância","vigilante","segurança","portaria","monitoramento","câmera","CFTV"] },
+  { sub:"11.03", grupo:"Guarda, vigilância, armazenamento", descricao:"Escolta, inclusive de veículos e cargas.", aliquota:5,
+    cbo:["5173-30 — Escolteiro"],
+    palavras:["escolta","carga","transporte segurança"] },
+  { sub:"11.04", grupo:"Guarda, vigilância, armazenamento", descricao:"Armazenamento, depósito, carga, descarga, arrumação e guarda de bens de qualquer espécie.", aliquota:5,
+    cbo:["4141-05 — Almoxarife"],
+    palavras:["armazenamento","depósito","estoque","logística","carga","descarga","guarda"] },
+
+  // ── 12. DIVERSÕES / ENTRETENIMENTO ──────────────────────────────
+  { sub:"12.01", grupo:"Diversões, lazer, entretenimento", descricao:"Espetáculos teatrais.", aliquota:3,
+    cbo:["2622-05 — Ator","2622-10 — Diretor teatral"],
+    palavras:["teatro","teatral","espetáculo","peça","ator","atriz"] },
+  { sub:"12.02", grupo:"Diversões, lazer, entretenimento", descricao:"Exibições cinematográficas.", aliquota:3,
+    cbo:["3741-20 — Projecionista de cinema"],
+    palavras:["cinema","cinematográfico","filme","exibição"] },
+  { sub:"12.07", grupo:"Diversões, lazer, entretenimento", descricao:"Shows, ballet, danças, desfiles, bailes, óperas, concertos, recitais, festivais e congêneres.", aliquota:3,
+    cbo:["2621-05 — Músico","2625-05 — Bailarino","2621-20 — Cantor"],
+    palavras:["show","ballet","dança","baile","ópera","concerto","recital","festival","músico","cantor","bailarino"] },
+  { sub:"12.11", grupo:"Diversões, lazer, entretenimento", descricao:"Competições esportivas ou de destreza física ou intelectual, com ou sem a participação do espectador.", aliquota:2,
+    cbo:["3771-05 — Atleta profissional"],
+    palavras:["competição","esportiva","atleta","campeonato","torneio"] },
+  { sub:"12.12", grupo:"Diversões, lazer, entretenimento", descricao:"Execução de música.", aliquota:2,
+    cbo:["2621-05 — Músico intérprete","2621-25 — Instrumentista","2621-30 — Regente de coral","2626-05 — Compositor"],
+    palavras:["música","músico","instrumentista","violinista","pianista","guitarrista","baterista","regente","maestro","saxofonista","execução musical","coral","conjunto"] },
+  { sub:"12.13", grupo:"Diversões, lazer, entretenimento", descricao:"Produção, mediante ou sem encomenda prévia, de eventos, espetáculos, entrevistas, shows, ballet, danças, desfiles, bailes, teatros, óperas, concertos, recitais, festivais e congêneres.", aliquota:5,
+    cbo:["2622-15 — Produtor cultural","3714-05 — Promotor de eventos"],
+    palavras:["produção","produtor","evento","show","organização","cerimonial"] },
+  { sub:"12.17", grupo:"Diversões, lazer, entretenimento", descricao:"Recreação e animação, inclusive em festas e eventos de qualquer natureza.", aliquota:5,
+    cbo:["3714-25 — Animador sociocultural"],
+    palavras:["recreação","animação","festa","recreador","animador","buffet","monitor"] },
+
+  // ── 13. FONOGRAFIA / FOTOGRAFIA ──────────────────────────────────
+  { sub:"13.02", grupo:"Fonografia, fotografia, cinematografia", descricao:"Fonografia ou gravação de sons, inclusive trucagem, dublagem, mixagem e congêneres.", aliquota:5,
+    cbo:["3741-10 — Técnico em gravação de áudio","3741-15 — Técnico de som"],
+    palavras:["gravação","fonografia","áudio","mixagem","dublagem","estúdio","podcasting"] },
+  { sub:"13.03", grupo:"Fonografia, fotografia, cinematografia", descricao:"Fotografia e cinematografia, inclusive revelação, ampliação, cópia, reprodução, trucagem e congêneres.", aliquota:5,
+    cbo:["3731-05 — Fotógrafo"],
+    palavras:["fotografia","fotógrafo","foto","filmagem","cinematografia","vídeo","videomaker","câmera"] },
+  { sub:"13.04", grupo:"Fonografia, fotografia, cinematografia", descricao:"Reprografia, microfilmagem e digitalização.", aliquota:5,
+    cbo:[], palavras:["reprografia","cópia","microfilmagem","digitalização","scan","xerox"] },
+  { sub:"13.05", grupo:"Fonografia, fotografia, cinematografia", descricao:"Composição gráfica, inclusive confecção de impressos gráficos, fotocomposição, clicheria, zincografia, litografia e fotolitografia.", aliquota:5,
+    cbo:["7661-05 — Compositor gráfico"],
+    palavras:["gráfica","impressão","composição gráfica","litografia","tipografia"] },
+
+  // ── 14. BENS DE TERCEIROS ────────────────────────────────────────
+  { sub:"14.01", grupo:"Serviços relativos a bens de terceiros", descricao:"Lubrificação, limpeza, lustração, revisão, carga e recarga, conserto, restauração, blindagem, manutenção e conservação de máquinas, veículos, aparelhos, equipamentos, motores, elevadores ou de qualquer objeto.", aliquota:5,
+    cbo:["9112-05 — Mecânico de manutenção de automóvel","9536-05 — Eletricista de instalações"],
+    palavras:["mecânico","mecânica","conserto","reparo","manutenção","veículo","carro","moto","máquina","equipamento","motor","revisão","oficina"] },
+  { sub:"14.02", grupo:"Serviços relativos a bens de terceiros", descricao:"Assistência técnica.", aliquota:5,
+    cbo:["3172-05 — Técnico de suporte","9111-05 — Mecânico de manutenção"],
+    palavras:["assistência técnica","técnico","conserto","reparo","eletrodoméstico","eletrônico","celular"] },
+  { sub:"14.05", grupo:"Serviços relativos a bens de terceiros", descricao:"Restauração, recondicionamento, acondicionamento, pintura, beneficiamento, lavagem, secagem, tingimento, galvanoplastia, anodização, corte, recorte, plastificação, costura, acabamento, polimento e congêneres de objetos quaisquer.", aliquota:5,
+    cbo:["7144-05 — Pintor","7641-05 — Costureiro"],
+    palavras:["pintura","pintor","costura","costureira","lavagem","tingimento","restauração","recondicionamento","beneficiamento"] },
+  { sub:"14.09", grupo:"Serviços relativos a bens de terceiros", descricao:"Alfaiataria e costura, quando o material for fornecido pelo usuário final, exceto aviamento.", aliquota:2,
+    cbo:["7641-05 — Costureiro","7641-15 — Alfaiate"],
+    palavras:["alfaiataria","alfaiate","costura","costureira","roupa","vestido","confecção"] },
+  { sub:"14.13", grupo:"Serviços relativos a bens de terceiros", descricao:"Carpintaria e serralheria.", aliquota:5,
+    cbo:["7142-05 — Carpinteiro","7244-05 — Serralheiro"],
+    palavras:["carpintaria","carpinteiro","madeira","marcenaria","marceneiro","serralheria","serralheiro","ferro","grade","portão"] },
+  { sub:"14.14", grupo:"Serviços relativos a bens de terceiros", descricao:"Guincho intramunicipal, guindaste e içamento.", aliquota:3,
+    cbo:["7821-10 — Guincheiro"],
+    palavras:["guincho","guindaste","içamento","reboque","socorro mecânico"] },
+
+  // ── 17. SERVIÇOS PROFISSIONAIS ───────────────────────────────────
+  { sub:"17.01", grupo:"Serviços profissionais e técnicos", descricao:"Assessoria ou consultoria de qualquer natureza, não contida em outros itens desta lista; análise, exame, pesquisa, coleta, compilação e fornecimento de dados e informações de qualquer natureza, inclusive cadastro e similares.", aliquota:5,
+    cbo:["2521-05 — Administrador","2523-05 — Consultor de gestão"],
+    palavras:["assessoria","consultoria","consultor","análise","pesquisa","dados","relatório","levantamento"] },
+  { sub:"17.02", grupo:"Serviços profissionais e técnicos", descricao:"Datilografia, digitação, estenografia, expediente, secretaria em geral, resposta audível, redação, edição, interpretação, revisão, tradução, apoio e infraestrutura administrativa e congêneres.", aliquota:3,
+    cbo:["4221-05 — Recepcionista","3515-05 — Secretária","2614-10 — Tradutor","2614-25 — Intérprete"],
+    palavras:["secretária","secretaria","recepcionista","digitação","digitador","tradução","tradutor","intérprete","redação","revisão","copywriter"] },
+  { sub:"17.03", grupo:"Serviços profissionais e técnicos", descricao:"Planejamento, coordenação, programação ou organização técnica, financeira ou administrativa.", aliquota:5,
+    cbo:["2521-05 — Administrador de empresas","2521-10 — Administrador de obras"],
+    palavras:["planejamento","coordenação","administração","gestão","organização","gerenciamento"] },
+  { sub:"17.04", grupo:"Serviços profissionais e técnicos", descricao:"Recrutamento, agenciamento, seleção e colocação de mão-de-obra.", aliquota:5,
+    cbo:["2523-15 — Headhunter","3513-05 — Selecionador de pessoal"],
+    palavras:["recrutamento","seleção","RH","recursos humanos","headhunter","mão de obra","terceirização"] },
+  { sub:"17.05", grupo:"Serviços profissionais e técnicos", descricao:"Fornecimento de mão-de-obra, mesmo em caráter temporário, inclusive de empregados ou trabalhadores avulsos ou temporários, contratados pelo prestador de serviço.", aliquota:5,
+    cbo:[], palavras:["fornecimento","mão de obra","temporário","avulso","locação pessoal"] },
+  { sub:"17.06", grupo:"Serviços profissionais e técnicos", descricao:"Propaganda e publicidade, inclusive promoção de vendas, planejamento de campanhas ou sistemas de publicidade, elaboração de desenhos, textos e demais materiais publicitários.", aliquota:5,
+    cbo:["2616-05 — Publicitário","2616-10 — Designer gráfico","1423-25 — Relações públicas"],
+    palavras:["publicidade","propaganda","marketing","publicitário","campanha","anúncio","mídia","agência","social media","redes sociais","conteúdo"] },
+  { sub:"17.09", grupo:"Serviços profissionais e técnicos", descricao:"Perícias, laudos, exames técnicos e análises técnicas.", aliquota:5,
+    cbo:["2523-25 — Perito"],
+    palavras:["perícia","perito","laudo","vistoria","avaliação técnica","exame técnico"] },
+  { sub:"17.14", grupo:"Serviços profissionais e técnicos", descricao:"Advocacia.", aliquota:5,
+    cbo:["2410-05 — Advogado"],
+    palavras:["advocacia","advogado","advogada","OAB","jurídico","contrato","causa","processo"] },
+  { sub:"17.16", grupo:"Serviços profissionais e técnicos", descricao:"Auditoria.", aliquota:5,
+    cbo:["2522-10 — Auditor"],
+    palavras:["auditoria","auditor","compliance","controle interno","fiscal"] },
+  { sub:"17.19", grupo:"Serviços profissionais e técnicos", descricao:"Contabilidade, inclusive serviços técnicos e auxiliares.", aliquota:5,
+    cbo:["2522-05 — Contador","3513-25 — Técnico em contabilidade"],
+    palavras:["contabilidade","contador","contábil","CRC","balancete","balanço","imposto","declaração","fiscal"] },
+  { sub:"17.20", grupo:"Serviços profissionais e técnicos", descricao:"Consultoria e assessoria econômica ou financeira.", aliquota:5,
+    cbo:["2522-15 — Economista"],
+    palavras:["economia","economista","financeiro","financeira","investimento","análise econômica"] },
+  { sub:"17.21", grupo:"Serviços profissionais e técnicos", descricao:"Estatística.", aliquota:5,
+    cbo:["2112-05 — Estatístico"],
+    palavras:["estatística","estatístico","probabilidade","análise dados"] },
+  { sub:"17.24", grupo:"Serviços profissionais e técnicos", descricao:"Apresentação de palestras, conferências, seminários e congêneres.", aliquota:5,
+    cbo:["2394-30 — Palestrante"],
+    palavras:["palestra","palestrante","conferência","seminário","workshop","treinamento"] },
+  { sub:"17.25", grupo:"Serviços profissionais e técnicos", descricao:"Inserção de textos, desenhos e outros materiais de propaganda e publicidade, em qualquer meio.", aliquota:3,
+    cbo:["2616-10 — Designer gráfico"],
+    palavras:["inserção","publicidade","propaganda","veiculação","anúncio","mídia"] },
+
+  // ── 18. REGULAÇÃO DE SINISTROS ───────────────────────────────────
+  { sub:"18.01", grupo:"Regulação de sinistros", descricao:"Serviços de regulação de sinistros vinculados a contratos de seguros; inspeção e avaliação de riscos para cobertura de contratos de seguros.", aliquota:5,
+    cbo:["2523-25 — Perito de seguros"],
+    palavras:["sinistro","regulação","seguro","perito","avaliação risco"] },
+
+  // ── 21. CARTÓRIOS ────────────────────────────────────────────────
+  { sub:"21.01", grupo:"Registros públicos, cartorários", descricao:"Serviços de registros públicos, cartorários e notariais.", aliquota:5,
+    cbo:["3514-15 — Escrivão de cartório","2410-25 — Tabelião"],
+    palavras:["cartório","notarial","registro","certidão","escritura","tabelião","escrivão","reconhecimento firma"] },
+
+  // ── 23. PROGRAMAÇÃO VISUAL ───────────────────────────────────────
+  { sub:"23.01", grupo:"Comunicação visual, design industrial", descricao:"Serviços de programação e comunicação visual, desenho industrial e congêneres.", aliquota:5,
+    cbo:["2616-10 — Designer gráfico","2617-05 — Designer de produto","2625-35 — Designer de interiores"],
+    palavras:["design","designer","comunicação visual","identidade visual","logotipo","logo","marca","desenho industrial"] },
+
+  // ── 24. CHAVEIROS / CARIMBOS ─────────────────────────────────────
+  { sub:"24.01", grupo:"Chaveiros, carimbos, placas, sinalização", descricao:"Serviços de chaveiros, confecção de carimbos, placas, sinalização visual, banners, adesivos e congêneres.", aliquota:3,
+    cbo:["5199-10 — Chaveiro"],
+    palavras:["chaveiro","carimbo","placa","banner","adesivo","sinalização","fachada"] },
+
+  // ── 25. FUNERÁRIOS ───────────────────────────────────────────────
+  { sub:"25.01", grupo:"Serviços funerários", descricao:"Funerais, inclusive fornecimento de caixão, urna ou esquifes; aluguel de capela; transporte do corpo cadavérico; fornecimento de flores, coroas e outros paramentos; desembaraço de certidão de óbito; embalsamento.", aliquota:5,
+    cbo:["5166-05 — Agente funerário"],
+    palavras:["funeral","funerária","velório","enterro","caixão","urna","embalsamento","obituário"] },
+
+  // ── 26. COLETA / CORREIOS ────────────────────────────────────────
+  { sub:"26.01", grupo:"Coleta, remessa ou entrega", descricao:"Serviços de coleta, remessa ou entrega de correspondências, documentos, objetos, bens ou valores, inclusive pelos correios e suas agências franqueadas; courrier e congêneres.", aliquota:5,
+    cbo:["4152-05 — Carteiro","4152-15 — Entregador de publicações"],
+    palavras:["entrega","correios","courrier","motoboy","moto mensageiro","logística","coleta","remessa","frete"] },
+
+  // ── 30. BIOLOGIA / QUÍMICA ───────────────────────────────────────
+  { sub:"30.01", grupo:"Biologia, biotecnologia e química", descricao:"Serviços de biologia, biotecnologia e química.", aliquota:5,
+    cbo:["2211-05 — Biólogo","2030-05 — Químico"],
+    palavras:["biologia","biólogo","biotecnologia","química","químico","laboratório","análise ambiental"] },
+
+  // ── 31. TÉCNICO EM EDIFICAÇÕES ───────────────────────────────────
+  { sub:"31.01", grupo:"Serviços técnicos em edificações e eletrônica", descricao:"Serviços técnicos em edificações, eletrônica, eletrotécnica, mecânica, telecomunicações e congêneres.", aliquota:5,
+    cbo:["3131-05 — Técnico em edificações","3171-30 — Técnico em eletrônica","3135-05 — Técnico em eletrotécnica"],
+    palavras:["técnico","edificações","eletrônica","eletrotécnica","telecomunicações","manutenção elétrica","instalação elétrica","eletricista"] },
+
+  // ── 32. DESENHO TÉCNICO ──────────────────────────────────────────
+  { sub:"32.01", grupo:"Desenhos técnicos", descricao:"Serviços de desenhos técnicos.", aliquota:3,
+    cbo:["3119-05 — Desenhista técnico"],
+    palavras:["desenho técnico","CAD","planta","projeto","AutoCAD","BIM","revit"] },
+
+  // ── 33. DESPACHANTE ──────────────────────────────────────────────
+  { sub:"33.01", grupo:"Desembaraço aduaneiro, despachantes", descricao:"Serviços de desembaraço aduaneiro, comissários, despachantes e congêneres.", aliquota:3,
+    cbo:["3431-05 — Despachante documentalista","4151-05 — Despachante aduaneiro"],
+    palavras:["despachante","desembaraço","aduaneiro","importação","exportação","DETRAN","veículo","transferência"] },
+
+  // ── 35. JORNALISMO ───────────────────────────────────────────────
+  { sub:"35.01", grupo:"Reportagem, jornalismo, relações públicas", descricao:"Serviços de reportagem, assessoria de imprensa, jornalismo e relações públicas.", aliquota:5,
+    cbo:["2611-05 — Jornalista","1423-25 — Relações públicas"],
+    palavras:["jornalismo","jornalista","imprensa","relações públicas","assessoria imprensa","comunicação"] },
+
+  // ── 37. ARTISTAS / ATLETAS ───────────────────────────────────────
+  { sub:"37.01", grupo:"Artistas, atletas, modelos e manequins", descricao:"Serviços de artistas, atletas, modelos e manequins.", aliquota:5,
+    cbo:["2621-05 — Músico intérprete","3762-05 — Artista circense","3771-05 — Atleta profissional","3764-05 — Modelo de moda"],
+    palavras:["artista","atleta","modelo","manequim","atriz","ator","influencer","youtuber"] },
+
+  // ── 39. OURIVESARIA ──────────────────────────────────────────────
+  { sub:"39.01", grupo:"Ourivesaria e lapidação", descricao:"Serviços de ourivesaria e lapidação (quando o material for fornecido pelo tomador do serviço).", aliquota:5,
+    cbo:["7511-05 — Ourives","7512-05 — Lapidário"],
+    palavras:["ourivesaria","ourives","lapidação","joia","pedra","gemologia","diamante"] },
+
+  // ── 40. OBRAS DE ARTE ────────────────────────────────────────────
+  { sub:"40.01", grupo:"Obras de arte sob encomenda", descricao:"Obras de arte sob encomenda.", aliquota:3,
+    cbo:["2624-05 — Artista plástico","2624-10 — Escultor"],
+    palavras:["obra arte","escultura","pintura artística","artista plástico","escultor","encomenda"] },
+
+  // ── 16. TRANSPORTE MUNICIPAL ─────────────────────────────────────
+  { sub:"16.01", grupo:"Transporte de natureza municipal", descricao:"Serviços de transporte coletivo municipal rodoviário, metroviário, ferroviário e aquaviário de passageiros.", aliquota:2,
+    cbo:["7823-05 — Motorista de ônibus"],
+    palavras:["transporte coletivo","ônibus","lotação","van","taxi","mototaxi","passageiro"] },
+  { sub:"16.02", grupo:"Transporte de natureza municipal", descricao:"Outros serviços de transporte de natureza municipal.", aliquota:2,
+    cbo:["7824-05 — Motorista de táxi","7824-15 — Motorista de aplicativo"],
+    palavras:["transporte","taxi","motorista","uber","aplicativo","frete","mototaxi","carona"] }
+];
+
+// ================================================================
+//  MOTOR DE BUSCA
+// ================================================================
+function normalizar(txt) {
+  return txt
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9 ]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function tokenizar(txt) {
+  return normalizar(txt).split(" ").filter(t => t.length > 1);
+}
+
+function calcularScore(servico, tokens, q) {
+  const nDesc    = normalizar(servico.descricao);
+  const nGrupo   = normalizar(servico.grupo);
+  const nPalavras = servico.palavras.map(normalizar).join(" ");
+  const nCbo     = servico.cbo.map(normalizar).join(" ");
+  const haystack = nDesc + " " + nGrupo + " " + nPalavras + " " + nCbo;
+
+  let score = 0;
+
+  // frase inteira
+  const qNorm = normalizar(q);
+  if (haystack.includes(qNorm)) score += 15;
+
+  // tokens individuais
+  tokens.forEach(t => {
+    if (nPalavras.includes(t)) score += 6;
+    else if (nDesc.includes(t))    score += 4;
+    else if (nCbo.includes(t))     score += 3;
+    else if (nGrupo.includes(t))   score += 2;
+  });
+
+  return score;
+}
+
+function destacar(txt, tokens) {
+  let out = txt;
+  tokens.forEach(t => {
+    // destaca ignorando acentos
+    const re = new RegExp(t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi");
+    out = out.replace(re, m => `<mark>${m}</mark>`);
+  });
+  return out;
+}
+
+function buscar(q) {
+  if (!q || q.trim().length < 2) return [];
+  const tokens = tokenizar(q);
+  return SERVICOS
+    .map(s => ({ ...s, _score: calcularScore(s, tokens, q) }))
+    .filter(s => s._score > 0)
+    .sort((a, b) => b._score - a._score)
+    .slice(0, 10);
+}
+
+// ================================================================
+//  RENDERIZAÇÃO
+// ================================================================
+function corAliquota(a) {
+  if (a <= 2) return "#22c55e";
+  if (a <= 3) return "#38bdf8";
+  return "#f59e0b";
+}
+
+function renderCard(s, tokens) {
+  const maxScore = 30;
+  const pct = Math.min(100, Math.round((s._score / maxScore) * 100));
+  const cboHtml = s.cbo.length
+    ? `<div class="card-cbo">
+        <span style="color:#64748b;font-size:0.7rem;">CBO:</span>
+        ${s.cbo.map(c => `<span class="tag-cbo">${c}</span>`).join("")}
+       </div>`
+    : "";
+
+  const avisoMin = s.aliquota === 2
+    ? `<div class="aviso-minimo">⚠️ Alíquota mínima constitucional (art. 88 ADCT)</div>` : "";
+
+  return `
+    <div class="card-resultado">
+      <div class="card-esquerda">
+        <span class="card-subitem">LC 116 — Subitem ${s.sub}</span>
+        <div class="card-descricao">${destacar(s.descricao, tokens.map(t => t.length > 2 ? t : null).filter(Boolean))}</div>
+        <div class="card-grupo">Grupo: <strong>${s.grupo}</strong></div>
+        ${cboHtml}
+        ${avisoMin}
+        <div class="score-bar"><div class="score-fill" style="width:${pct}%"></div></div>
+      </div>
+      <div class="card-direita">
+        <div class="badge-aliquota" style="background:linear-gradient(135deg,${corAliquota(s.aliquota)},${corAliquota(s.aliquota)}aa)">${s.aliquota}%</div>
+        <div class="badge-aliquota-label">ISSQN<br>Art. 40 LC 112</div>
+      </div>
+    </div>`;
+}
+
+function renderizar(q) {
+  const container = document.getElementById("resultados");
+  const tokens = tokenizar(q);
+  const resultados = buscar(q);
+
+  if (!q || q.trim().length < 2) {
+    container.innerHTML = `
+      <div class="estado-vazio">
+        <div class="icone">📂</div>
+        <div>Digite uma atividade acima para consultar a alíquota de ISSQN aplicável.</div>
+      </div>`;
+    return;
+  }
+
+  if (resultados.length === 0) {
+    container.innerHTML = `
+      <div class="estado-vazio">
+        <div class="icone">🔎</div>
+        <div>Nenhuma atividade encontrada para <strong>"${q}"</strong>.<br>
+        Tente usar outros termos ou consulte a lista completa da LC 116.</div>
+      </div>`;
+    return;
+  }
+
+  container.innerHTML = resultados.map(s => renderCard(s, tokens)).join("");
+}
+
+// ── Debounce ──
+let timer;
+document.getElementById("campoBusca").addEventListener("input", e => {
+  clearTimeout(timer);
+  timer = setTimeout(() => renderizar(e.target.value), 280);
+});
+</script>
+</body>
+</html>
