@@ -306,8 +306,7 @@ const LC116 = [
 
 // ================================================================
 // TABELA DE CORRELAÇÃO CBO → LC116
-// Mapeia ocupações CBO que NÃO têm item direto para o subitem mais adequado
-// { cbo_codigo, cbo_titulo, sub_lc116, justificativa, palavrasExtra[] }
+// { cod, titulo, sub, justificativa, palavras[] }
 // ================================================================
 const CORRELACAO_CBO = [
   // ── COMUNICAÇÃO / RÁDIO / TV ──
@@ -319,77 +318,77 @@ const CORRELACAO_CBO = [
   {cod:"2611-35",titulo:"Cronista",sub:"35.01",justificativa:"Cronista produz conteúdo jornalístico/literário de interesse editorial (LC116, 35.01).",palavras:["cronista","cronica","jornalismo","coluna","texto","escritor"]},
   {cod:"2611-40",titulo:"Repórter",sub:"35.01",justificativa:"Repórter realiza reportagem e investigação jornalística (LC116, 35.01).",palavras:["reporter","reportagem","jornalismo","jornalista","noticia","pauta","correspondente"]},
   {cod:"2611-45",titulo:"Redator de rádio e televisão",sub:"35.01",justificativa:"Redator de rádio/TV produz texto jornalístico ou publicitário para veículos de comunicação (LC116, 35.01 ou 17.06).",palavras:["redator","radio","televisao","texto","roteiro","jornalismo","comunicacao"]},
-  {cod:"2612-05",titulo:"Arquivista",sub:"17.01",justificativa:"Arquivista presta serviço de organização, compilação e fornecimento de dados e informações (LC116, 17.01 — consultoria e fornecimento de informações).",palavras:["arquivista","arquivo","documentacao","gestao documentos","organizacao documentos","acervo"]},
-  {cod:"2612-10",titulo:"Bibliotecário",sub:"17.01",justificativa:"Bibliotecário presta serviço de gestão de informação e documentação, enquadrando-se em assessoria e fornecimento de informações (LC116, 17.01).",palavras:["bibliotecario","biblioteca","acervo","catalogacao","documentacao","indexacao","gestao informacao"]},
+  {cod:"2612-05",titulo:"Arquivista",sub:"17.01",justificativa:"Arquivista presta serviço de organização, compilação e fornecimento de dados e informações (LC116, 17.01).",palavras:["arquivista","arquivo","documentacao","gestao documentos","organizacao documentos","acervo"]},
+  {cod:"2612-10",titulo:"Bibliotecário",sub:"17.01",justificativa:"Bibliotecário presta serviço de gestão de informação e documentação (LC116, 17.01).",palavras:["bibliotecario","biblioteca","acervo","catalogacao","documentacao","indexacao","gestao informacao"]},
   // ── ARTE / CIRCO / ENTRETENIMENTO ──
-  {cod:"3762-05",titulo:"Artista circense",sub:"12.07",justificativa:"Artista circense realiza espetáculos artísticos (shows, apresentações), enquadrando-se em shows e espetáculos (LC116, 12.07).",palavras:["circo","circense","acrobata","malabarismo","equilibrismo","trapezista","palhaço","palhaco","magico","ilusionismo"]},
+  {cod:"3762-05",titulo:"Artista circense",sub:"12.07",justificativa:"Artista circense realiza espetáculos artísticos (LC116, 12.07).",palavras:["circo","circense","acrobata","malabarismo","equilibrismo","trapezista","palhaco","magico","ilusionismo"]},
   {cod:"3762-10",titulo:"Acrobata",sub:"12.07",justificativa:"Acrobata realiza apresentações de destreza física enquadradas em espetáculos (LC116, 12.07).",palavras:["acrobata","acrobacia","ginastica acrobatica","malabarismo","espetaculo"]},
   {cod:"3762-15",titulo:"Malabarista",sub:"12.07",justificativa:"Malabarista realiza espetáculos artísticos (LC116, 12.07).",palavras:["malabarismo","malabarista","circo","espetaculo","artista"]},
-  {cod:"3762-20",titulo:"Palhaço",sub:"12.07",justificativa:"Palhaço realiza espetáculos cômicos enquadrados em shows/espetáculos (LC116, 12.07) ou animação de eventos (12.17).",palavras:["palhaco","palhaço","circo","espetaculo","animacao","festa","entretenimento"]},
+  {cod:"3762-20",titulo:"Palhaço",sub:"12.07",justificativa:"Palhaço realiza espetáculos cômicos enquadrados em shows/espetáculos (LC116, 12.07) ou animação de eventos (12.17).",palavras:["palhaco","circo","espetaculo","animacao","festa","entretenimento"]},
   {cod:"3762-25",titulo:"Mágico",sub:"12.07",justificativa:"Mágico/ilusionista realiza espetáculos artísticos (LC116, 12.07).",palavras:["magico","ilusionista","truque","prestidigitacao","espetaculo","show"]},
   {cod:"3762-30",titulo:"Equilibrista",sub:"12.07",justificativa:"Equilibrista realiza apresentações artísticas (LC116, 12.07).",palavras:["equilibrista","equilibrio","circo","acrobacia","espetaculo"]},
   {cod:"2625-05",titulo:"Humorista",sub:"12.07",justificativa:"Humorista realiza apresentações artísticas/espetáculos de humor (LC116, 12.07).",palavras:["humorista","humor","stand-up","comico","comediante","espetaculo","show","entretenimento"]},
   {cod:"2625-10",titulo:"Comediante",sub:"12.07",justificativa:"Comediante realiza espetáculos cômicos (LC116, 12.07).",palavras:["comediante","comico","humor","stand-up","espetaculo","show","humorista"]},
-  {cod:"2624-15",titulo:"Artista plástico",sub:"40.01",justificativa:"Artista plástico executa obras de arte sob encomenda (LC116, 40.01) ou quando expostos/comercializados enquadra-se em serviços culturais.",palavras:["artista plastico","pintura","escultura","obra arte","galeria","atelie","encomenda arte","arte visual"]},
+  {cod:"2624-15",titulo:"Artista plástico",sub:"40.01",justificativa:"Artista plástico executa obras de arte sob encomenda (LC116, 40.01).",palavras:["artista plastico","pintura","escultura","obra arte","galeria","atelie","encomenda arte","arte visual"]},
   {cod:"2624-20",titulo:"Fotógrafo publicitário",sub:"13.03",justificativa:"Fotógrafo publicitário realiza serviços de fotografia (LC116, 13.03).",palavras:["fotografo","fotografia","publicitario","foto","ensaio","book","retrato","evento fotografico"]},
   {cod:"2624-25",titulo:"Estilista de moda",sub:"23.01",justificativa:"Estilista de moda presta serviços de design/comunicação visual (LC116, 23.01).",palavras:["estilista","moda","design moda","roupa","colecao","figurino","moda fashion"]},
-  {cod:"2626-05",titulo:"Compositor musical",sub:"12.12",justificativa:"Compositor cria obras musicais que são executadas, enquadrando-se em execução de música (LC116, 12.12).",palavras:["compositor","composicao","musica","canção","letra","musica","arranjo","criacao musical"]},
-  {cod:"2626-10",titulo:"Arranjador musical",sub:"12.12",justificativa:"Arranjador musical presta serviço técnico-musical, equiparando-se à execução e produção de música (LC116, 12.12).",palavras:["arranjador","arranjo","musica","partitura","orquestracao","producao musical"]},
-  {cod:"2626-15",titulo:"Regente de orquestra",sub:"12.12",justificativa:"Regente de orquestra executa serviços de direção musical na execução de música (LC116, 12.12).",palavras:["regente","orquestra","maestro","musica","regencia","direcao musical","coral"]},
-  {cod:"2626-20",titulo:"Musicólogo",sub:"17.01",justificativa:"Musicólogo presta serviços de pesquisa, consultoria e assessoria musical, enquadrando-se em assessoria/consultoria (LC116, 17.01).",palavras:["musicologo","musicologia","pesquisa musical","historia musica","teoria musical"]},
-  {cod:"2621-10",titulo:"Cantor",sub:"12.12",justificativa:"Cantor executa música ao vivo, enquadrando-se em execução de música (LC116, 12.12). Quando em shows/espetáculos também se enquadra em 12.07.",palavras:["cantor","cantora","voz","vocal","musica","show","performance musical","canto"]},
-  {cod:"2621-15",titulo:"Instrumentista",sub:"12.12",justificativa:"Instrumentista executa música, enquadrando-se diretamente em execução de música (LC116, 12.12).",palavras:["instrumentista","instrumento","musico","violao","guitarra","piano","bateria","violino","flauta","saxofone","trompete","tecladista","baixista","acordeonista"]},
-  {cod:"2621-20",titulo:"Músico de banda / conjunto",sub:"12.12",justificativa:"Músico integrante de banda executa música (LC116, 12.12). Shows e espetáculos enquadram-se em 12.07.",palavras:["musico","banda","conjunto","grupo musical","duo","trio","quarteto","quinteto","forró","samba","pagode","rock","pop"]},
-  {cod:"2625-15",titulo:"DJ / Disc-jóquei",sub:"12.12",justificativa:"DJ realiza execução musical (LC116, 12.12) em festas, casas noturnas e eventos.",palavras:["dj","disc-joquei","disk jockey","mixagem","set","musica eletronica","pista","balada","evento musical"]},
+  {cod:"2626-05",titulo:"Compositor musical",sub:"12.12",justificativa:"Compositor cria obras musicais enquadrando-se em execução de música (LC116, 12.12).",palavras:["compositor","composicao","musica","letra","arranjo","criacao musical"]},
+  {cod:"2626-10",titulo:"Arranjador musical",sub:"12.12",justificativa:"Arranjador musical presta serviço técnico-musical (LC116, 12.12).",palavras:["arranjador","arranjo","musica","partitura","orquestracao","producao musical"]},
+  {cod:"2626-15",titulo:"Regente de orquestra",sub:"12.12",justificativa:"Regente de orquestra executa serviços de direção musical (LC116, 12.12).",palavras:["regente","orquestra","maestro","musica","regencia","direcao musical","coral"]},
+  {cod:"2626-20",titulo:"Musicólogo",sub:"17.01",justificativa:"Musicólogo presta serviços de pesquisa e assessoria musical (LC116, 17.01).",palavras:["musicologo","musicologia","pesquisa musical","historia musica","teoria musical"]},
+  {cod:"2621-10",titulo:"Cantor",sub:"12.12",justificativa:"Cantor executa música ao vivo (LC116, 12.12).",palavras:["cantor","cantora","voz","vocal","musica","show","performance musical","canto"]},
+  {cod:"2621-15",titulo:"Instrumentista",sub:"12.12",justificativa:"Instrumentista executa música (LC116, 12.12).",palavras:["instrumentista","instrumento","musico","violao","guitarra","piano","bateria","violino","flauta","saxofone","trompete","tecladista","baixista","acordeonista"]},
+  {cod:"2621-20",titulo:"Músico de banda / conjunto",sub:"12.12",justificativa:"Músico integrante de banda executa música (LC116, 12.12).",palavras:["musico","banda","conjunto","grupo musical","duo","trio","quarteto","quinteto","forro","samba","pagode","rock","pop"]},
+  {cod:"2625-15",titulo:"DJ / Disc-jóquei",sub:"12.12",justificativa:"DJ realiza execução musical (LC116, 12.12) em festas e eventos.",palavras:["dj","disc-joquei","disk jockey","mixagem","set","musica eletronica","pista","balada","evento musical"]},
   // ── EDUCAÇÃO FÍSICA / ESPORTE ──
   {cod:"3728-05",titulo:"Técnico desportivo",sub:"6.04",justificativa:"Técnico desportivo presta serviços de orientação em atividades físicas e esportivas (LC116, 6.04).",palavras:["tecnico desportivo","treinador","treinamento esportivo","esporte","futebol","basquete","volei","natacao","atletismo"]},
-  {cod:"3714-25",titulo:"Instrutor de academia",sub:"6.04",justificativa:"Instrutor de academia orienta atividades físicas (LC116, 6.04 — ginástica e demais atividades físicas).",palavras:["instrutor","academia","musculacao","ginastica","personal","atividade fisica","educacao fisica","professor academia"]},
-  {cod:"2347-05",titulo:"Professor de educação física",sub:"6.04",justificativa:"Professor de educação física orientando atividades esportivas e ginásticas fora do ensino formal enquadra-se em 6.04; dentro do ensino regular, em 8.01.",palavras:["professor educacao fisica","educacao fisica","esporte","ginastica","atividade fisica","natacao","futsal","handebol"]},
-  {cod:"3771-10",titulo:"Jogador de futebol",sub:"12.11",justificativa:"Jogador de futebol profissional presta serviços em competições esportivas (LC116, 12.11).",palavras:["jogador","futebol","atleta","profissional","competicao","times","campeonato","goleiro","zagueiro","atacante","meio-campo"]},
+  {cod:"3714-25",titulo:"Instrutor de academia",sub:"6.04",justificativa:"Instrutor de academia orienta atividades físicas (LC116, 6.04).",palavras:["instrutor","academia","musculacao","ginastica","personal","atividade fisica","educacao fisica","professor academia"]},
+  {cod:"2347-05",titulo:"Professor de educação física",sub:"6.04",justificativa:"Professor de educação física fora do ensino formal enquadra-se em 6.04.",palavras:["professor educacao fisica","educacao fisica","esporte","ginastica","atividade fisica","natacao","futsal","handebol"]},
+  {cod:"3771-10",titulo:"Jogador de futebol",sub:"12.11",justificativa:"Jogador de futebol profissional presta serviços em competições esportivas (LC116, 12.11).",palavras:["jogador","futebol","atleta","profissional","competicao","campeonato","goleiro","zagueiro","atacante"]},
   {cod:"3771-25",titulo:"Tenista profissional",sub:"12.11",justificativa:"Atleta profissional em competições esportivas (LC116, 12.11).",palavras:["tenista","tenis","atleta","profissional","competicao","torneio","partida"]},
   {cod:"3771-15",titulo:"Golfista profissional",sub:"12.11",justificativa:"Atleta profissional em competições esportivas (LC116, 12.11).",palavras:["golfista","golfe","atleta","profissional","competicao","torneio"]},
   // ── ESCRITA / TRADUÇÃO / EDIÇÃO ──
-  {cod:"2615-05",titulo:"Escritor",sub:"17.02",justificativa:"Escritor presta serviços de redação, edição e produção de conteúdo textual (LC116, 17.02).",palavras:["escritor","redacao","edicao","livro","texto","autoral","conteudo","obra literaria"]},
-  {cod:"2615-10",titulo:"Redator",sub:"17.02",justificativa:"Redator presta serviços de redação para empresas, publicidade ou comunicação (LC116, 17.02 ou 17.06 se publicitário).",palavras:["redator","redacao","texto","conteudo","copywriter","texto publicitario","conteudo digital"]},
-  {cod:"2614-10",titulo:"Tradutor",sub:"17.02",justificativa:"Tradutor presta serviços de tradução, enquadrando-se diretamente em 17.02 (tradução, interpretação).",palavras:["tradutor","traducao","idioma","lingua","interprete","traducao tecnica","legenda","versao"]},
-  {cod:"2614-15",titulo:"Intérprete de língua",sub:"17.02",justificativa:"Intérprete presta serviços de interpretação (LC116, 17.02).",palavras:["interprete","interpretacao","lingua","idioma","libras","simultâneo","consecutivo"]},
+  {cod:"2615-05",titulo:"Escritor",sub:"17.02",justificativa:"Escritor presta serviços de redação e produção de conteúdo textual (LC116, 17.02).",palavras:["escritor","redacao","edicao","livro","texto","autoral","conteudo","obra literaria"]},
+  {cod:"2615-10",titulo:"Redator",sub:"17.02",justificativa:"Redator presta serviços de redação (LC116, 17.02).",palavras:["redator","redacao","texto","conteudo","copywriter","texto publicitario","conteudo digital"]},
+  {cod:"2614-10",titulo:"Tradutor",sub:"17.02",justificativa:"Tradutor presta serviços de tradução (LC116, 17.02).",palavras:["tradutor","traducao","idioma","lingua","interprete","traducao tecnica","legenda","versao"]},
+  {cod:"2614-15",titulo:"Intérprete de língua",sub:"17.02",justificativa:"Intérprete presta serviços de interpretação (LC116, 17.02).",palavras:["interprete","interpretacao","lingua","idioma","libras","simultaneo","consecutivo"]},
   {cod:"2614-20",titulo:"Revisor de textos",sub:"17.02",justificativa:"Revisor de textos presta serviços de revisão editorial (LC116, 17.02).",palavras:["revisor","revisao","texto","gramatica","ortografia","edicao","editorial"]},
   // ── RELIGIOSO ──
-  {cod:"2631-05",titulo:"Sacerdote/Pastor/Padre",sub:"8.02",justificativa:"Atividade religiosa com cunho educativo (catequese, homilética) enquadra-se em instrução e orientação (LC116, 8.02). Serviços prestados a pessoas físicas podem ter imunidade específica.",palavras:["padre","pastor","sacerdote","religioso","missa","culto","catequese","pregacao","devocional","igrejas"]},
+  {cod:"2631-05",titulo:"Sacerdote/Pastor/Padre",sub:"8.02",justificativa:"Atividade religiosa com cunho educativo enquadra-se em instrução e orientação (LC116, 8.02).",palavras:["padre","pastor","sacerdote","religioso","missa","culto","catequese","pregacao","igrejas"]},
   // ── ASSISTÊNCIA SOCIAL ──
-  {cod:"2516-05",titulo:"Assistente social",sub:"17.01",justificativa:"Assistente social presta assessoria e consultoria social, enquadrando-se em assessoria/consultoria de qualquer natureza (LC116, 17.01).",palavras:["assistente social","servico social","assistencia social","cras","creas","social","vulnerabilidade"]},
+  {cod:"2516-05",titulo:"Assistente social",sub:"17.01",justificativa:"Assistente social presta assessoria e consultoria social (LC116, 17.01).",palavras:["assistente social","servico social","assistencia social","cras","creas","social","vulnerabilidade"]},
   // ── SEGURANÇA DO TRABALHO ──
   {cod:"2149-15",titulo:"Engenheiro de segurança do trabalho",sub:"7.01",justificativa:"Engenheiro de segurança do trabalho presta serviços de engenharia especializada (LC116, 7.01).",palavras:["engenheiro seguranca","seguranca trabalho","NR","laudo","cipa","ppra","pcmso","acidente trabalho"]},
-  {cod:"3516-05",titulo:"Técnico de segurança do trabalho",sub:"17.09",justificativa:"Técnico de segurança do trabalho realiza laudos, perícias e análises técnicas (LC116, 17.09).",palavras:["tecnico seguranca","seguranca trabalho","NR","laudo tecnico","inspecao","vistoria","ppra","cipa"]},
-  // ── MEDICINA DO TRABALHO / SAÚDE OCUP. ──
-  {cod:"2251-52",titulo:"Médico do trabalho",sub:"4.01",justificativa:"Médico do trabalho presta serviços médicos especializados (LC116, 4.01 — medicina).",palavras:["medico trabalho","medicina trabalho","pcmso","exame admissional","exame demissional","ocupacional","saude trabalhador"]},
-  // ── TERAPEUTA HOLÍSTICO / ALTERNATIVO ──
-  {cod:"2263-05",titulo:"Terapeuta holístico",sub:"4.09",justificativa:"Terapeuta holístico presta serviços de terapias para tratamento físico/mental (LC116, 4.09).",palavras:["terapeuta","terapia holistica","florais","reiki","cromoterapia","aromaterapia","cristaloterapia","cura","energia","espiritualidade"]},
+  {cod:"3516-05",titulo:"Técnico de segurança do trabalho",sub:"17.09",justificativa:"Técnico de segurança do trabalho realiza laudos e análises técnicas (LC116, 17.09).",palavras:["tecnico seguranca","seguranca trabalho","NR","laudo tecnico","inspecao","vistoria","ppra","cipa"]},
+  // ── MEDICINA DO TRABALHO ──
+  {cod:"2251-52",titulo:"Médico do trabalho",sub:"4.01",justificativa:"Médico do trabalho presta serviços médicos especializados (LC116, 4.01).",palavras:["medico trabalho","medicina trabalho","pcmso","exame admissional","exame demissional","ocupacional","saude trabalhador"]},
+  // ── TERAPEUTA HOLÍSTICO ──
+  {cod:"2263-05",titulo:"Terapeuta holístico",sub:"4.09",justificativa:"Terapeuta holístico presta serviços de terapias físico/mental (LC116, 4.09).",palavras:["terapeuta","terapia holistica","florais","reiki","cromoterapia","aromaterapia","cristaloterapia","cura","energia","espiritualidade"]},
   {cod:"2263-10",titulo:"Quiropraxista",sub:"4.08",justificativa:"Quiropraxista realiza tratamento físico terapêutico equiparável à fisioterapia (LC116, 4.08).",palavras:["quiropraxia","quiropraxista","coluna","ajuste","manipulacao","fisioterapia","tratamento fisico"]},
-  {cod:"5168-05",titulo:"Esotérico",sub:"4.09",justificativa:"Serviços esotéricos com fim terapêutico equiparam-se a terapias (LC116, 4.09). Atenção: pode haver discussão sobre incidência do ISS.",palavras:["esoterismo","esotico","tarot","oraculo","videncia","magia","rituais","tarologia","cartomante"]},
+  {cod:"5168-05",titulo:"Esotérico",sub:"4.09",justificativa:"Serviços esotéricos com fim terapêutico equiparam-se a terapias (LC116, 4.09).",palavras:["esoterismo","esotico","tarot","oraculo","videncia","magia","rituais","tarologia","cartomante"]},
   // ── NUTRIÇÃO / BELEZA ──
   {cod:"2241-10",titulo:"Nutricionista clínico",sub:"4.10",justificativa:"Nutricionista clínico presta serviços de nutrição (LC116, 4.10).",palavras:["nutricionista","nutricao","dieta","reeducacao alimentar","plano alimentar","emagrecimento nutricional"]},
-  {cod:"5161-20",titulo:"Micropigmentador",sub:"6.02",justificativa:"Micropigmentação é tratamento estético (LC116, 6.02 — esteticistas, tratamento de pele).",palavras:["micropigmentacao","micropigmentador","sobrancelha","labios","tatuagem sobrancelha","estetica","pigmento"]},
+  {cod:"5161-20",titulo:"Micropigmentador",sub:"6.02",justificativa:"Micropigmentação é tratamento estético (LC116, 6.02).",palavras:["micropigmentacao","micropigmentador","sobrancelha","labios","tatuagem sobrancelha","estetica","pigmento"]},
   {cod:"5161-25",titulo:"Designer de sobrancelhas",sub:"6.02",justificativa:"Designer de sobrancelhas presta serviço estético (LC116, 6.02).",palavras:["designer sobrancelhas","sobrancelha","design","estetica","henna","depilacao sobrancelha"]},
   // ── INFORMÁTICA AVANÇADA ──
-  {cod:"2123-15",titulo:"Analista de segurança da informação",sub:"1.07",justificativa:"Analista de segurança da informação presta suporte técnico e manutenção de sistemas (LC116, 1.07).",palavras:["seguranca informacao","analista seguranca","hacker etico","pentest","vulnerabilidade","ciberseguranca","firewall","soc"]},
-  {cod:"2534-10",titulo:"Influenciador digital",sub:"1.09",justificativa:"Influenciador digital disponibiliza conteúdo de áudio, vídeo e texto por meio da internet (LC116, 1.09).",palavras:["influencer","influenciador digital","instagram","tiktok","youtube","reels","conteudo","digital","seguidores","stories"]},
+  {cod:"2123-15",titulo:"Analista de segurança da informação",sub:"1.07",justificativa:"Analista de segurança da informação presta suporte técnico de sistemas (LC116, 1.07).",palavras:["seguranca informacao","analista seguranca","hacker etico","pentest","vulnerabilidade","ciberseguranca","firewall","soc"]},
+  {cod:"2534-10",titulo:"Influenciador digital",sub:"1.09",justificativa:"Influenciador digital disponibiliza conteúdo por meio da internet (LC116, 1.09).",palavras:["influencer","influenciador digital","instagram","tiktok","youtube","reels","conteudo","digital","seguidores","stories"]},
   {cod:"2124-25",titulo:"Web designer",sub:"1.08",justificativa:"Web designer cria e mantém páginas eletrônicas (LC116, 1.08).",palavras:["web designer","webdesigner","site","layout","ux","ui","figma","design site","interface","web"]},
   // ── GASTRONOMIA ──
-  {cod:"2611-50",titulo:"Gastrônomo / Chef de cozinha",sub:"17.01",justificativa:"Chef/gastrônomo prestando consultoria, treinamento ou elaboração de cardápios enquadra-se em assessoria técnica (LC116, 17.01) ou instrução (8.02).",palavras:["chef","gastronomia","gastronomo","cozinha","cardapio","culinaria","cozinheiro","confeiteiro","doceiro","padeiro"]},
-  {cod:"5132-05",titulo:"Cozinheiro",sub:"17.01",justificativa:"Cozinheiro autônomo prestando serviço de preparo de refeições enquadra-se em assessoria/serviço técnico pessoal (LC116, 17.01). Atenção: venda de alimentos pode ser ICMS.",palavras:["cozinheiro","culinaria","gastronomia","refeicao","preparo","marmita","catering","cozinha"]},
+  {cod:"2611-50",titulo:"Gastrônomo / Chef de cozinha",sub:"17.01",justificativa:"Chef/gastrônomo prestando consultoria ou elaboração de cardápios enquadra-se em assessoria técnica (LC116, 17.01).",palavras:["chef","gastronomia","gastronomo","cozinha","cardapio","culinaria","cozinheiro","confeiteiro","doceiro","padeiro"]},
+  {cod:"5132-05",titulo:"Cozinheiro",sub:"17.01",justificativa:"Cozinheiro autônomo prestando serviço de preparo de refeições enquadra-se em serviço técnico pessoal (LC116, 17.01).",palavras:["cozinheiro","culinaria","gastronomia","refeicao","preparo","marmita","catering","cozinha"]},
   // ── SEGURANÇA PRIVADA ──
   {cod:"5173-20",titulo:"Vigilante",sub:"11.02",justificativa:"Vigilante presta serviços de vigilância e segurança (LC116, 11.02).",palavras:["vigilante","vigilancia","seguranca","portaria","monitoramento","guarda"]},
   {cod:"5173-30",titulo:"Guarda de segurança",sub:"11.02",justificativa:"Guarda de segurança presta serviços de vigilância (LC116, 11.02).",palavras:["guarda seguranca","seguranca","vigilancia","porteiro","portaria","condominio"]},
   // ── TRANSPORTES ──
   {cod:"7824-05",titulo:"Motorista de táxi",sub:"16.02",justificativa:"Motorista de táxi presta serviço de transporte municipal de passageiros (LC116, 16.02).",palavras:["motorista taxi","taxi","transporte","passageiro","corrida","frotas"]},
-  {cod:"7824-10",titulo:"Motorista de aplicativo",sub:"16.02",justificativa:"Motorista de aplicativo (Uber, 99 etc.) presta serviço de transporte municipal (LC116, 16.02).",palavras:["motorista aplicativo","uber","99","ifood motorista","transporte aplicativo","passageiro","corrida","carona"]},
+  {cod:"7824-10",titulo:"Motorista de aplicativo",sub:"16.02",justificativa:"Motorista de aplicativo presta serviço de transporte municipal (LC116, 16.02).",palavras:["motorista aplicativo","uber","99","ifood motorista","transporte aplicativo","passageiro","corrida","carona"]},
   {cod:"7823-05",titulo:"Motorista de ônibus",sub:"16.01",justificativa:"Motorista de ônibus presta serviço de transporte coletivo municipal (LC116, 16.01).",palavras:["motorista onibus","onibus","coletivo","linha","passageiro","urbano","intramunicipal"]},
-  {cod:"4152-05",titulo:"Carteiro / Motoboy",sub:"26.01",justificativa:"Carteiro/Motoboy presta serviços de coleta e entrega de correspondências e objetos (LC116, 26.01).",palavras:["carteiro","motoboy","entregador","entrega","correios","coleta","remessa","encomenda","motociclista entregador"]},
+  {cod:"4152-05",titulo:"Carteiro / Motoboy",sub:"26.01",justificativa:"Carteiro/Motoboy presta serviços de coleta e entrega de correspondências (LC116, 26.01).",palavras:["carteiro","motoboy","entregador","entrega","correios","coleta","remessa","encomenda","motociclista entregador"]},
   // ── IMOBILIÁRIO ──
   {cod:"3541-15",titulo:"Corretor de imóveis",sub:"10.05",justificativa:"Corretor de imóveis realiza corretagem e intermediação de imóveis (LC116, 10.05).",palavras:["corretor imovel","imobiliaria","creci","compra venda imovel","locacao","aluguel","imovel","captacao","vistoria imovel"]},
   // ── AGROPECUÁRIA / RURAL ──
-  {cod:"2221-05",titulo:"Engenheiro agrônomo",sub:"7.01",justificativa:"Engenheiro agrônomo presta serviços de agronomia enquadrando-se em engenharia e agronomia (LC116, 7.01).",palavras:["agronomo","agronomia","lavoura","producao rural","solo","calcario","adubo","plantio","irrigacao","CREA","receituario agronomico"]},
+  {cod:"2221-05",titulo:"Engenheiro agrônomo",sub:"7.01",justificativa:"Engenheiro agrônomo presta serviços de agronomia (LC116, 7.01).",palavras:["agronomo","agronomia","lavoura","producao rural","solo","calcario","adubo","plantio","irrigacao","CREA","receituario agronomico"]},
   {cod:"2221-10",titulo:"Engenheiro florestal",sub:"7.01",justificativa:"Engenheiro florestal presta serviços de engenharia florestal (LC116, 7.01).",palavras:["engenheiro florestal","floresta","silvicultura","madeira","remanescente","licenca ambiental","inventario florestal"]},
   // ── CONSTRUÇÃO CIVIL / OFÍCIOS ──
   {cod:"7163-05",titulo:"Encanador",sub:"7.02",justificativa:"Encanador executa obras hidráulicas em edificações (LC116, 7.02).",palavras:["encanador","hidraulica","tubulacao","cano","vazamento","obra hidraulica","esgoto","agua","instalacao hidraulica"]},
@@ -405,16 +404,16 @@ const CORRELACAO_CBO = [
   {cod:"2410-05",titulo:"Advogado",sub:"17.14",justificativa:"Advogado presta serviços de advocacia (LC116, 17.14).",palavras:["advogado","advocacia","oab","juridico","contrato","processo","causa","defesa","consultoria juridica","direito"]},
   {cod:"2410-10",titulo:"Procurador",sub:"17.14",justificativa:"Procurador presta serviços jurídicos equiparáveis à advocacia (LC116, 17.14).",palavras:["procurador","juridico","advocacia","representacao juridica","oab"]},
   // ── SERVIÇOS DOMÉSTICOS / LIMPEZA ──
-  {cod:"5142-05",titulo:"Faxineiro / Diarista",sub:"7.10",justificativa:"Faxineiro/diarista autônomo presta serviços de limpeza de imóveis (LC116, 7.10 — limpeza, manutenção e conservação).",palavras:["faxineiro","diarista","limpeza","faxina","condominio","residencia","escritorio","limpeza predial","higienizacao"]},
+  {cod:"5142-05",titulo:"Faxineiro / Diarista",sub:"7.10",justificativa:"Faxineiro/diarista autônomo presta serviços de limpeza de imóveis (LC116, 7.10).",palavras:["faxineiro","diarista","limpeza","faxina","condominio","residencia","escritorio","limpeza predial","higienizacao"]},
   {cod:"5142-10",titulo:"Zelador",sub:"7.10",justificativa:"Zelador presta serviços de conservação de imóveis (LC116, 7.10).",palavras:["zelador","conservacao","condominio","predio","imovel","portaria","manutencao predial"]},
   // ── PRODUÇÃO AUDIOVISUAL ──
   {cod:"3741-05",titulo:"Técnico de som",sub:"13.02",justificativa:"Técnico de som realiza serviços de sonorização e gravação de áudio (LC116, 13.02).",palavras:["tecnico som","sonorizacao","audio","pa","microfone","mixer","gravacao","estudio","live sound"]},
   {cod:"3741-10",titulo:"Operador de câmera",sub:"13.03",justificativa:"Operador de câmera presta serviços de filmagem (LC116, 13.03).",palavras:["operador camera","filmagem","video","cinematografia","camera","gravacao video","audiovisual"]},
   {cod:"3721-10",titulo:"Iluminador cênico",sub:"12.13",justificativa:"Iluminador cênico presta serviço técnico em produção de espetáculos (LC116, 12.13).",palavras:["iluminador","iluminacao cenica","luz","projetor","show","evento","espetaculo","palco"]},
   // ── CUIDADOS COM IDOSOS ──
-  {cod:"5162-05",titulo:"Cuidador de idosos",sub:"4.17",justificativa:"Cuidador de idosos presta serviços de assistência e cuidado a pessoas idosas (LC116, 4.17 — casas de repouso e congêneres).",palavras:["cuidador idosos","idoso","cuidador","acompanhante","terceira idade","cuidado domiciliar","home care"]},
+  {cod:"5162-05",titulo:"Cuidador de idosos",sub:"4.17",justificativa:"Cuidador de idosos presta serviços de assistência a pessoas idosas (LC116, 4.17).",palavras:["cuidador idosos","idoso","cuidador","acompanhante","terceira idade","cuidado domiciliar","home care"]},
   // ── COACHING / MENTORIA ──
-  {cod:"2394-35",titulo:"Coach",sub:"8.02",justificativa:"Coach/mentor presta serviços de instrução, orientação e desenvolvimento pessoal/profissional (LC116, 8.02).",palavras:["coach","coaching","mentoria","mentor","desenvolvimento pessoal","lideranca","carreira","life coach","executive coach"]},
+  {cod:"2394-35",titulo:"Coach",sub:"8.02",justificativa:"Coach/mentor presta serviços de instrução e desenvolvimento pessoal/profissional (LC116, 8.02).",palavras:["coach","coaching","mentoria","mentor","desenvolvimento pessoal","lideranca","carreira","life coach","executive coach"]},
   // ── SERVIÇOS FUNERÁRIOS ──
   {cod:"5166-05",titulo:"Agente funerário",sub:"25.01",justificativa:"Agente funerário presta serviços funerários (LC116, 25.01).",palavras:["funerario","agente funerario","funeral","velorio","enterro","obito","translado","sepultamento"]},
   // ── SEGUROS ──
@@ -423,9 +422,9 @@ const CORRELACAO_CBO = [
   {cod:"4221-05",titulo:"Recepcionista",sub:"17.02",justificativa:"Recepcionista presta serviços de secretaria e apoio administrativo (LC116, 17.02).",palavras:["recepcionista","secretaria","atendimento","balcao","recepcao","escritorio","apoio administrativo"]},
   {cod:"3515-05",titulo:"Secretária",sub:"17.02",justificativa:"Secretária presta serviços de secretaria e expediente (LC116, 17.02).",palavras:["secretaria","secretario","secretaria executiva","administrativo","escritorio","digitacao","agenda","correspondencia"]},
   // ── PALESTRANTE ──
-  {cod:"2394-30",titulo:"Palestrante / Conferencista",sub:"17.24",justificativa:"Palestrante presta serviços de apresentação de palestras, conferências e seminários (LC116, 17.24).",palavras:["palestrante","palestra","conferencista","conferencia","seminario","workshop","speaker","motivacional","apresentacao"]},
+  {cod:"2394-30",titulo:"Palestrante / Conferencista",sub:"17.24",justificativa:"Palestrante presta serviços de apresentação de palestras e conferências (LC116, 17.24).",palavras:["palestrante","palestra","conferencista","conferencia","seminario","workshop","speaker","motivacional","apresentacao"]},
   // ── GESTÃO DE RH ──
-  {cod:"2523-15",titulo:"Headhunter / Recrutador",sub:"17.04",justificativa:"Headhunter/recrutador presta serviços de recrutamento e seleção de pessoal (LC116, 17.04).",palavras:["headhunter","recrutador","selecao","rh","recursos humanos","hunting","selecao pessoal","vaga","processo seletivo"]},
+  {cod:"2523-15",titulo:"Headhunter / Recrutador",sub:"17.04",justificativa:"Headhunter/recrutador presta serviços de recrutamento e seleção de pessoal (LC116, 17.04).",palavras:["headhunter","recrutador","selecao","rh","recursos humanos","hunting","selecao pessoal","vaga","processo seletivo"]}
 ];
 
 // ================================================================
@@ -438,7 +437,6 @@ function norm(txt){
 }
 function tokens(txt){ return norm(txt).split(" ").filter(t=>t.length>1); }
 
-// Busca nos subitens LC116
 function scoreLC(serv, toks, qNorm){
   const h = norm(serv.descricao)+" "+norm(serv.grupo)+" "+serv.palavras.map(norm).join(" ");
   let s=0;
@@ -451,7 +449,6 @@ function scoreLC(serv, toks, qNorm){
   return s;
 }
 
-// Busca nas correlações CBO
 function scoreCBO(cor, toks, qNorm){
   const h = norm(cor.titulo)+" "+cor.palavras.map(norm).join(" ");
   let s=0;
@@ -469,17 +466,16 @@ function buscar(q){
   const resultados=[];
   const subVistos=new Set();
 
-  // 1) CBO correlações
+  // 1) CBO correlações — usa cor.sub (campo correto)
   CORRELACAO_CBO.forEach(cor=>{
     const sc=scoreCBO(cor,toks,qn);
     if(sc>0){
-      const serv=LC116.find(s=>s.sub===cor.sub_lc116);
-      if(serv && !subVistos.has(cor.sub_lc116)){
-        subVistos.add(cor.sub_lc116);
+      const serv=LC116.find(s=>s.sub===cor.sub);
+      if(serv && !subVistos.has(cor.sub)){
+        subVistos.add(cor.sub);
         resultados.push({...serv, _score:sc+5, _cboCod:cor.cod, _cboTitulo:cor.titulo, _justificativa:cor.justificativa, _viaCBO:true});
       } else if(serv){
-        // já existe — aumenta score se maior
-        const ex=resultados.find(r=>r.sub===cor.sub_lc116);
+        const ex=resultados.find(r=>r.sub===cor.sub);
         if(ex && sc+5>ex._score){ ex._score=sc+5; ex._cboCod=cor.cod; ex._cboTitulo=cor.titulo; ex._justificativa=cor.justificativa; ex._viaCBO=true; }
       }
     }
