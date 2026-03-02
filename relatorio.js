@@ -63,6 +63,11 @@ export function gerarPDF(lancamentos, sess, dIni, dFim, numInput) {
   const col1 = pares.slice(0, metade);
   const col2 = pares.slice(metade);
 
+  // ===== Ajuste dinâmico de fonte conforme quantidade de serviços
+  const totalServicos = pares.length;
+  const fontSize = totalServicos > 20 ? '9px' : totalServicos > 15 ? '10px' : '12px';
+  const padding = totalServicos > 20 ? '2px 4px' : '3px 6px';
+
   // ===== HTML do relatório
   let html = `
   <div style="font-family:Arial,Helvetica,sans-serif;max-width:700px;margin:0 auto;line-height:1.4;">
@@ -79,54 +84,54 @@ export function gerarPDF(lancamentos, sess, dIni, dFim, numInput) {
     <hr style="margin:4px 0 8px;border:0;border-top:2px solid #444;">
     <h3 style="text-align:center;margin:0;">RELATÓRIO DE PRODUTIVIDADE Nº ${String(num).padStart(3,'0')}/${ano}</h3>
 
-    <p style="margin-top:6px;font-size:13px;">
+    <p style="margin-top:4px;font-size:12px;">
       <strong>DE:</strong> Diretoria de Fiscalização e Tributação<br>
       <strong>PARA:</strong> Secretaria da Fazenda<br>
       <strong>ASSUNTO:</strong> Produtividade Fiscal<br>
       <strong>DATA:</strong> ${dataGer}
     </p>
 
-    <p style="margin-top:8px;font-size:13px;">
+    <p style="margin-top:6px;font-size:12px;">
       Seguem as atividades realizadas no período de <strong>${periodo}</strong>:
     </p>
 
     <!-- ===== DUAS TABELAS LADO A LADO ===== -->
     <div style="display:flex;gap:12px;justify-content:space-between;margin-top:10px;">
-      <table style="width:50%;border-collapse:collapse;font-size:12px;">
+      <table style="width:50%;border-collapse:collapse;font-size:${fontSize};">
         <thead>
           <tr style="background:#f1f5f9;">
-            <th style="text-align:left;padding:3px 6px;border-bottom:2px solid #444;">Tipo de Serviço</th>
-            <th style="text-align:right;padding:3px 6px;border-bottom:2px solid #444;">Qtd</th>
+            <th style="text-align:left;padding:${padding};border-bottom:2px solid #444;">Tipo de Serviço</th>
+            <th style="text-align:right;padding:${padding};border-bottom:2px solid #444;">Qtd</th>
           </tr>
         </thead>
         <tbody>
           ${col1.map(([serv, qtd]) => `
             <tr>
-              <td style="padding:3px 6px;border-bottom:1px solid #ddd;">${serv}</td>
-              <td style="text-align:right;padding:3px 6px;border-bottom:1px solid #ddd;">${qtd}</td>
+              <td style="padding:${padding};border-bottom:1px solid #ddd;">${serv}</td>
+              <td style="text-align:right;padding:${padding};border-bottom:1px solid #ddd;">${qtd}</td>
             </tr>`).join('')}
         </tbody>
       </table>
 
-      <table style="width:50%;border-collapse:collapse;font-size:12px;">
+      <table style="width:50%;border-collapse:collapse;font-size:${fontSize};">
         <thead>
           <tr style="background:#f1f5f9;">
-            <th style="text-align:left;padding:3px 6px;border-bottom:2px solid #444;">Tipo de Serviço</th>
-            <th style="text-align:right;padding:3px 6px;border-bottom:2px solid #444;">Qtd</th>
+            <th style="text-align:left;padding:${padding};border-bottom:2px solid #444;">Tipo de Serviço</th>
+            <th style="text-align:right;padding:${padding};border-bottom:2px solid #444;">Qtd</th>
           </tr>
         </thead>
         <tbody>
           ${col2.map(([serv, qtd]) => `
             <tr>
-              <td style="padding:3px 6px;border-bottom:1px solid #ddd;">${serv}</td>
-              <td style="text-align:right;padding:3px 6px;border-bottom:1px solid #ddd;">${qtd}</td>
+              <td style="padding:${padding};border-bottom:1px solid #ddd;">${serv}</td>
+              <td style="text-align:right;padding:${padding};border-bottom:1px solid #ddd;">${qtd}</td>
             </tr>`).join('')}
         </tbody>
       </table>
     </div>
 
     <!-- ===== RESUMO FINANCEIRO ===== -->
-    <div style="margin-top:16px;padding:10px;border:1px solid #ccc;border-radius:6px;background:#f9fafb;font-size:13px;">
+    <div style="margin-top:12px;padding:8px;border:1px solid #ccc;border-radius:6px;background:#f9fafb;font-size:12px;">
       <strong>Total de atividades:</strong> ${totalGeral}<br>
       <strong>Valor arrecadado:</strong> ${totalBRL}<br><br>
       <strong>Composição do valor arrecadado:</strong><br>
@@ -136,8 +141,8 @@ export function gerarPDF(lancamentos, sess, dIni, dFim, numInput) {
       • Outros serviços: ${totalOutros.toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}
     </div>
 
-    <h4 style="text-align:center;margin-top:20px;">Composição visual do valor arrecadado</h4>
-    <canvas id="graficoComposicao" width="600" height="220"></canvas>
+    <h4 style="text-align:center;margin-top:16px;margin-bottom:8px;">Composição visual do valor arrecadado</h4>
+    <canvas id="graficoComposicao" width="600" height="180"></canvas>
 
     <!-- ===== NOVA PÁGINA PARA FECHAMENTO ===== -->
     <div style="page-break-before: always; margin-top:40px;">
@@ -188,7 +193,7 @@ export function gerarPDF(lancamentos, sess, dIni, dFim, numInput) {
         scales: {
           x: {
             beginAtZero: true,
-            min: 0, // força início no zero
+            min: 0,
             ticks: { callback: v => 'R$ ' + v.toLocaleString('pt-BR') }
           }
         }
