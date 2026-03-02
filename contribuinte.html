@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Portal do Contribuinte — Diamantina/MG</title>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{background:linear-gradient(135deg,#0f172a 0%,#1e293b 100%);color:#e2e8f0;font-family:"Segoe UI",system-ui,-apple-system,sans-serif;min-height:100vh;padding:24px 16px 48px}
+    .container{max-width:1100px;margin:0 auto}
+    .header{text-align:center;margin-bottom:40px}
+    .header h1{font-size:2rem;font-weight:800;color:#38bdf8;margin-bottom:8px}
+    .header p{font-size:1rem;color:#94a3b8;line-height:1.5}
+    .badge{display:inline-flex;align-items:center;gap:6px;margin-top:10px;background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.3);border-radius:999px;padding:5px 16px;font-size:.8rem;color:#7dd3fc;font-weight:600}
+    .ferramentas{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:24px;margin-top:32px}
+    .ferramenta{background:linear-gradient(145deg,#1e293b,#0f172a);border:2px solid rgba(56,189,248,.2);border-radius:14px;padding:28px;transition:all .3s ease;text-decoration:none;display:block;color:inherit}
+    .ferramenta:hover{border-color:#38bdf8;transform:translateY(-4px);box-shadow:0 12px 32px rgba(56,189,248,.2)}
+    .ferramenta .icone{font-size:2.5rem;margin-bottom:14px}
+    .ferramenta h2{font-size:1.3rem;font-weight:700;color:#f1f5f9;margin-bottom:8px}
+    .ferramenta p{font-size:.9rem;color:#94a3b8;line-height:1.5;margin-bottom:12px}
+    .ferramenta .tag{display:inline-block;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);border-radius:6px;padding:3px 10px;font-size:.72rem;color:#4ade80;font-weight:600;margin-top:4px}
+    .back-link{text-align:center;margin-top:40px}
+    .back-link a{display:inline-flex;align-items:center;gap:6px;color:#38bdf8;text-decoration:none;font-size:.9rem;font-weight:600;padding:10px 20px;border:1px solid rgba(56,189,248,.3);border-radius:8px;transition:.2s}
+    .back-link a:hover{background:rgba(56,189,248,.1);border-color:#38bdf8}
+    .rodape{text-align:center;margin-top:48px;font-size:.8rem;color:#475569}
+    @media(max-width:640px){
+      .ferramentas{grid-template-columns:1fr}
+      .header h1{font-size:1.6rem}
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <h1>👤 Portal do Contribuinte</h1>
+    <p>Ferramentas públicas de consulta e cálculo tributário</p>
+    <div class="badge">📊 Ferramentas de auxílio ao contribuinte — Diamantina/MG</div>
+  </div>
+
+  <div class="ferramentas">
+    <a href="aliquota.html" class="ferramenta">
+      <div class="icone">📋</div>
+      <h2>Consulta de Alíquota ISSQN</h2>
+      <p>Identifique o subitem da LC 116/2003 e descubra a alíquota de ISSQN aplicável à sua atividade profissional.</p>
+      <span class="tag">🔍 Busca por atividade</span>
+    </a>
+
+    <a href="retencao-simples.html" class="ferramenta">
+      <div class="icone">🧮</div>
+      <h2>Cálculo de Retenção ISSQN</h2>
+      <p>Calcule a alíquota efetiva de ISS para retenção na fonte aplicável a empresas optantes pelo Simples Nacional.</p>
+      <span class="tag">💼 Simples Nacional</span>
+    </a>
+  </div>
+
+  <div class="back-link">
+    <a href="index.html">← Voltar ao Portal Principal</a>
+  </div>
+
+  <div class="rodape">
+    © 2026 Prefeitura Municipal de Diamantina — Secretaria de Fazenda
+  </div>
+</div>
+
+</body>
+</html>
