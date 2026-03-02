@@ -58,7 +58,7 @@
     
     <div class="campo-grupo">
       <label for="rbt12">Receita Bruta Total em 12 Meses (RBT12)</label>
-      <input type="number" id="rbt12" placeholder="Ex: 280140.00" step="0.01" value="280140">
+      <input type="text" id="rbt12" placeholder="Ex: 280.140,00">
       <div class="hint">Informe a Receita Bruta acumulada nos últimos 12 meses</div>
     </div>
 
@@ -78,7 +78,13 @@
   <div class="painel">
     <h2>🎯 Resultados do Cálculo</h2>
     
-    <div class="grid-2">
+    <!-- ALÍQUOTA EFETIVA EM DESTAQUE NO TOPO -->
+    <div class="resultado-box destaque">
+      <div class="label">⭐ Alíquota Efetiva de ISSQN para Retenção</div>
+      <div class="valor" id="aliquotaEfetiva">—</div>
+    </div>
+
+    <div class="grid-2" style="margin-top:16px">
       <div class="resultado-box">
         <div class="label">Faixa do Anexo</div>
         <div class="valor" id="faixa">—</div>
@@ -98,11 +104,6 @@
         <div class="label">% ISS na Faixa (PD)</div>
         <div class="valor" id="percentualISS">—</div>
       </div>
-    </div>
-
-    <div class="resultado-box destaque" style="margin-top:16px">
-      <div class="label">⭐ Alíquota Efetiva de ISSQN para Retenção</div>
-      <div class="valor" id="aliquotaEfetiva">—</div>
     </div>
 
     <div class="alerta">
@@ -177,10 +178,31 @@ const TABELAS = {
 };
 
 // ================================================================
+// FORMATAÇÃO MONETÁRIA
+// ================================================================
+function formatarMoeda(valor) {
+  return valor.toLocaleString('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+    minimumFractionDigits: 2
+  });
+}
+
+function removerFormatacao(valorFormatado) {
+  return parseFloat(valorFormatado.replace(/[R$\s.]/g, '').replace(',', '.')) || 0;
+}
+
+function aplicarMascaraMoeda(input) {
+  let valor = removerFormatacao(input.value);
+  input.value = formatarMoeda(valor).replace('R$', '').trim();
+}
+
+// ================================================================
 // FUNÇÕES DE CÁLCULO
 // ================================================================
 function calcularAliquotaEfetiva() {
-  const rbt12 = parseFloat(document.getElementById('rbt12').value) || 0;
+  const inputRbt = document.getElementById('rbt12');
+  const rbt12 = removerFormatacao(inputRbt.value);
   const anexoSel = document.getElementById('anexo').value;
   
   if(!anexoSel || rbt12 <= 0){
@@ -217,19 +239,19 @@ function calcularAliquotaEfetiva() {
   const aliquotaEfetivaISS = aliquotaEfetiva * (percentualISS / 100);
 
   // Exibir resultados
+  document.getElementById('aliquotaEfetiva').textContent = (aliquotaEfetivaISS * 100).toFixed(4) + '%';
   document.getElementById('faixa').textContent = faixaData.faixa + 'ª';
   document.getElementById('aliquotaFaixa').textContent = aliquotaNominal.toFixed(2) + '%';
-  document.getElementById('deducao').textContent = deducao.toLocaleString('pt-BR', {minimumFractionDigits:2});
+  document.getElementById('deducao').textContent = formatarMoeda(deducao);
   document.getElementById('percentualISS').textContent = percentualISS.toFixed(2) + '%';
-  document.getElementById('aliquotaEfetiva').textContent = (aliquotaEfetivaISS * 100).toFixed(4) + '%';
 }
 
 function limparResultados(){
+  document.getElementById('aliquotaEfetiva').textContent = '—';
   document.getElementById('faixa').textContent = '—';
   document.getElementById('aliquotaFaixa').textContent = '—';
   document.getElementById('deducao').textContent = '—';
   document.getElementById('percentualISS').textContent = '—';
-  document.getElementById('aliquotaEfetiva').textContent = '—';
 }
 
 function atualizarTabela(){
@@ -246,12 +268,11 @@ function atualizarTabela(){
   
   for(let i = 0; i < tabela.length; i++){
     const f = tabela[i];
-    const ateFormatado = f.ate.toLocaleString('pt-BR', {minimumFractionDigits:2});
     html += `<tr>
       <td>${f.faixa}ª</td>
-      <td class="numero">até R$ ${ateFormatado}</td>
+      <td class="numero">${formatarMoeda(f.ate)}</td>
       <td class="numero">${f.aliquota.toFixed(2)}%</td>
-      <td class="numero">R$ ${f.deducao.toLocaleString('pt-BR', {minimumFractionDigits:2})}</td>
+      <td class="numero">${formatarMoeda(f.deducao)}</td>
       <td class="numero">${f.percentualISS.toFixed(2)}%</td>
     </tr>`;
   }
@@ -262,13 +283,26 @@ function atualizarTabela(){
 // ================================================================
 // EVENTOS
 // ================================================================
-document.getElementById('rbt12').addEventListener('input', calcularAliquotaEfetiva);
+const inputRbt = document.getElementById('rbt12');
+
+// Formatar ao digitar
+inputRbt.addEventListener('input', function(e) {
+  aplicarMascaraMoeda(this);
+  calcularAliquotaEfetiva();
+});
+
+// Formatar ao sair do campo
+inputRbt.addEventListener('blur', function() {
+  aplicarMascaraMoeda(this);
+});
+
 document.getElementById('anexo').addEventListener('change', function(){
   atualizarTabela();
   calcularAliquotaEfetiva();
 });
 
-// Inicializar
+// Inicializar com valor padrão formatado
+inputRbt.value = formatarMoeda(280140).replace('R$', '').trim();
 atualizarTabela();
 calcularAliquotaEfetiva();
 </script>
