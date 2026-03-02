@@ -58,7 +58,7 @@
     
     <div class="campo-grupo">
       <label for="rbt12">Receita Bruta Total em 12 Meses (RBT12)</label>
-      <input type="text" id="rbt12" placeholder="Ex: 280.140,00">
+      <input type="text" id="rbt12" placeholder="Ex: 280.140,00" maxlength="20">
       <div class="hint">Informe a Receita Bruta acumulada nos últimos 12 meses</div>
     </div>
 
@@ -178,23 +178,35 @@ const TABELAS = {
 };
 
 // ================================================================
-// FORMATAÇÃO MONETÁRIA
+// FORMATAÇÃO MONETÁRIA BRASILEIRA
 // ================================================================
 function formatarMoeda(valor) {
   return valor.toLocaleString('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-    minimumFractionDigits: 2
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
   });
 }
 
 function removerFormatacao(valorFormatado) {
-  return parseFloat(valorFormatado.replace(/[R$\s.]/g, '').replace(',', '.')) || 0;
+  // Remove tudo exceto números e vírgula, depois substitui vírgula por ponto
+  return parseFloat(valorFormatado.replace(/[^\d,]/g, '').replace(',', '.')) || 0;
 }
 
 function aplicarMascaraMoeda(input) {
-  let valor = removerFormatacao(input.value);
-  input.value = formatarMoeda(valor).replace('R$', '').trim();
+  // Remove caracteres não numéricos
+  let valor = input.value.replace(/\D/g, '');
+  
+  // Se vazio, limpa o campo
+  if (valor === '') {
+    input.value = '';
+    return;
+  }
+  
+  // Converte para número (considera os últimos 2 dígitos como centavos)
+  let numero = parseFloat(valor) / 100;
+  
+  // Formata com separadores brasileiros
+  input.value = formatarMoeda(numero);
 }
 
 // ================================================================
@@ -270,9 +282,9 @@ function atualizarTabela(){
     const f = tabela[i];
     html += `<tr>
       <td>${f.faixa}ª</td>
-      <td class="numero">${formatarMoeda(f.ate)}</td>
+      <td class="numero">até R$ ${formatarMoeda(f.ate)}</td>
       <td class="numero">${f.aliquota.toFixed(2)}%</td>
-      <td class="numero">${formatarMoeda(f.deducao)}</td>
+      <td class="numero">R$ ${formatarMoeda(f.deducao)}</td>
       <td class="numero">${f.percentualISS.toFixed(2)}%</td>
     </tr>`;
   }
@@ -293,7 +305,9 @@ inputRbt.addEventListener('input', function(e) {
 
 // Formatar ao sair do campo
 inputRbt.addEventListener('blur', function() {
-  aplicarMascaraMoeda(this);
+  if(this.value) {
+    aplicarMascaraMoeda(this);
+  }
 });
 
 document.getElementById('anexo').addEventListener('change', function(){
@@ -302,7 +316,7 @@ document.getElementById('anexo').addEventListener('change', function(){
 });
 
 // Inicializar com valor padrão formatado
-inputRbt.value = formatarMoeda(280140).replace('R$', '').trim();
+inputRbt.value = formatarMoeda(280140);
 atualizarTabela();
 calcularAliquotaEfetiva();
 </script>
