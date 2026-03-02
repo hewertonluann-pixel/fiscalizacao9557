@@ -1,4 +1,4 @@
-// usuarios.js — CRUD de usuários (Gerente)
+// usuarios.js — CRUD de usuários via Google OAuth (Gerente)
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, where } 
   from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
@@ -14,15 +14,23 @@ export function inicializarUsuarios(db) {
   let editId = null;
 
   async function carregarUsuarios(){
-    const snap = await getDocs(collection(db,'usuarios'));
+    const snap = await getDocs(collection(db,'usuarios_autorizados'));
     tb.innerHTML='';
     snap.forEach(d=>{
       const u=d.data();
+      const statusBadge = u.ativo 
+        ? '<span class="status-badge ativo">✔️ Ativo</span>' 
+        : '<span class="status-badge inativo">❌ Inativo</span>';
+      
       const tr=document.createElement('tr');
-      tr.innerHTML=`<td>${u.nome}</td><td>${u.tipo}</td><td>${u.senha}</td>
+      tr.innerHTML=`
+        <td>${u.nome||'---'}</td>
+        <td style="font-family:monospace;font-size:12px">${u.email||'---'}</td>
+        <td><span style="text-transform:capitalize;font-weight:600;color:${u.tipo==='gerente'?'#2563eb':'#059669'}">${u.tipo||'---'}</span></td>
+        <td>${statusBadge}</td>
         <td style="white-space:nowrap">
-          <button class="link" data-e="${d.id}">✏️</button>
-          <button class="link" data-x="${d.id}" style="color:#dc2626">❌</button>
+          <button class="link" data-e="${d.id}" style="cursor:pointer;background:none;border:none;font-size:16px">✏️</button>
+          <button class="link" data-x="${d.id}" style="cursor:pointer;background:none;border:none;font-size:16px;color:#dc2626">❌</button>
         </td>`;
       tb.appendChild(tr);
     });
@@ -30,12 +38,13 @@ export function inicializarUsuarios(db) {
     tb.querySelectorAll('[data-e]').forEach(b=>{
       b.onclick=async()=>{
         const id=b.getAttribute('data-e');
-        const all=await getDocs(query(collection(db,'usuarios'), where('__name__','==',id)));
-        if(!all.empty){
-          const u=all.docs[0].data();
-          $('#uNome').value=u.nome;
-          $('#uSenha').value=u.senha;
-          $('#uTipo').value=u.tipo;
+        const docSnap = await getDocs(query(collection(db,'usuarios_autorizados'), where('__name__','==',id)));
+        if(!docSnap.empty){
+          const u=docSnap.docs[0].data();
+          $('#uNome').value=u.nome||'';
+          $('#uEmail').value=u.email||'';
+          $('#uTipo').value=u.tipo||'fiscal';
+          $('#uAtivo').value=String(u.ativo !== false);
           editId=id;
           $('#modalTitulo').textContent='Editar Usuário';
           modal.style.display='flex';
@@ -47,7 +56,7 @@ export function inicializarUsuarios(db) {
       b.onclick=async()=>{
         const id=b.getAttribute('data-x');
         if(confirm('Excluir este usuário?')){
-          await deleteDoc(doc(db,'usuarios',id));
+          await deleteDoc(doc(db,'usuarios_autorizados',id));
           msg('Usuário removido','ok');
           carregarUsuarios();
         }
@@ -58,8 +67,9 @@ export function inicializarUsuarios(db) {
   $('#btnNovoUser').onclick=()=>{
     editId=null;
     $('#uNome').value='';
-    $('#uSenha').value='';
+    $('#uEmail').value='';
     $('#uTipo').value='fiscal';
+    $('#uAtivo').value='true';
     $('#modalTitulo').textContent='Novo Usuário';
     modal.style.display='flex';
   };
@@ -68,16 +78,42 @@ export function inicializarUsuarios(db) {
 
   $('#btnSalvarUser').onclick=async()=>{
     const nome=$('#uNome').value.trim();
-    const senha=$('#uSenha').value.trim();
+    const email=$('#uEmail').value.trim().toLowerCase();
     const tipo=$('#uTipo').value;
-    if(!nome || !senha){ msg('Preencha nome e senha','err'); return; }
+    const ativo = $('#uAtivo').value === 'true';
+    
+    if(!nome || !email){ msg('Preencha nome e email','err'); return; }
+    
+    // Validação de email
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
+      msg('Email inválido','err');
+      return;
+    }
 
     try{
       if(editId){
-        await updateDoc(doc(db,'usuarios',editId),{nome,senha,tipo});
+        await updateDoc(doc(db,'usuarios_autorizados',editId),{
+          nome,
+          email,
+          tipo,
+          ativo
+        });
         msg('Usuário atualizado','ok');
       }else{
-        await addDoc(collection(db,'usuarios'),{nome,senha,tipo,nomeLower:nome.toLowerCase()});
+        // Verifica se já existe
+        const existente = await getDocs(query(collection(db,'usuarios_autorizados'), where('email','==',email)));
+        if(!existente.empty){
+          msg('Email já cadastrado','err');
+          return;
+        }
+        
+        await addDoc(collection(db,'usuarios_autorizados'),{
+          nome,
+          email,
+          tipo,
+          ativo: true,
+          dataCriacao: new Date().toISOString()
+        });
         msg('Usuário adicionado','ok');
       }
       modal.style.display='none';
