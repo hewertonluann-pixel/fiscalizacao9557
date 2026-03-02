@@ -1,4 +1,4 @@
-// relatorio.js — Relatório PDF com duas tabelas lado a lado, gráfico horizontal e fechamento em nova página
+// relatorio.js — Relatório PDF otimizado em página única
 export function gerarPDF(lancamentos, sess, dIni, dFim, numInput) {
   if (!lancamentos || lancamentos.length === 0) {
     alert('Nenhum dado carregado.');
@@ -68,7 +68,7 @@ export function gerarPDF(lancamentos, sess, dIni, dFim, numInput) {
   const fontSize = totalServicos > 20 ? '9px' : totalServicos > 15 ? '10px' : '12px';
   const padding = totalServicos > 20 ? '2px 4px' : '3px 6px';
 
-  // ===== HTML do relatório
+  // ===== HTML do relatório (PÁGINA ÚNICA)
   let html = `
   <div style="font-family:Arial,Helvetica,sans-serif;max-width:700px;margin:0 auto;line-height:1.4;">
     <!-- Cabeçalho -->
@@ -142,26 +142,28 @@ export function gerarPDF(lancamentos, sess, dIni, dFim, numInput) {
     </div>
 
     <h4 style="text-align:center;margin-top:16px;margin-bottom:8px;">Composição visual do valor arrecadado</h4>
-    <canvas id="graficoComposicao" width="600" height="180"></canvas>
+    <canvas id="graficoComposicao" width="600" height="160"></canvas>
 
-    <!-- ===== NOVA PÁGINA PARA FECHAMENTO ===== -->
-    <div style="page-break-before: always; margin-top:40px;">
-      <p style="font-size:13px;">
+    <!-- ===== FECHAMENTO NA MESMA PÁGINA (SEM page-break) ===== -->
+    <div style="margin-top:20px;padding-top:12px;border-top:1px solid #ddd;">
+      <p style="font-size:12px;margin-bottom:10px;">
         Sendo o que tínhamos a relatar para o momento, colocamo-nos à disposição para eventuais esclarecimentos.
       </p>
 
-      <p style="margin-top:60px;text-align:center;font-size:14px;line-height:1.6;">
-        <strong>Atenciosamente,</strong><br><br>
-        _______________________________<br>
-        <strong>${gerente}</strong><br>
-        Gerente de Fiscalização Tributária<br>
-        Prefeitura Municipal de Diamantina/MG
-      </p>
-
-      <hr style="margin:18px 0;border:0;border-top:1px solid #999;">
-      <p style="text-align:center;font-size:11px;color:#555;">
-        Gerado automaticamente pelo Sistema de Produção — ${dataGer}
-      </p>
+      <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:20px;">
+        <div style="text-align:center;flex:1;">
+          <p style="margin:0;font-size:13px;line-height:1.4;">
+            <strong>Atenciosamente,</strong><br><br>
+            _____________________________<br>
+            <strong>${gerente}</strong><br>
+            <span style="font-size:11px;">Gerente de Fiscalização Tributária<br>
+            Prefeitura Municipal de Diamantina/MG</span>
+          </p>
+        </div>
+        <div style="text-align:right;font-size:10px;color:#666;flex:1;">
+          Gerado automaticamente pelo<br>Sistema de Produção<br>${dataGer}
+        </div>
+      </div>
     </div>
   </div>
   `;
