@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Login — Sistema de Fiscalização</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     body{background:linear-gradient(135deg,#0f172a 0%,#1e293b 100%);color:#e2e8f0;font-family:"Segoe UI",system-ui,-apple-system,sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
@@ -178,6 +179,8 @@
         showError('Login cancelado pelo usuário.');
       } else if (error.code === 'auth/network-request-failed') {
         showError('Erro de conexão. Verifique sua internet.');
+      } else if (error.code === 'auth/unauthorized-domain') {
+        showError('Domínio não autorizado. Configure o Firebase Console.');
       } else {
         showError('Erro ao fazer login. Tente novamente.');
       }
