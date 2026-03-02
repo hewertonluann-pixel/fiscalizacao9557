@@ -1,115 +1,57 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Login — Sistema de Produção</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Portal Tributário — Diamantina/MG</title>
   <style>
-    .perfil-toggle{display:flex;gap:8px;margin-top:4px}
-    .perfil-btn{flex:1;padding:10px 0;border-radius:8px;border:1px solid var(--border);background:#f3f4f6;color:var(--muted);font-weight:700;cursor:pointer;transition:.2s}
-    .perfil-btn:hover{background:#e0ecff}
-    .perfil-btn.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{background:linear-gradient(135deg,#0f172a 0%,#1e293b 100%);color:#e2e8f0;font-family:"Segoe UI",system-ui,-apple-system,sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+    .container{max-width:900px;width:100%;text-align:center}
+    .header{margin-bottom:48px}
+    .header h1{font-size:2.2rem;font-weight:800;color:#38bdf8;margin-bottom:12px}
+    .header p{font-size:1.1rem;color:#94a3b8;line-height:1.5}
+    .badge{display:inline-flex;align-items:center;gap:6px;margin-top:12px;background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.3);border-radius:999px;padding:6px 18px;font-size:.85rem;color:#7dd3fc;font-weight:600}
+    .opcoes{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:40px}
+    .card{background:linear-gradient(145deg,#1e293b,#0f172a);border:2px solid rgba(56,189,248,.2);border-radius:16px;padding:32px;text-align:center;cursor:pointer;transition:all .3s ease;text-decoration:none;display:block}
+    .card:hover{border-color:#38bdf8;transform:translateY(-4px);box-shadow:0 12px 32px rgba(56,189,248,.2)}
+    .card .icone{font-size:3.5rem;margin-bottom:16px}
+    .card h2{font-size:1.4rem;font-weight:700;color:#f1f5f9;margin-bottom:8px}
+    .card p{font-size:.95rem;color:#94a3b8;line-height:1.5}
+    .rodape{text-align:center;margin-top:48px;font-size:.85rem;color:#475569}
+    @media(max-width:640px){
+      .opcoes{grid-template-columns:1fr}
+      .header h1{font-size:1.7rem}
+    }
   </style>
 </head>
 <body>
-<div class="wrap">
-  <div class="card" style="max-width:460px;margin:60px auto">
-    <div class="hd">Acesso</div>
-    <div class="bd" style="display:grid;gap:12px">
-      <div>
-        <label>Nome</label>
-        <input id="nome" type="text" placeholder="Seu nome">
-      </div>
-      <div>
-        <label>Senha</label>
-        <input id="senha" type="password" placeholder="Sua senha">
-      </div>
-      <div>
-        <label>Perfil</label>
-        <div class="perfil-toggle">
-          <button type="button" id="btnFiscal" class="perfil-btn active">Fiscal</button>
-          <button type="button" id="btnGerente" class="perfil-btn">Gerente</button>
-        </div>
-      </div>
-      <button id="btnEntrar" type="button">Entrar</button>
-      <div id="msg" class="msg"></div>
-    </div>
+
+<div class="container">
+  <div class="header">
+    <h1>🏛️ Portal Tributário de Diamantina</h1>
+    <p>Sistema integrado de gestão tributária municipal</p>
+    <div class="badge">🇧🇷 Prefeitura Municipal de Diamantina — Minas Gerais</div>
+  </div>
+
+  <div class="opcoes">
+    <a href="login.html" class="card">
+      <div class="icone">🔐</div>
+      <h2>Município</h2>
+      <p>Acesso restrito para fiscais e gerentes do sistema de fiscalização tributária</p>
+    </a>
+
+    <a href="contribuinte.html" class="card">
+      <div class="icone">👤</div>
+      <h2>Contribuinte</h2>
+      <p>Ferramentas públicas de consulta e cálculo tributário para contribuintes</p>
+    </a>
+  </div>
+
+  <div class="rodape">
+    © 2026 Prefeitura Municipal de Diamantina — Secretaria de Fazenda
   </div>
 </div>
 
-<script type="module">
-  // ===== Firebase SDK (v9 modular) =====
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-  import { getFirestore, collection, query, where, getDocs, addDoc, limit } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyANrr4R5JtJ9GmO0j-1X8-9CvBmYkC4oCI",
-    authDomain: "fiscalizacao9557.firebaseapp.com",
-    projectId: "fiscalizacao9557",
-    storageBucket: "fiscalizacao9557.firebasestorage.app",
-    messagingSenderId: "98041336495",
-    appId: "1:98041336495:web:0475dfd9c0490cc0a17a5a",
-    measurementId: "G-7PY1G1JTKL"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-
-  // ===== Util =====
-  const $ = s => document.querySelector(s);
-  const showMsg = (t, c='ok') => {
-    const m = $('#msg');
-    m.textContent = t;
-    m.className = 'msg ' + c;
-    m.style.display = 'block';
-    setTimeout(()=>m.style.display='none', 2500);
-  };
-
-  // Perfil local
-  let perfil = 'fiscal';
-  $('#btnFiscal').onclick = ()=>{perfil='fiscal'; $('#btnFiscal').classList.add('active'); $('#btnGerente').classList.remove('active');};
-  $('#btnGerente').onclick = ()=>{perfil='gerente'; $('#btnGerente').classList.add('active'); $('#btnFiscal').classList.remove('active');};
-
-  // Garante gerente padrão (Alexon) se não existir
-  async function ensureDefaultGerente(){
-    const q1 = query(collection(db,'usuarios'), where('nome','==','Alexon'), where('tipo','==','gerente'), limit(1));
-    const snap = await getDocs(q1);
-    if (snap.empty){
-      await addDoc(collection(db,'usuarios'), {
-        nome: 'Alexon',
-        nomeLower: 'alexon',
-        senha: 'gerente1234',
-        tipo: 'gerente'
-      });
-    }
-  }
-  ensureDefaultGerente().catch(console.error);
-
-  // Login local validando no Firestore
-  $('#btnEntrar').onclick = async ()=>{
-    const nome = ($('#nome').value||'').trim();
-    const senha = ($('#senha').value||'').trim();
-    if(!nome || !senha){ showMsg('Preencha nome e senha','err'); return; }
-
-    try{
-      // Busca por nome exato (case-sensitive). Caso deseje, adicione campo nomeLower e pesquise por ele.
-      const qUser = query(collection(db,'usuarios'), where('nome','==',nome), where('tipo','==', perfil), limit(1));
-      const snap = await getDocs(qUser);
-
-      if (snap.empty){ showMsg('Usuário não encontrado para este perfil.','err'); return; }
-
-      const doc = snap.docs[0];
-      const u = doc.data();
-      if (u.senha !== senha){ showMsg('Senha incorreta.','err'); return; }
-
-      localStorage.setItem('sessao_usuario', JSON.stringify({ nome: u.nome, tipo: u.tipo }));
-      setTimeout(()=>{ location.href = (perfil==='gerente' ? 'gerente.html' : 'fiscal.html'); }, 150);
-    }catch(e){
-      console.error(e);
-      showMsg('Falha ao autenticar.','err');
-    }
-  };
-</script>
 </body>
 </html>
