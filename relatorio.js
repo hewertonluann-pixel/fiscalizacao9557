@@ -144,25 +144,20 @@ export function gerarPDF(lancamentos, sess, dIni, dFim, numInput) {
     <h4 style="text-align:center;margin-top:16px;margin-bottom:8px;">Composição visual do valor arrecadado</h4>
     <canvas id="graficoComposicao" width="600" height="160"></canvas>
 
-    <!-- ===== FECHAMENTO NA MESMA PÁGINA (SEM page-break) ===== -->
+    <!-- ===== FECHAMENTO CENTRALIZADO NA MESMA PÁGINA ===== -->
     <div style="margin-top:20px;padding-top:12px;border-top:1px solid #ddd;">
-      <p style="font-size:12px;margin-bottom:10px;">
+      <p style="font-size:12px;margin-bottom:10px;text-align:center;">
         Sendo o que tínhamos a relatar para o momento, colocamo-nos à disposição para eventuais esclarecimentos.
       </p>
 
-      <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:20px;">
-        <div style="text-align:center;flex:1;">
-          <p style="margin:0;font-size:13px;line-height:1.4;">
-            <strong>Atenciosamente,</strong><br><br>
-            _____________________________<br>
-            <strong>${gerente}</strong><br>
-            <span style="font-size:11px;">Gerente de Fiscalização Tributária<br>
-            Prefeitura Municipal de Diamantina/MG</span>
-          </p>
-        </div>
-        <div style="text-align:right;font-size:10px;color:#666;flex:1;">
-          Gerado automaticamente pelo<br>Sistema de Produção<br>${dataGer}
-        </div>
+      <div style="text-align:center;margin-top:30px;">
+        <p style="margin:0;font-size:13px;line-height:1.5;">
+          <strong>Atenciosamente,</strong><br><br>
+          _____________________________<br>
+          <strong>${gerente}</strong><br>
+          <span style="font-size:11px;">Gerente de Fiscalização Tributária<br>
+          Prefeitura Municipal de Diamantina/MG</span>
+        </p>
       </div>
     </div>
   </div>
