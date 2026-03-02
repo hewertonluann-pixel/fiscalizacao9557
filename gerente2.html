@@ -564,9 +564,10 @@
     }
 
     /* ===== CANVAS ===== */
-    canvas {
-      max-width: 100%;
-      height: auto !important;
+    #chartResume {
+      width: 100% !important;
+      max-height: 320px !important;
+      height: 320px !important;
     }
   </style>
 </head>
@@ -675,7 +676,7 @@
               <div class="card-title" style="font-size: 1rem;">🧩 Composição</div>
             </div>
             <div class="card-body">
-              <canvas id="chartResume" style="max-height: 300px;"></canvas>
+              <canvas id="chartResume"></canvas>
             </div>
           </div>
         </div>
@@ -861,7 +862,20 @@
         .map(([k, v]) => `<div class="resumo-item"><span class="resumo-label">${k}</span><span class="resumo-value">${v}</span></div>`)
         .join('') || '<em style="color: var(--text-tertiary);">Sem dados</em>';
 
-      gerarGraficoResumo(rows);
+      // Gerar gráfico (forçar cores fixas para impressão)
+      gerarGraficoResumo(rows, {
+        canvasId: 'chartResume',
+        colors: {
+          issStart:   '#3b82f6', issEnd:   '#2563eb',
+          tflfStart:  '#22c55e', tflfEnd:  '#15803d',
+          autoStart:  '#fbbf24', autoEnd:  '#f59e0b',
+          outStart:   '#9ca3af', outEnd:   '#6b7280',
+          axis:       '#000000',  // sempre preto
+          yTick:      '#000000',  // sempre preto
+          tooltipBg:  'rgba(17, 24, 39, 0.9)',
+          tooltipTxt: '#e5e7eb'
+        }
+      });
     }
 
     $('#btnFilter').onclick = loadData;
