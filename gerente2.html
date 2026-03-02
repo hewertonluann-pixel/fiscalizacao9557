@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Gerente — Sistema de Produção Tributário</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <style>
+    /* ===== VARIÁVEIS DE TEMA ===== */
+    :root[data-theme="light"] {
+      --bg-primary: #f8fafc;
+      --bg-secondary: #ffffff;
+      --bg-tertiary: #f1f5f9;
+      --text-primary: #0f172a;
+      --text-secondary: #475569;
+      --text-tertiary: #64748b;
+      --border-color: #e2e8f0;
+      --border-color-hover: #cbd5e1;
+      --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+      --primary: #3b82f6;
+      --primary-hover: #2563eb;
+      --primary-light: #dbeafe;
+      --success: #10b981;
+      --success-light: #d1fae5;
+      --danger: #ef4444;
+      --danger-light: #fee2e2;
+      --warning: #f59e0b;
+      --warning-light: #fef3c7;
+      --table-hover: #f8fafc;
+      --input-bg: #ffffff;
+    }
+
+    :root[data-theme="dark"] {
+      --bg-primary: #0f172a;
+      --bg-secondary: #1e293b;
+      --bg-tertiary: #334155;
+      --text-primary: #f1f5f9;
+      --text-secondary: #cbd5e1;
+      --text-tertiary: #94a3b8;
+      --border-color: #334155;
+      --border-color-hover: #475569;
+      --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.3);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+      --primary: #60a5fa;
+      --primary-hover: #3b82f6;
+      --primary-light: #1e3a8a;
+      --success: #34d399;
+      --success-light: #065f46;
+      --danger: #f87171;
+      --danger-light: #7f1d1d;
+      --warning: #fbbf24;
+      --warning-light: #78350f;
+      --table-hover: #334155;
+      --input-bg: #1e293b;
+    }
+
+    /* ===== RESET E BASE ===== */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.6;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    /* ===== HEADER ===== */
+    .header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border-color);
+      padding: 1rem 1.5rem;
+      box-shadow: var(--shadow-sm);
+      transition: all 0.3s ease;
+    }
+
+    .header-content {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1.5rem;
+    }
+
+    .header-info {
+      flex: 1;
+    }
+
+    .header-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 0.25rem;
+    }
+
+    .header-subtitle {
+      font-size: 0.875rem;
+      color: var(--text-tertiary);
+      font-weight: 500;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .user-badge {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      background: var(--bg-tertiary);
+      border-radius: 9999px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .theme-toggle {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      border: 1px solid var(--border-color);
+      background: var(--bg-tertiary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+      font-size: 1.25rem;
+    }
+
+    .theme-toggle:hover {
+      background: var(--primary-light);
+      border-color: var(--primary);
+    }
+
+    .btn-logout {
+      padding: 0.5rem 1.25rem;
+      background: var(--danger);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-size: 0.875rem;
+    }
+
+    .btn-logout:hover {
+      opacity: 0.9;
+      transform: translateY(-1px);
+    }
+
+    /* ===== MAIN CONTENT ===== */
+    .main {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 6rem 1.5rem 2rem;
+    }
+
+    .alert {
+      padding: 0.875rem 1.25rem;
+      border-radius: 12px;
+      margin-bottom: 1.5rem;
+      font-weight: 500;
+      font-size: 0.875rem;
+      display: none;
+    }
+
+    .alert.success {
+      background: var(--success-light);
+      color: var(--success);
+      border: 1px solid var(--success);
+    }
+
+    .alert.error {
+      background: var(--danger-light);
+      color: var(--danger);
+      border: 1px solid var(--danger);
+    }
+
+    /* ===== CARD SYSTEM ===== */
+    .card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      margin-bottom: 1.5rem;
+      box-shadow: var(--shadow-sm);
+      transition: all 0.3s ease;
+      overflow: hidden;
+    }
+
+    .card:hover {
+      box-shadow: var(--shadow-md);
+    }
+
+    .card-header {
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .card-title {
+      font-size: 1.125rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .card-body {
+      padding: 1.5rem;
+    }
+
+    /* ===== FORMS ===== */
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+    }
+
+    label {
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 0.5rem;
+      text-transform: uppercase;
+      letter-spacing: 0.025em;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      background: var(--input-bg);
+      color: var(--text-primary);
+      font-size: 0.9375rem;
+      transition: all 0.2s ease;
+      font-family: inherit;
+    }
+
+    input:focus, select:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--primary-light);
+    }
+
+    input:hover, select:hover {
+      border-color: var(--border-color-hover);
+    }
+
+    /* ===== BUTTONS ===== */
+    .btn {
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 0.9375rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-hover);
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .btn-success {
+      background: var(--success);
+      color: white;
+    }
+
+    .btn-success:hover {
+      opacity: 0.9;
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+      border: 1px solid var(--border-color);
+    }
+
+    .btn-secondary:hover {
+      background: var(--primary-light);
+      border-color: var(--primary);
+    }
+
+    .btn-sm {
+      padding: 0.5rem 1rem;
+      font-size: 0.8125rem;
+      border-radius: 8px;
+    }
+
+    .btn-icon {
+      width: 36px;
+      height: 36px;
+      padding: 0;
+      border-radius: 8px;
+      font-size: 1.125rem;
+    }
+
+    /* ===== TABLE ===== */
+    .table-container {
+      overflow-x: auto;
+      overflow-y: auto;
+      max-height: 500px;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      margin-top: 1rem;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+    }
+
+    thead {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    th {
+      padding: 1rem;
+      background: var(--bg-tertiary);
+      color: var(--text-secondary);
+      font-weight: 700;
+      font-size: 0.8125rem;
+      text-align: left;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      white-space: nowrap;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    td {
+      padding: 1rem;
+      border-bottom: 1px solid var(--border-color);
+      color: var(--text-primary);
+      font-size: 0.9375rem;
+      white-space: nowrap;
+    }
+
+    tbody tr {
+      transition: background-color 0.15s ease;
+    }
+
+    tbody tr:hover {
+      background: var(--table-hover);
+    }
+
+    /* ===== STATS ===== */
+    .stats {
+      display: flex;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+      margin-top: 1rem;
+    }
+
+    .stat-item {
+      flex: 1;
+      min-width: 200px;
+      padding: 1rem 1.25rem;
+      background: var(--bg-tertiary);
+      border-radius: 12px;
+      border-left: 4px solid var(--primary);
+    }
+
+    .stat-label {
+      font-size: 0.8125rem;
+      color: var(--text-tertiary);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.025em;
+      margin-bottom: 0.25rem;
+    }
+
+    .stat-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    /* ===== PANEL RESUMO ===== */
+    .panel-resumo {
+      display: grid;
+      grid-template-columns: 1fr 1fr 2fr;
+      gap: 1.5rem;
+      margin-top: 1.5rem;
+    }
+
+    @media (max-width: 1024px) {
+      .panel-resumo {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .resumo-item {
+      font-size: 0.9375rem;
+      padding: 0.5rem 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .resumo-item:last-child {
+      border-bottom: none;
+    }
+
+    .resumo-label {
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    .resumo-value {
+      color: var(--text-primary);
+      font-weight: 700;
+    }
+
+    /* ===== MODAL ===== */
+    .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 1rem;
+    }
+
+    .modal.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background: var(--bg-secondary);
+      border-radius: 16px;
+      max-width: 500px;
+      width: 100%;
+      box-shadow: var(--shadow-lg);
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .modal-header {
+      padding: 1.5rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .modal-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .modal-body {
+      padding: 1.5rem;
+    }
+
+    .modal-footer {
+      padding: 1.5rem;
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      gap: 0.75rem;
+      justify-content: flex-end;
+    }
+
+    /* ===== BADGES ===== */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.375rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .badge-success {
+      background: var(--success-light);
+      color: var(--success);
+    }
+
+    .badge-danger {
+      background: var(--danger-light);
+      color: var(--danger);
+    }
+
+    .badge-primary {
+      background: var(--primary-light);
+      color: var(--primary);
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 768px) {
+      .header-content {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .header-actions {
+        width: 100%;
+        justify-content: space-between;
+      }
+
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .stats {
+        flex-direction: column;
+      }
+    }
+
+    /* ===== CANVAS ===== */
+    canvas {
+      max-width: 100%;
+      height: auto !important;
+    }
+  </style>
+</head>
+<body>
+  <!-- HEADER -->
+  <header class="header">
+    <div class="header-content">
+      <div class="header-info">
+        <div class="header-title">🏛️ Sistema de Produção Tributário</div>
+        <div class="header-subtitle">Painel Gerencial — Diamantina/MG</div>
+      </div>
+      <div class="header-actions">
+        <div class="user-badge">
+          <span>👤</span>
+          <span id="userName">Carregando...</span>
+        </div>
+        <button class="theme-toggle" id="themeToggle" title="Alternar tema">
+          <span id="themeIcon">☀️</span>
+        </button>
+        <button class="btn-logout" id="btnLogout">Sair</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN -->
+  <main class="main">
+    <div class="alert" id="alert"></div>
+
+    <!-- RELATÓRIOS -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">📈 Relatório por Período</div>
+      </div>
+      <div class="card-body">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="dateFrom">Data Inicial</label>
+            <input type="date" id="dateFrom">
+          </div>
+          <div class="form-group">
+            <label for="dateTo">Data Final</label>
+            <input type="date" id="dateTo">
+          </div>
+          <div class="form-group" style="align-self: end;">
+            <button class="btn btn-primary" id="btnFilter">🔍 Filtrar</button>
+          </div>
+        </div>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Data</th>
+                <th>Fiscal</th>
+                <th>Empresa</th>
+                <th>Descrição</th>
+                <th>Qtd</th>
+                <th>Valor</th>
+                <th>Destino</th>
+                <th>Resumo</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+          </table>
+        </div>
+
+        <div class="stats">
+          <div class="stat-item">
+            <div class="stat-label">Total Registros</div>
+            <div class="stat-value" id="totalRegs">0</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">Total Quantidade</div>
+            <div class="stat-value" id="totalQty">0</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">Total Valor</div>
+            <div class="stat-value" id="totalVal">R$ 0,00</div>
+          </div>
+        </div>
+
+        <div style="margin-top: 1.5rem; display: flex; gap: 1rem; flex-wrap: wrap; align-items: center;">
+          <div class="form-group" style="flex: 0 0 150px;">
+            <label for="reportNum">Nº Relatório</label>
+            <input type="number" id="reportNum" min="1" placeholder="Automático">
+          </div>
+          <button class="btn btn-success" id="btnPDF" style="align-self: end;">🖨️ Gerar PDF</button>
+        </div>
+
+        <!-- PAINEL RESUMO -->
+        <div class="panel-resumo">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title" style="font-size: 1rem;">👥 Por Fiscal</div>
+            </div>
+            <div class="card-body" id="summaryFiscal"></div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title" style="font-size: 1rem;">📊 Por Tipo</div>
+            </div>
+            <div class="card-body" id="summaryType"></div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title" style="font-size: 1rem;">🧩 Composição</div>
+            </div>
+            <div class="card-body">
+              <canvas id="chartResume" style="max-height: 300px;"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- GESTÃO USUÁRIOS -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">👥 Gestão de Usuários</div>
+        <button class="btn btn-primary btn-sm" id="btnNewUser">➕ Novo Usuário</button>
+      </div>
+      <div class="card-body">
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Nome</th>
+                <th>Email</th>
+                <th>Tipo</th>
+                <th>Status</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="usersTable"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- MODAL USUÁRIO -->
+  <div class="modal" id="userModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-title" id="modalTitle">Novo Usuário</div>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="userName">Nome</label>
+          <input type="text" id="userNameInput">
+        </div>
+        <div class="form-group">
+          <label for="userEmail">Email</label>
+          <input type="email" id="userEmail" placeholder="usuario@gmail.com">
+        </div>
+        <div class="form-group">
+          <label for="userType">Tipo</label>
+          <select id="userType">
+            <option value="fiscal">Fiscal</option>
+            <option value="gerente">Gerente</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="userStatus">Status</label>
+          <select id="userStatus">
+            <option value="true">Ativo</option>
+            <option value="false">Inativo</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="btnCancelUser">Cancelar</button>
+        <button class="btn btn-primary" id="btnSaveUser">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+    import { getFirestore, collection, getDocs, query, where, orderBy } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+    import { gerarPDF } from "./relatorio.js";
+    import { inicializarUsuarios } from "./usuarios.js";
+    import { gerarGraficoResumo } from "./graficoResumo.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyANrr4R5JtJ9GmO0j-1X8-9CvBmYkC4oCI",
+      authDomain: "fiscalizacao9557.firebaseapp.com",
+      projectId: "fiscalizacao9557",
+      storageBucket: "fiscalizacao9557.firebasestorage.app",
+      messagingSenderId: "98041336495",
+      appId: "1:98041336495:web:0475dfd9c0490cc0a17a5a"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const $ = (s) => document.querySelector(s);
+    const formatMoney = (n) => Number(n || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+    // Sessão
+    let sess = null;
+    try {
+      sess = JSON.parse(localStorage.getItem('sessao_usuario') || 'null');
+    } catch (e) {
+      sess = null;
+    }
+    if (!sess || sess.tipo !== 'gerente') {
+      location.href = 'index.html';
+    }
+    $('#userName').textContent = `${sess.nome} (Gerente)`;
+
+    // Tema
+    const themeToggle = $('#themeToggle');
+    const themeIcon = $('#themeIcon');
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    themeIcon.textContent = savedTheme === 'light' ? '🌙' : '☀️';
+
+    themeToggle.addEventListener('click', () => {
+      const current = document.documentElement.getAttribute('data-theme');
+      const newTheme = current === 'light' ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', newTheme);
+      localStorage.setItem('theme', newTheme);
+      themeIcon.textContent = newTheme === 'light' ? '🌙' : '☀️';
+    });
+
+    // Logout
+    $('#btnLogout').onclick = () => {
+      localStorage.removeItem('sessao_usuario');
+      location.href = 'index.html';
+    };
+
+    // Relatórios
+    let cacheData = [];
+
+    async function loadData() {
+      const from = $('#dateFrom').value;
+      const to = $('#dateTo').value;
+      if (!from || !to) return;
+
+      const q = query(
+        collection(db, 'lancamentos'),
+        where('data', '>=', from),
+        where('data', '<=', to),
+        orderBy('data', 'asc')
+      );
+
+      const snap = await getDocs(q);
+      cacheData = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      renderData(cacheData);
+    }
+
+    function renderData(rows) {
+      const tbody = $('#tableBody');
+      tbody.innerHTML = '';
+
+      let totalRegs = 0, totalQty = 0, totalVal = 0;
+      const byFiscal = new Map();
+      const byType = new Map();
+
+      rows.forEach((r) => {
+        totalRegs++;
+        totalQty += Number(r.quantidade || 0);
+        totalVal += Number(r.valor || 0);
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${r.data || ''}</td>
+          <td>${r.usuario || ''}</td>
+          <td>${r.empresa || ''}</td>
+          <td>${r.descricao || ''}</td>
+          <td>${r.quantidade || 0}</td>
+          <td>${r.valor ? formatMoney(r.valor) : ''}</td>
+          <td>${r.destino || ''}</td>
+          <td>${r.descricaoResumida || ''}</td>
+        `;
+        tbody.appendChild(tr);
+
+        byFiscal.set(r.usuario, (byFiscal.get(r.usuario) || 0) + Number(r.quantidade || 0));
+        byType.set(r.descricaoResumida, (byType.get(r.descricaoResumida) || 0) + Number(r.quantidade || 0));
+      });
+
+      $('#totalRegs').textContent = totalRegs;
+      $('#totalQty').textContent = totalQty;
+      $('#totalVal').textContent = formatMoney(totalVal);
+
+      // Resumos
+      $('#summaryFiscal').innerHTML = Array.from(byFiscal.entries())
+        .map(([k, v]) => `<div class="resumo-item"><span class="resumo-label">${k}</span><span class="resumo-value">${v}</span></div>`)
+        .join('') || '<em style="color: var(--text-tertiary);">Sem dados</em>';
+
+      $('#summaryType').innerHTML = Array.from(byType.entries())
+        .map(([k, v]) => `<div class="resumo-item"><span class="resumo-label">${k}</span><span class="resumo-value">${v}</span></div>`)
+        .join('') || '<em style="color: var(--text-tertiary);">Sem dados</em>';
+
+      gerarGraficoResumo(rows);
+    }
+
+    $('#btnFilter').onclick = loadData;
+    $('#btnPDF').onclick = () => gerarPDF(cacheData, sess, $('#dateFrom').value, $('#dateTo').value, $('#reportNum').value);
+
+    // Inicializar
+    (function init() {
+      const today = new Date();
+      const weekAgo = new Date();
+      weekAgo.setDate(weekAgo.getDate() - 7);
+      $('#dateFrom').value = weekAgo.toISOString().slice(0, 10);
+      $('#dateTo').value = today.toISOString().slice(0, 10);
+      loadData();
+      inicializarUsuarios(db);
+    })();
+  </script>
+</body>
+</html>
