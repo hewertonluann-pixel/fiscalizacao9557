@@ -124,23 +124,28 @@
 <script>
 // ================================================================
 // CONTADOR GLOBAL — 1 incremento por dispositivo por dia
-// Fluxo:
-//   1. Lê localStorage para ver se já visitou HOJE
-//   2a. Se sim  → apenas GET (leitura, sem incrementar)
-//   2b. Se não → GET /up (incrementa) e salva a data de hoje
+//
+// Endpoints CounterAPI:
+//   /up  → incrementa +1 e retorna { count: N }
+//   /    → leitura sem incrementar (GET simples na raiz)
+//
+// LS_KEY v2: renova a chave para ignorar registro das versões
+// anteriores e garantir o primeiro incremento correto.
 // ================================================================
 (function () {
-  var NS  = 'fiscalizacao9557';
-  var KEY = 'retencao-simples-v1';
-  var LS_KEY = 'cnt_last_visit_' + KEY;
-  var el  = document.getElementById('cntNumero');
+  var NS     = 'fiscalizacao9557';
+  var KEY    = 'retencao-simples-v1';   // chave na CounterAPI (mantida)
+  var LS_KEY = 'cnt_visit_v2_' + KEY;  // v2 = ignora localStorage antigo
+  var el     = document.getElementById('cntNumero');
 
-  var hoje = new Date().toISOString().slice(0, 10); // "YYYY-MM-DD"
+  var hoje        = new Date().toISOString().slice(0, 10); // "YYYY-MM-DD"
   var ultimaVisita = localStorage.getItem(LS_KEY);
   var jaVisitouHoje = (ultimaVisita === hoje);
 
   var BASE = 'https://api.counterapi.dev/v1/' + NS + '/' + KEY;
-  var url  = jaVisitouHoje ? (BASE + '/get') : (BASE + '/up');
+  // Se já visitou hoje: leitura sem incrementar (GET /)
+  // Se é visita nova:   incrementa (GET /up)
+  var url = jaVisitouHoje ? BASE + '/' : BASE + '/up';
 
   fetch(url)
     .then(function (r) { return r.json(); })
@@ -148,7 +153,7 @@
       var count = data.count || data.value || 0;
       el.textContent = Number(count).toLocaleString('pt-BR');
       if (!jaVisitouHoje) {
-        localStorage.setItem(LS_KEY, hoje); // registra visita de hoje
+        localStorage.setItem(LS_KEY, hoje);
       }
     })
     .catch(function () {
