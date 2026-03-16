@@ -39,13 +39,13 @@
     .info-legal a:hover{text-decoration:underline}
     .rodape{text-align:center;margin-top:40px;font-size:.75rem;color:#334155}
 
-    /* ── Contador de acessos ── */
+    /* ── Contador de acessos global ── */
     .contador-acessos{
       display:inline-flex;
       align-items:center;
       gap:6px;
       margin-top:14px;
-      padding:4px 12px;
+      padding:4px 14px;
       background:rgba(56,189,248,.05);
       border:1px solid rgba(56,189,248,.12);
       border-radius:999px;
@@ -54,12 +54,23 @@
       letter-spacing:.3px;
       transition:opacity .3s;
     }
-    .contador-acessos:hover{opacity:.8}
+    .contador-acessos:hover{opacity:.75}
     .contador-acessos .cnt-num{
       color:#38bdf8;
       font-weight:700;
       font-variant-numeric:tabular-nums;
+      min-width:2ch;
     }
+    .cnt-loading{
+      display:inline-block;
+      width:10px;height:10px;
+      border:1.5px solid rgba(56,189,248,.3);
+      border-top-color:#38bdf8;
+      border-radius:50%;
+      animation:spin .7s linear infinite;
+      vertical-align:middle;
+    }
+    @keyframes spin{to{transform:rotate(360deg)}}
 
     @media(max-width:640px){
       .grid-2{grid-template-columns:1fr}
@@ -101,7 +112,6 @@
   <div class="painel">
     <h2>🎯 Resultados do Cálculo</h2>
     
-    <!-- ALÍQUOTA EFETIVA EM DESTAQUE NO TOPO -->
     <div class="resultado-box destaque">
       <div class="label">⭐ Alíquota Efetiva de ISSQN para Retenção</div>
       <div class="valor" id="aliquotaEfetiva">—</div>
@@ -148,9 +158,7 @@
             <th>% ISS (PD)</th>
           </tr>
         </thead>
-        <tbody id="corpoTabela">
-          <!-- Preenchido dinamicamente -->
-        </tbody>
+        <tbody id="corpoTabela"></tbody>
       </table>
     </div>
   </div>
@@ -167,191 +175,124 @@
   <div class="rodape">
     Base: LC nº 123/2006 (Simples Nacional) — Art. 21, §4º, inciso I • Diamantina/MG
     <br>
-    <span class="contador-acessos" title="Acessos contabilizados neste dispositivo">
-      👁 Acessos neste dispositivo: <span class="cnt-num" id="cntNumero">0</span>
+    <span class="contador-acessos" title="Total de acessos globais à esta página">
+      👁 Acessos: <span id="cntNumero"><span class="cnt-loading"></span></span>
     </span>
   </div>
 </div>
 
 <script>
 // ================================================================
-// CONTADOR DE ACESSOS (localStorage)
+// CONTADOR DE ACESSOS GLOBAL — CounterAPI (api.counterapi.dev)
+// Namespace único para este projeto. A chave abaixo identifica
+// exclusivamente este contador — não compartilhada com outros sites.
 // ================================================================
 (function() {
-  const CHAVE = 'retencao_simples_acessos';
-  const total = (parseInt(localStorage.getItem(CHAVE) || '0', 10)) + 1;
-  localStorage.setItem(CHAVE, total);
-  document.getElementById('cntNumero').textContent = total.toLocaleString('pt-BR');
+  const NS  = 'fiscalizacao9557';
+  const KEY = 'retencao-simples-v1';
+  const el  = document.getElementById('cntNumero');
+
+  fetch('https://api.counterapi.dev/v1/' + NS + '/' + KEY + '/up')
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      const count = data.count || data.value || 0;
+      el.textContent = Number(count).toLocaleString('pt-BR');
+    })
+    .catch(function(){
+      // Se a API falhar, exibe traço discreto sem quebrar a página
+      el.textContent = '—';
+    });
 })();
 
 // ================================================================
 // TABELAS DOS ANEXOS III, IV E V
 // ================================================================
 const TABELAS = {
-  3: [ // ANEXO III
-    {faixa:1, ate:180000, aliquota:6.00, deducao:0, percentualISS:33.50},
-    {faixa:2, ate:360000, aliquota:11.20, deducao:9360, percentualISS:32.00},
-    {faixa:3, ate:720000, aliquota:13.50, deducao:17640, percentualISS:32.50},
-    {faixa:4, ate:1800000, aliquota:16.00, deducao:35640, percentualISS:32.50},
+  3: [
+    {faixa:1, ate:180000,  aliquota:6.00,  deducao:0,      percentualISS:33.50},
+    {faixa:2, ate:360000,  aliquota:11.20, deducao:9360,   percentualISS:32.00},
+    {faixa:3, ate:720000,  aliquota:13.50, deducao:17640,  percentualISS:32.50},
+    {faixa:4, ate:1800000, aliquota:16.00, deducao:35640,  percentualISS:32.50},
     {faixa:5, ate:3600000, aliquota:21.00, deducao:125640, percentualISS:33.50},
     {faixa:6, ate:4800000, aliquota:33.00, deducao:648000, percentualISS:33.50}
   ],
-  4: [ // ANEXO IV
-    {faixa:1, ate:180000, aliquota:4.50, deducao:0, percentualISS:44.50},
-    {faixa:2, ate:360000, aliquota:9.00, deducao:8100, percentualISS:40.00},
-    {faixa:3, ate:720000, aliquota:10.20, deducao:12420, percentualISS:40.00},
-    {faixa:4, ate:1800000, aliquota:14.00, deducao:39780, percentualISS:40.00},
+  4: [
+    {faixa:1, ate:180000,  aliquota:4.50,  deducao:0,      percentualISS:44.50},
+    {faixa:2, ate:360000,  aliquota:9.00,  deducao:8100,   percentualISS:40.00},
+    {faixa:3, ate:720000,  aliquota:10.20, deducao:12420,  percentualISS:40.00},
+    {faixa:4, ate:1800000, aliquota:14.00, deducao:39780,  percentualISS:40.00},
     {faixa:5, ate:3600000, aliquota:22.00, deducao:183780, percentualISS:40.00},
     {faixa:6, ate:4800000, aliquota:33.00, deducao:828000, percentualISS:40.00}
   ],
-  5: [ // ANEXO V
-    {faixa:1, ate:180000, aliquota:15.50, deducao:0, percentualISS:100.00},
-    {faixa:2, ate:360000, aliquota:18.00, deducao:4500, percentualISS:100.00},
-    {faixa:3, ate:720000, aliquota:19.50, deducao:9900, percentualISS:100.00},
-    {faixa:4, ate:1800000, aliquota:20.50, deducao:17100, percentualISS:100.00},
-    {faixa:5, ate:3600000, aliquota:23.00, deducao:62100, percentualISS:100.00},
+  5: [
+    {faixa:1, ate:180000,  aliquota:15.50, deducao:0,      percentualISS:100.00},
+    {faixa:2, ate:360000,  aliquota:18.00, deducao:4500,   percentualISS:100.00},
+    {faixa:3, ate:720000,  aliquota:19.50, deducao:9900,   percentualISS:100.00},
+    {faixa:4, ate:1800000, aliquota:20.50, deducao:17100,  percentualISS:100.00},
+    {faixa:5, ate:3600000, aliquota:23.00, deducao:62100,  percentualISS:100.00},
     {faixa:6, ate:4800000, aliquota:30.50, deducao:540000, percentualISS:100.00}
   ]
 };
 
-// ================================================================
-// FORMATAÇÃO MONETÁRIA BRASILEIRA
-// ================================================================
-function formatarMoeda(valor) {
-  return valor.toLocaleString('pt-BR', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  });
+function formatarMoeda(valor){
+  return valor.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+}
+function removerFormatacao(v){
+  return parseFloat(v.replace(/[^\d,]/g,'').replace(',','.')) || 0;
+}
+function aplicarMascaraMoeda(input){
+  let v = input.value.replace(/\D/g,'');
+  if(!v){input.value='';return;}
+  input.value = formatarMoeda(parseFloat(v)/100);
 }
 
-function removerFormatacao(valorFormatado) {
-  return parseFloat(valorFormatado.replace(/[^\d,]/g, '').replace(',', '.')) || 0;
-}
-
-function aplicarMascaraMoeda(input) {
-  let valor = input.value.replace(/\D/g, '');
-  if (valor === '') {
-    input.value = '';
-    return;
-  }
-  let numero = parseFloat(valor) / 100;
-  input.value = formatarMoeda(numero);
-}
-
-// ================================================================
-// FUNÇÕES DE CÁLCULO
-// ================================================================
-function calcularAliquotaEfetiva() {
-  const inputRbt = document.getElementById('rbt12');
-  const rbt12 = removerFormatacao(inputRbt.value);
+function calcularAliquotaEfetiva(){
+  const rbt12 = removerFormatacao(document.getElementById('rbt12').value);
   const anexoSel = document.getElementById('anexo').value;
-  
-  if(!anexoSel || rbt12 <= 0){
-    limparResultados();
-    return;
-  }
-
+  if(!anexoSel || rbt12 <= 0){limparResultados();return;}
   const tabela = TABELAS[anexoSel];
-  if(!tabela){
-    limparResultados();
-    return;
-  }
-
-  let faixaData = null;
-  for(let i = 0; i < tabela.length; i++){
-    if(rbt12 <= tabela[i].ate){
-      faixaData = tabela[i];
-      break;
-    }
-  }
-
-  if(!faixaData){
-    faixaData = tabela[tabela.length - 1];
-  }
-
-  const aliquotaNominal = faixaData.aliquota;
-  const deducao = faixaData.deducao;
-  const percentualISS = faixaData.percentualISS;
-  const faixa = faixaData.faixa;
-
+  if(!tabela){limparResultados();return;}
+  let fd = tabela.find(function(f){return rbt12 <= f.ate;}) || tabela[tabela.length-1];
   let aliquotaFinal;
-  
-  if (faixa === 6) {
-    aliquotaFinal = 5.0;
+  if(fd.faixa===6){
+    aliquotaFinal=5.0;
   } else {
-    const aliquotaEfetiva = ((rbt12 * (aliquotaNominal / 100)) - deducao) / rbt12;
-    const aliquotaEfetivaISS = (aliquotaEfetiva * (percentualISS / 100)) * 100;
-    
-    if (aliquotaEfetivaISS <= 5) {
-      aliquotaFinal = Math.round(aliquotaEfetivaISS * 10000) / 10000;
-    } else if (aliquotaEfetivaISS < 2) {
-      aliquotaFinal = 2.0;
-    } else {
-      aliquotaFinal = 5.0;
-    }
+    const ae = ((rbt12*(fd.aliquota/100))-fd.deducao)/rbt12;
+    const aeISS = (ae*(fd.percentualISS/100))*100;
+    aliquotaFinal = aeISS<=5 ? Math.round(aeISS*10000)/10000 : (aeISS<2 ? 2.0 : 5.0);
   }
-
-  document.getElementById('aliquotaEfetiva').textContent = aliquotaFinal.toFixed(4) + '%';
-  document.getElementById('faixa').textContent = faixa + 'ª';
-  document.getElementById('aliquotaFaixa').textContent = aliquotaNominal.toFixed(2) + '%';
-  document.getElementById('deducao').textContent = formatarMoeda(deducao);
-  document.getElementById('percentualISS').textContent = percentualISS.toFixed(2) + '%';
+  document.getElementById('aliquotaEfetiva').textContent = aliquotaFinal.toFixed(4)+'%';
+  document.getElementById('faixa').textContent = fd.faixa+'ª';
+  document.getElementById('aliquotaFaixa').textContent = fd.aliquota.toFixed(2)+'%';
+  document.getElementById('deducao').textContent = formatarMoeda(fd.deducao);
+  document.getElementById('percentualISS').textContent = fd.percentualISS.toFixed(2)+'%';
 }
 
 function limparResultados(){
-  document.getElementById('aliquotaEfetiva').textContent = '—';
-  document.getElementById('faixa').textContent = '—';
-  document.getElementById('aliquotaFaixa').textContent = '—';
-  document.getElementById('deducao').textContent = '—';
-  document.getElementById('percentualISS').textContent = '—';
+  ['aliquotaEfetiva','faixa','aliquotaFaixa','deducao','percentualISS']
+    .forEach(function(id){document.getElementById(id).textContent='—';});
 }
 
 function atualizarTabela(){
   const anexoSel = document.getElementById('anexo').value;
   const tbody = document.getElementById('corpoTabela');
-  
   if(!anexoSel){
-    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#64748b">Selecione um Anexo para visualizar a tabela</td></tr>';
+    tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:#64748b">Selecione um Anexo para visualizar a tabela</td></tr>';
     return;
   }
-
-  const tabela = TABELAS[anexoSel];
-  let html = '';
-  
-  for(let i = 0; i < tabela.length; i++){
-    const f = tabela[i];
-    html += `<tr>
-      <td>${f.faixa}ª</td>
-      <td class="numero">até R$ ${formatarMoeda(f.ate)}</td>
-      <td class="numero">${f.aliquota.toFixed(2)}%</td>
-      <td class="numero">R$ ${formatarMoeda(f.deducao)}</td>
-      <td class="numero">${f.percentualISS.toFixed(2)}%</td>
-    </tr>`;
-  }
-  
-  tbody.innerHTML = html;
+  tbody.innerHTML = TABELAS[anexoSel].map(function(f){
+    return '<tr><td>'+f.faixa+'ª</td>'+
+      '<td class="numero">até R$ '+formatarMoeda(f.ate)+'</td>'+
+      '<td class="numero">'+f.aliquota.toFixed(2)+'%</td>'+
+      '<td class="numero">R$ '+formatarMoeda(f.deducao)+'</td>'+
+      '<td class="numero">'+f.percentualISS.toFixed(2)+'%</td></tr>';
+  }).join('');
 }
 
-// ================================================================
-// EVENTOS
-// ================================================================
 const inputRbt = document.getElementById('rbt12');
-
-inputRbt.addEventListener('input', function(e) {
-  aplicarMascaraMoeda(this);
-  calcularAliquotaEfetiva();
-});
-
-inputRbt.addEventListener('blur', function() {
-  if(this.value) {
-    aplicarMascaraMoeda(this);
-  }
-});
-
-document.getElementById('anexo').addEventListener('change', function(){
-  atualizarTabela();
-  calcularAliquotaEfetiva();
-});
+inputRbt.addEventListener('input', function(){aplicarMascaraMoeda(this);calcularAliquotaEfetiva();});
+inputRbt.addEventListener('blur',  function(){if(this.value)aplicarMascaraMoeda(this);});
+document.getElementById('anexo').addEventListener('change',function(){atualizarTabela();calcularAliquotaEfetiva();});
 
 inputRbt.value = formatarMoeda(280140);
 atualizarTabela();
