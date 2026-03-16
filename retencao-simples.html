@@ -38,43 +38,13 @@
     .info-legal a{color:#7dd3fc;text-decoration:none}
     .info-legal a:hover{text-decoration:underline}
     .rodape{text-align:center;margin-top:40px;font-size:.75rem;color:#334155}
-
-    /* ── Contador de acessos global ── */
-    .contador-acessos{
-      display:inline-flex;
-      align-items:center;
-      gap:6px;
-      margin-top:14px;
-      padding:4px 14px;
-      background:rgba(56,189,248,.05);
-      border:1px solid rgba(56,189,248,.12);
-      border-radius:999px;
-      font-size:.7rem;
-      color:#475569;
-      letter-spacing:.3px;
-      transition:opacity .3s;
-    }
+    /* ── Contador ── */
+    .contador-acessos{display:inline-flex;align-items:center;gap:6px;margin-top:14px;padding:4px 14px;background:rgba(56,189,248,.05);border:1px solid rgba(56,189,248,.12);border-radius:999px;font-size:.7rem;color:#475569;letter-spacing:.3px;transition:opacity .3s}
     .contador-acessos:hover{opacity:.75}
-    .contador-acessos .cnt-num{
-      color:#38bdf8;
-      font-weight:700;
-      font-variant-numeric:tabular-nums;
-      min-width:2ch;
-    }
-    .cnt-loading{
-      display:inline-block;
-      width:10px;height:10px;
-      border:1.5px solid rgba(56,189,248,.3);
-      border-top-color:#38bdf8;
-      border-radius:50%;
-      animation:spin .7s linear infinite;
-      vertical-align:middle;
-    }
+    .contador-acessos .cnt-num{color:#38bdf8;font-weight:700;font-variant-numeric:tabular-nums;min-width:2ch}
+    .cnt-loading{display:inline-block;width:10px;height:10px;border:1.5px solid rgba(56,189,248,.3);border-top-color:#38bdf8;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle}
     @keyframes spin{to{transform:rotate(360deg)}}
-
-    @media(max-width:640px){
-      .grid-2{grid-template-columns:1fr}
-    }
+    @media(max-width:640px){.grid-2{grid-template-columns:1fr}}
   </style>
 </head>
 <body>
@@ -86,16 +56,13 @@
 </div>
 
 <div class="container">
-  <!-- PAINEL ENTRADA DE DADOS -->
   <div class="painel">
     <h2>📊 Dados para Cálculo</h2>
-    
     <div class="campo-grupo">
       <label for="rbt12">Receita Bruta Total em 12 Meses (RBT12)</label>
       <input type="text" id="rbt12" placeholder="Ex: 280.140,00" maxlength="20">
       <div class="hint">Informe a Receita Bruta acumulada nos últimos 12 meses</div>
     </div>
-
     <div class="campo-grupo">
       <label for="anexo">Anexo da LC 123/2006</label>
       <select id="anexo">
@@ -108,62 +75,35 @@
     </div>
   </div>
 
-  <!-- PAINEL RESULTADOS -->
   <div class="painel">
     <h2>🎯 Resultados do Cálculo</h2>
-    
     <div class="resultado-box destaque">
       <div class="label">⭐ Alíquota Efetiva de ISSQN para Retenção</div>
       <div class="valor" id="aliquotaEfetiva">—</div>
     </div>
-
     <div class="grid-2" style="margin-top:16px">
-      <div class="resultado-box">
-        <div class="label">Faixa do Anexo</div>
-        <div class="valor" id="faixa">—</div>
-      </div>
-      <div class="resultado-box">
-        <div class="label">Alíquota na Faixa</div>
-        <div class="valor" id="aliquotaFaixa">—</div>
-      </div>
+      <div class="resultado-box"><div class="label">Faixa do Anexo</div><div class="valor" id="faixa">—</div></div>
+      <div class="resultado-box"><div class="label">Alíquota na Faixa</div><div class="valor" id="aliquotaFaixa">—</div></div>
     </div>
-
     <div class="grid-2" style="margin-top:16px">
-      <div class="resultado-box">
-        <div class="label">Dedução (R$)</div>
-        <div class="valor" id="deducao">—</div>
-      </div>
-      <div class="resultado-box">
-        <div class="label">% ISS na Faixa (PD)</div>
-        <div class="valor" id="percentualISS">—</div>
-      </div>
+      <div class="resultado-box"><div class="label">Dedução (R$)</div><div class="valor" id="deducao">—</div></div>
+      <div class="resultado-box"><div class="label">% ISS na Faixa (PD)</div><div class="valor" id="percentualISS">—</div></div>
     </div>
-
     <div class="alerta">
       <strong>⚠️ Importante:</strong> Esta alíquota efetiva deve ser informada no documento fiscal e utilizada pelo tomador para calcular a retenção de ISSQN na fonte. A alíquota corresponde ao percentual efetivo de ISS que a microempresa ou empresa de pequeno porte estava sujeita no <strong>mês anterior</strong> à prestação do serviço.
     </div>
   </div>
 
-  <!-- TABELA DE REFERÊNCIA -->
   <div class="painel">
     <h2>📋 Tabela de Referência — Anexo III</h2>
     <div class="tabela-wrapper">
       <table id="tabelaAnexo">
-        <thead>
-          <tr>
-            <th>Faixa</th>
-            <th>Receita Bruta em 12 Meses (R$)</th>
-            <th>Alíquota</th>
-            <th>Dedução (R$)</th>
-            <th>% ISS (PD)</th>
-          </tr>
-        </thead>
+        <thead><tr><th>Faixa</th><th>Receita Bruta em 12 Meses (R$)</th><th>Alíquota</th><th>Dedução (R$)</th><th>% ISS (PD)</th></tr></thead>
         <tbody id="corpoTabela"></tbody>
       </table>
     </div>
   </div>
 
-  <!-- INFORMAÇÕES LEGAIS -->
   <div class="info-legal">
     <strong>📄 Base Legal:</strong><br>
     • <strong>Lei Complementar nº 123/2006</strong>, Art. 21, §4º, inciso I (com redação dada pela LC 155/2016):<br>
@@ -175,31 +115,43 @@
   <div class="rodape">
     Base: LC nº 123/2006 (Simples Nacional) — Art. 21, §4º, inciso I • Diamantina/MG
     <br>
-    <span class="contador-acessos" title="Total de acessos globais à esta página">
-      👁 Acessos: <span id="cntNumero"><span class="cnt-loading"></span></span>
+    <span class="contador-acessos" title="Visitantes únicos por dia (global)">
+      👁 Visitantes: <span id="cntNumero"><span class="cnt-loading"></span></span>
     </span>
   </div>
 </div>
 
 <script>
 // ================================================================
-// CONTADOR DE ACESSOS GLOBAL — CounterAPI (api.counterapi.dev)
-// Namespace único para este projeto. A chave abaixo identifica
-// exclusivamente este contador — não compartilhada com outros sites.
+// CONTADOR GLOBAL — 1 incremento por dispositivo por dia
+// Fluxo:
+//   1. Lê localStorage para ver se já visitou HOJE
+//   2a. Se sim  → apenas GET (leitura, sem incrementar)
+//   2b. Se não → GET /up (incrementa) e salva a data de hoje
 // ================================================================
-(function() {
-  const NS  = 'fiscalizacao9557';
-  const KEY = 'retencao-simples-v1';
-  const el  = document.getElementById('cntNumero');
+(function () {
+  var NS  = 'fiscalizacao9557';
+  var KEY = 'retencao-simples-v1';
+  var LS_KEY = 'cnt_last_visit_' + KEY;
+  var el  = document.getElementById('cntNumero');
 
-  fetch('https://api.counterapi.dev/v1/' + NS + '/' + KEY + '/up')
-    .then(function(r){ return r.json(); })
-    .then(function(data){
-      const count = data.count || data.value || 0;
+  var hoje = new Date().toISOString().slice(0, 10); // "YYYY-MM-DD"
+  var ultimaVisita = localStorage.getItem(LS_KEY);
+  var jaVisitouHoje = (ultimaVisita === hoje);
+
+  var BASE = 'https://api.counterapi.dev/v1/' + NS + '/' + KEY;
+  var url  = jaVisitouHoje ? (BASE + '/get') : (BASE + '/up');
+
+  fetch(url)
+    .then(function (r) { return r.json(); })
+    .then(function (data) {
+      var count = data.count || data.value || 0;
       el.textContent = Number(count).toLocaleString('pt-BR');
+      if (!jaVisitouHoje) {
+        localStorage.setItem(LS_KEY, hoje); // registra visita de hoje
+      }
     })
-    .catch(function(){
-      // Se a API falhar, exibe traço discreto sem quebrar a página
+    .catch(function () {
       el.textContent = '—';
     });
 })();
@@ -207,7 +159,7 @@
 // ================================================================
 // TABELAS DOS ANEXOS III, IV E V
 // ================================================================
-const TABELAS = {
+var TABELAS = {
   3: [
     {faixa:1, ate:180000,  aliquota:6.00,  deducao:0,      percentualISS:33.50},
     {faixa:2, ate:360000,  aliquota:11.20, deducao:9360,   percentualISS:32.00},
@@ -234,31 +186,33 @@ const TABELAS = {
   ]
 };
 
-function formatarMoeda(valor){
-  return valor.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+function formatarMoeda(v){
+  return v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
 }
 function removerFormatacao(v){
   return parseFloat(v.replace(/[^\d,]/g,'').replace(',','.')) || 0;
 }
 function aplicarMascaraMoeda(input){
-  let v = input.value.replace(/\D/g,'');
+  var v = input.value.replace(/\D/g,'');
   if(!v){input.value='';return;}
   input.value = formatarMoeda(parseFloat(v)/100);
 }
 
 function calcularAliquotaEfetiva(){
-  const rbt12 = removerFormatacao(document.getElementById('rbt12').value);
-  const anexoSel = document.getElementById('anexo').value;
+  var rbt12 = removerFormatacao(document.getElementById('rbt12').value);
+  var anexoSel = document.getElementById('anexo').value;
   if(!anexoSel || rbt12 <= 0){limparResultados();return;}
-  const tabela = TABELAS[anexoSel];
+  var tabela = TABELAS[anexoSel];
   if(!tabela){limparResultados();return;}
-  let fd = tabela.find(function(f){return rbt12 <= f.ate;}) || tabela[tabela.length-1];
-  let aliquotaFinal;
+  var fd = null;
+  for(var i=0;i<tabela.length;i++){if(rbt12<=tabela[i].ate){fd=tabela[i];break;}}
+  if(!fd) fd = tabela[tabela.length-1];
+  var aliquotaFinal;
   if(fd.faixa===6){
     aliquotaFinal=5.0;
   } else {
-    const ae = ((rbt12*(fd.aliquota/100))-fd.deducao)/rbt12;
-    const aeISS = (ae*(fd.percentualISS/100))*100;
+    var ae = ((rbt12*(fd.aliquota/100))-fd.deducao)/rbt12;
+    var aeISS = (ae*(fd.percentualISS/100))*100;
     aliquotaFinal = aeISS<=5 ? Math.round(aeISS*10000)/10000 : (aeISS<2 ? 2.0 : 5.0);
   }
   document.getElementById('aliquotaEfetiva').textContent = aliquotaFinal.toFixed(4)+'%';
@@ -274,8 +228,8 @@ function limparResultados(){
 }
 
 function atualizarTabela(){
-  const anexoSel = document.getElementById('anexo').value;
-  const tbody = document.getElementById('corpoTabela');
+  var anexoSel = document.getElementById('anexo').value;
+  var tbody = document.getElementById('corpoTabela');
   if(!anexoSel){
     tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:#64748b">Selecione um Anexo para visualizar a tabela</td></tr>';
     return;
@@ -289,7 +243,7 @@ function atualizarTabela(){
   }).join('');
 }
 
-const inputRbt = document.getElementById('rbt12');
+var inputRbt = document.getElementById('rbt12');
 inputRbt.addEventListener('input', function(){aplicarMascaraMoeda(this);calcularAliquotaEfetiva();});
 inputRbt.addEventListener('blur',  function(){if(this.value)aplicarMascaraMoeda(this);});
 document.getElementById('anexo').addEventListener('change',function(){atualizarTabela();calcularAliquotaEfetiva();});
