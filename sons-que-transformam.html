@@ -47,7 +47,6 @@
     overflow: hidden;
   }
 
-  /* Capa */
   .capa {
     background: linear-gradient(135deg, #1a472a 60%, #2d5f3f 100%);
     color: white;
@@ -156,24 +155,31 @@
     margin-bottom: 12px;
     page-break-inside: avoid;
   }
-
   .fase-card h4 {
     color: #1a472a;
     font-size: 0.95rem;
     margin-bottom: 6px;
     page-break-after: avoid;
   }
-
-  .fase-card p {
-    font-size: 0.85rem;
-    color: #555;
-    margin-bottom: 6px;
-  }
-
+  .fase-card p { font-size: 0.85rem; color: #555; margin-bottom: 6px; }
   .fase-card .meta { font-size: 0.8rem; color: #777; }
   .fase-card.f1 { border-left: 4px solid #f5a623; }
   .fase-card.f2 { border-left: 4px solid #1a472a; }
   .fase-card.f3 { border-left: 4px solid #1565c0; }
+
+  .instr-card {
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    padding: 14px 18px;
+    margin-bottom: 12px;
+    page-break-inside: avoid;
+  }
+  .instr-card.sopro { border-left: 4px solid #1565c0; }
+  .instr-card.percussao { border-left: 4px solid #f5a623; }
+  .instr-card.apoio { border-left: 4px solid #2d5f3f; }
+  .instr-card h4 { color: #1a472a; font-size: 0.9rem; margin-bottom: 6px; font-weight: 700; }
+  .instr-card p { font-size: 0.85rem; color: #555; margin-bottom: 4px; }
+  .instr-card .fase-ref { font-size: 0.78rem; color: #888; margin-top: 4px; }
 
   .highlight-box {
     background: #e8f5e9;
@@ -196,10 +202,8 @@
     page-break-inside: avoid;
   }
 
-  /* Quebras de página estratégicas */
   @media print {
     .section { page-break-inside: avoid; }
-    .section:nth-child(5) { page-break-before: auto; }
   }
 </style>
 </head>
@@ -280,12 +284,12 @@
       </div>
       <div class="fase-card f2">
         <h4>🎼 Fase 2 — Prática de Leitura <span class="badge">~4 meses</span></h4>
-        <p>Leitura musical progressiva (básico ao intermediário), solfejo melódico e rítmico, ditado musical.</p>
+        <p>Leitura musical progressiva (básico ao intermediário), solfejo melódico e rítmico, ditado musical e leitura de partituras para instrumentos de sopro e percussão.</p>
         <div class="meta">✅ Avaliação: <strong>Prova prática de leitura</strong></div>
       </div>
       <div class="fase-card f3">
         <h4>🎺 Fase 3 — Prática Instrumental <span class="badge azul">~4 meses</span></h4>
-        <p>Técnica instrumental, repertório, tocar em conjunto, ensaios da orquestra do projeto.</p>
+        <p>Técnica instrumental nos naipes de sopro (metais e madeiras) e percussão, repertório, prática em conjunto e ensaios da orquestra do projeto.</p>
         <div class="meta">✅ Avaliação: <strong>Inserção na orquestra do Projeto "Sons que Transformam"</strong></div>
       </div>
       <p><strong>4.2 Carga Horária Detalhada</strong></p>
@@ -299,13 +303,13 @@
         </tbody>
       </table>
       <p><strong>4.3 Metodologia de Execução</strong></p>
-      <p>As aulas são conduzidas com abordagem <strong>teórico-prática e lúdica</strong>, respeitando as particularidades do desenvolvimento infantil e juvenil. Para crianças, os conteúdos da Fase 1 são apresentados por meio de jogos e recursos visuais. Para adolescentes, privilegia-se a autonomia progressiva sem perder o rigor técnico.</p>
+      <p>As aulas são conduzidas com abordagem <strong>teórico-prática e lúdica</strong>, respeitando as particularidades do desenvolvimento infantil e juvenil. Para crianças, os conteúdos da Fase 1 são apresentados por meio de jogos e recursos visuais. Para adolescentes, privilegia-se a autonomia progressiva sem perder o rigor técnico. A partir da Fase 2, as atividades incorporam leitura de partituras específicas para instrumentos de sopro e percussão, preparando os alunos para a prática instrumental coletiva da Fase 3.</p>
       <p><strong>Recursos didáticos:</strong></p>
       <ul>
         <li>Quadro branco e marcadores;</li>
-        <li>Material impresso de teoria musical e partituras adaptadas;</li>
+        <li>Material impresso de teoria musical e partituras adaptadas para instrumentos de sopro e percussão;</li>
         <li>Jogos didáticos musicais;</li>
-        <li>Instrumentos musicais (violões, teclados, flauta, percussão, etc.);</li>
+        <li>Instrumentos de sopro e percussão (conforme dotado para o projeto);</li>
         <li>Áudios e vídeos de referência musical.</li>
       </ul>
     </div>
@@ -334,32 +338,38 @@
     </div>
 
     <div class="section">
-      <div class="section-title">7. Instrumentos Musicais e Equipamentos</div>
-      <p>Os instrumentos e suportes são provenientes de <strong>doações</strong> e <strong>aquisições com recursos de apoiadores</strong>, vinculados exclusivamente às atividades das oficinas musicais.</p>
-      <ul>
-        <li>Violões</li>
-        <li>Trompete(s)</li>
-        <li>Teclado(s)</li>
-        <li>Instrumentos de sopro (flauta doce/transversal, etc.)</li>
-        <li>Instrumentos de percussão (caixa, pandeiro, xilofone, etc.)</li>
-        <li>Estantes de partitura</li>
-        <li>Material didático impresso e jogos musicais</li>
-        <li>Amplificadores e cabos (quando necessário)</li>
-      </ul>
+      <div class="section-title">7. Instrumentos e Recursos Materiais</div>
+      <p>Os instrumentos musicais e demais recursos são adquiridos com recursos do projeto e/ou provenientes de doações, vinculados exclusivamente às atividades das oficinas musicais. A seleção dos instrumentos obedece à proposta pedagógica do projeto, sendo organizados em duas categorias principais:</p>
+      <div class="instr-card sopro">
+        <h4>🎺 Instrumentos de Sopro</h4>
+        <p>Instrumentos de metal e palheta (naipes de metais e madeiras) destinados à formação dos naipes melódicos e harmônicos da orquestra em construção. São utilizados a partir da Fase 2 para leitura de partituras e consolidados na Fase 3 para a prática instrumental coletiva.</p>
+        <div class="fase-ref">🔗 Vinculação pedagógica: <strong>Fases 2 e 3</strong></div>
+      </div>
+      <div class="instr-card percussao">
+        <h4>🥁 Instrumentos Percussivos</h4>
+        <p>Instrumentos de percussão rítmica destinados à marcação e sustentação rítmica da orquestra. São introduzidos progressivamente a partir das atividades de solfejo rítmico da Fase 2 e integrados plenamente aos ensaios coletivos da Fase 3.</p>
+        <div class="fase-ref">🔗 Vinculação pedagógica: <strong>Fases 2 e 3</strong></div>
+      </div>
+      <div class="instr-card apoio">
+        <h4>📚 Suportes e Material Didático</h4>
+        <p>Estantes de partitura, material impresso, jogos didáticos musicais e demais recursos de apoio pedagógico utilizados ao longo de todas as fases do projeto.</p>
+        <div class="fase-ref">🔗 Vinculação pedagógica: <strong>Todas as fases</strong></div>
+      </div>
+      <div class="highlight-box">Todos os recursos são administrados com transparência, com registros de entrada e destinação de cada bem adquirido ou recebido, em conformidade com as normas de prestação de contas aplicáveis.</div>
     </div>
 
     <div class="section">
       <div class="section-title">8. Demonstração da Adequação das Despesas</div>
       <table>
-        <thead><tr><th>Item de Despesa</th><th>Finalidade</th><th>Vinculação</th></tr></thead>
+        <thead><tr><th>Categoria de Despesa</th><th>Finalidade Pedagógica</th><th>Vinculação</th></tr></thead>
         <tbody>
-          <tr><td>Aquisição de instrumentos</td><td>Aulas práticas das Fases 2 e 3</td><td>Oficinas musicais</td></tr>
-          <tr><td>Material didático</td><td>Suporte às Fases 1 e 2</td><td>Alfabetização e leitura</td></tr>
-          <tr><td>Suportes e acessórios</td><td>Prática instrumental</td><td>Fases 2 e 3</td></tr>
-          <tr><td>Manutenção dos instrumentos</td><td>Uso contínuo</td><td>Todas as fases</td></tr>
+          <tr><td>Instrumentos de sopro</td><td>Prática melódica/harmônica dos naipes da orquestra</td><td>Fases 2 e 3</td></tr>
+          <tr><td>Instrumentos percussivos</td><td>Marcação rítmica e sustentação da orquestra</td><td>Fases 2 e 3</td></tr>
+          <tr><td>Material didático e partituras</td><td>Suporte à alfabetização e leitura musical</td><td>Fases 1 e 2</td></tr>
+          <tr><td>Suportes e acessórios</td><td>Organização e prática instrumental</td><td>Fases 2 e 3</td></tr>
+          <tr><td>Manutenção de instrumentos</td><td>Conservação para uso contínuo</td><td>Todas as fases</td></tr>
         </tbody>
       </table>
-      <div class="highlight-box">Todos os recursos são administrados com transparência, com registros de entrada e destinação de cada bem adquirido ou recebido.</div>
     </div>
 
     <div class="section">
@@ -385,12 +395,12 @@
           <tr><td>Fevereiro</td><td>Notas musicais, figuras, pautas e claves</td><td><span class="badge amarelo">Fase 1</span></td></tr>
           <tr><td>Março</td><td>Compassos, fórmulas de compasso, solfejo</td><td><span class="badge amarelo">Fase 1</span></td></tr>
           <tr><td>Abril</td><td>Revisão geral + <strong>Prova Teórica</strong></td><td><span class="badge amarelo">Fase 1</span></td></tr>
-          <tr><td>Maio</td><td>Leitura rítmica progressiva, nível básico</td><td><span class="badge">Fase 2</span></td></tr>
+          <tr><td>Maio</td><td>Leitura rítmica progressiva para sopro e percussão</td><td><span class="badge">Fase 2</span></td></tr>
           <tr><td>Junho</td><td>Leitura melódica, solfejo aplicado</td><td><span class="badge">Fase 2</span></td></tr>
           <tr><td>Julho</td><td>Leitura em níveis crescentes de dificuldade</td><td><span class="badge">Fase 2</span></td></tr>
           <tr><td>Agosto</td><td>Revisão + <strong>Prova Prática de Leitura</strong></td><td><span class="badge">Fase 2</span></td></tr>
-          <tr><td>Setembro</td><td>Técnica instrumental, postura, repertórios</td><td><span class="badge azul">Fase 3</span></td></tr>
-          <tr><td>Outubro</td><td>Repertório musical, prática em duplas e trios</td><td><span class="badge azul">Fase 3</span></td></tr>
+          <tr><td>Setembro</td><td>Técnica instrumental por naipe (sopro e percussão)</td><td><span class="badge azul">Fase 3</span></td></tr>
+          <tr><td>Outubro</td><td>Repertório musical, prática em naipes e conjunto</td><td><span class="badge azul">Fase 3</span></td></tr>
           <tr><td>Novembro</td><td>Ensaios coletivos da orquestra</td><td><span class="badge azul">Fase 3</span></td></tr>
           <tr><td>Dezembro</td><td><strong>Apresentação pública</strong> e inserção formal na orquestra</td><td><span class="badge azul">Fase 3</span></td></tr>
         </tbody>
