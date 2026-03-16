@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Plano de Aplicação dos Recursos — Sons que Transformam</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #f4f6f0; color: #222; }
+  .topbar {
+    background: #1a472a; color: white; padding: 14px 32px;
+    display: flex; justify-content: space-between; align-items: center;
+    position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  }
+  .topbar h1 { font-size: 1rem; font-weight: 600; }
+  .btn-pdf {
+    background: #f5a623; color: #1a1a1a; border: none; padding: 10px 24px;
+    border-radius: 6px; font-size: 0.95rem; font-weight: 700; cursor: pointer;
+    display: flex; align-items: center; gap: 8px; transition: background 0.2s;
+  }
+  .btn-pdf:hover { background: #e09510; }
+  .container {
+    max-width: 860px; margin: 30px auto; background: white;
+    border-radius: 10px; box-shadow: 0 2px 16px rgba(0,0,0,0.1); overflow: hidden;
+  }
+  .capa {
+    background: linear-gradient(135deg, #1a472a 60%, #2d5f3f 100%);
+    color: white; padding: 48px 40px 36px; text-align: center;
+  }
+  .capa .tag {
+    display: inline-block; background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.3); border-radius: 20px;
+    padding: 4px 16px; font-size: 0.8rem; letter-spacing: 1px;
+    text-transform: uppercase; margin-bottom: 16px;
+  }
+  .capa h1 { font-size: 1.6rem; font-weight: 800; margin-bottom: 8px; }
+  .capa h2 { font-size: 1.1rem; font-weight: 400; opacity: 0.9; }
+  .info-bar {
+    background: #e8f5e9; border-bottom: 2px solid #2d5f3f;
+    padding: 20px 40px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;
+  }
+  .info-item { display: flex; flex-direction: column; }
+  .info-item .label { font-size: 0.7rem; font-weight: 700; color: #2d5f3f; text-transform: uppercase; letter-spacing: 0.5px; }
+  .info-item .value { font-size: 0.9rem; color: #222; margin-top: 2px; }
+  .content { padding: 32px 40px; }
+  .section { margin-bottom: 32px; }
+  .section-title {
+    font-size: 1rem; font-weight: 700; color: #1a472a;
+    border-left: 4px solid #f5a623; padding-left: 12px; margin-bottom: 14px;
+  }
+  p { font-size: 0.92rem; line-height: 1.7; text-align: justify; color: #333; }
+  ul { padding-left: 20px; margin-top: 8px; }
+  ul li { font-size: 0.9rem; line-height: 1.7; color: #333; margin-bottom: 4px; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin-top: 12px; }
+  thead tr { background: #1a472a; color: white; }
+  thead th { padding: 10px 12px; text-align: left; font-weight: 600; }
+  tbody tr:nth-child(even) { background: #f5f9f5; }
+  tbody tr:nth-child(odd) { background: #ffffff; }
+  tbody td { padding: 9px 12px; border-bottom: 1px solid #ddd; color: #333; vertical-align: top; }
+  tbody tr:hover { background: #e8f5e9; }
+  .badge {
+    display: inline-block; background: #1a472a; color: white;
+    border-radius: 12px; padding: 2px 10px; font-size: 0.75rem; font-weight: 600;
+  }
+  .badge.amarelo { background: #f5a623; color: #1a1a1a; }
+  .badge.azul { background: #1565c0; }
+  .fase-card { border-radius: 8px; border: 1px solid #ddd; padding: 16px 18px; margin-bottom: 12px; }
+  .fase-card h4 { color: #1a472a; font-size: 0.95rem; margin-bottom: 6px; }
+  .fase-card p { font-size: 0.85rem; color: #555; margin-bottom: 6px; }
+  .fase-card .meta { font-size: 0.8rem; color: #777; }
+  .fase-card.f1 { border-left: 4px solid #f5a623; }
+  .fase-card.f2 { border-left: 4px solid #1a472a; }
+  .fase-card.f3 { border-left: 4px solid #1565c0; }
+  .highlight-box {
+    background: #e8f5e9; border: 1px solid #a5d6a7; border-radius: 8px;
+    padding: 16px 18px; margin-top: 12px; font-size: 0.88rem; color: #1b5e20;
+  }
+  .footer-doc {
+    display: block; text-align: center; padding: 20px;
+    font-size: 0.78rem; color: #999; border-top: 1px solid #eee;
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1>📋 Plano de Aplicação dos Recursos — Projeto "Sons que Transformam"</h1>
+  <button class="btn-pdf" onclick="exportarPDF()">⬇️ Exportar PDF</button>
+</div>
+
+<div class="container" id="documento">
+
+  <div class="capa">
+    <div class="tag">Plano de Aplicação dos Recursos</div>
+    <h1>Oficinas Musicais</h1>
+    <h2>Projeto "Sons que Transformam"</h2>
+  </div>
+
+  <div class="info-bar">
+    <div class="info-item">
+      <span class="label">Entidade Executora</span>
+      <span class="value">Assoc. Casa da Criança Maria Antônia</span>
+    </div>
+    <div class="info-item">
+      <span class="label">Endereço</span>
+      <span class="value">Rua Cruz de Moisés, 364</span>
+    </div>
+    <div class="info-item">
+      <span class="label">Público-Alvo</span>
+      <span class="value">Crianças e Adolescentes</span>
+    </div>
+    <div class="info-item">
+      <span class="label">Período</span>
+      <span class="value">Jan – Dez / 2026 (12 meses)</span>
+    </div>
+    <div class="info-item">
+      <span class="label">Carga Horária</span>
+      <span class="value">192 horas/ano</span>
+    </div>
+    <div class="info-item">
+      <span class="label">Frequência</span>
+      <span class="value">2 encontros semanais × 2h cada</span>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <div class="section">
+      <div class="section-title">1. Identificação do Serviço</div>
+      <p>As Oficinas Musicais constituem a atividade central do <strong>Projeto "Sons que Transformam"</strong>, desenvolvido pela <strong>Associação Casa da Criança Maria Antônia</strong>, situada na Rua Cruz de Moisés, 364. O projeto atende crianças e adolescentes, promovendo o desenvolvimento da educação musical formal em ambiente socioeducativo, com vistas ao fortalecimento de vínculos, ampliação de repertório cultural e desenvolvimento integral dos participantes.</p>
+    </div>
+
+    <div class="section">
+      <div class="section-title">2. Justificativa</div>
+      <p>A música é reconhecida como poderosa ferramenta de desenvolvimento cognitivo, emocional e social para crianças e adolescentes. Ao oferecer formação musical estruturada através do <strong>Projeto "Sons que Transformam"</strong>, a Associação proporciona aos seus assistidos uma experiência de aprendizado disciplinado, com metas progressivas e resultado concreto: a integração à orquestra em formação. A oficina representa também uma alternativa protetiva ao tempo ocioso, contribuindo para a prevenção de vulnerabilidades sociais.</p>
+    </div>
+
+    <div class="section">
+      <div class="section-title">3. Objetivos</div>
+      <p><strong>Objetivo Geral:</strong> Promover a formação musical progressiva de crianças e adolescentes, desde a alfabetização até a prática instrumental em conjunto, no âmbito do Projeto "Sons que Transformam".</p>
+      <br/>
+      <p><strong>Objetivos Específicos:</strong></p>
+      <ul>
+        <li>Desenvolver a leitura e escrita musical de forma lúdica e adequada à faixa etária;</li>
+        <li>Ampliar a capacidade de leitura musical com progressão de dificuldade;</li>
+        <li>Capacitar os participantes para a prática instrumental individual e coletiva;</li>
+        <li>Fortalecer vínculos comunitários, autoestima e identidade cultural;</li>
+        <li>Incorporar os músicos formados ao grupo instrumental da orquestra do projeto.</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <div class="section-title">4. Descrição das Oficinas Musicais</div>
+      <p><strong>4.1 Estrutura de Fases</strong></p>
+      <br/>
+      <div class="fase-card f1">
+        <h4>🎵 Fase 1 — Alfabetização Musical <span class="badge amarelo">~4 meses</span></h4>
+        <p>Teoria musical básica: notas, figuras, pausas, compassos, claves, dinâmica e solfejo elementar, com abordagem lúdica para crianças.</p>
+        <div class="meta">✅ Avaliação: <strong>Prova teórica escrita</strong> (adaptada à faixa etária)</div>
+      </div>
+      <div class="fase-card f2">
+        <h4>🎼 Fase 2 — Prática de Leitura <span class="badge">~4 meses</span></h4>
+        <p>Leitura musical progressiva (básico ao intermediário), solfejo melódico e rítmico, ditado musical.</p>
+        <div class="meta">✅ Avaliação: <strong>Prova prática de leitura</strong></div>
+      </div>
+      <div class="fase-card f3">
+        <h4>🎸 Fase 3 — Prática Instrumental <span class="badge azul">~4 meses</span></h4>
+        <p>Técnica instrumental, repertório, tocar em conjunto, ensaios da orquestra do projeto.</p>
+        <div class="meta">✅ Avaliação: <strong>Inserção na orquestra do Projeto "Sons que Transformam"</strong></div>
+      </div>
+      <br/>
+      <p><strong>4.2 Carga Horária Detalhada</strong></p>
+      <table>
+        <thead><tr><th>Período</th><th>Fase</th><th>Nº de Aulas</th><th>Horas</th></tr></thead>
+        <tbody>
+          <tr><td>Janeiro – Abril</td><td>Fase 1</td><td>~32 aulas</td><td><strong>64h</strong></td></tr>
+          <tr><td>Maio – Agosto</td><td>Fase 2</td><td>~32 aulas</td><td><strong>64h</strong></td></tr>
+          <tr><td>Setembro – Dezembro</td><td>Fase 3</td><td>~32 aulas</td><td><strong>64h</strong></td></tr>
+          <tr style="background:#e8f5e9;font-weight:bold"><td>Total</td><td></td><td>~96 aulas</td><td>192h</td></tr>
+        </tbody>
+      </table>
+      <br/>
+      <p><strong>4.3 Metodologia de Execução</strong></p>
+      <br/>
+      <p>As aulas são conduzidas com abordagem <strong>teórico-prática e lúdica</strong>, respeitando as particularidades do desenvolvimento infantil e juvenil. Para crianças, os conteúdos da Fase 1 são apresentados por meio de jogos e recursos visuais. Para adolescentes, privilegia-se a autonomia progressiva sem perder o rigor técnico.</p>
+      <br/>
+      <p><strong>Recursos didáticos:</strong></p>
+      <ul>
+        <li>Quadro branco e marcadores;</li>
+        <li>Material impresso de teoria musical e partituras adaptadas;</li>
+        <li>Jogos didáticos musicais;</li>
+        <li>Instrumentos musicais (violões, teclados, flauta, percussão, etc.);</li>
+        <li>Áudios e vídeos de referência musical.</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <div class="section-title">5. Frequência e Local das Aulas</div>
+      <ul>
+        <li><strong>Frequência:</strong> 2 (dois) encontros semanais</li>
+        <li><strong>Duração:</strong> 2 horas por encontro</li>
+        <li><strong>Local:</strong> Sede da Associação Casa da Criança Maria Antônia — Rua Cruz de Moisés, 364</li>
+        <li><strong>Observação:</strong> Horários definidos conforme a grade da entidade, sem conflito com o período escolar regular.</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <div class="section-title">6. Responsáveis pela Execução</div>
+      <table>
+        <thead><tr><th>Função</th><th>Responsável</th></tr></thead>
+        <tbody>
+          <tr><td>Coordenação Geral</td><td>Direção da Associação Casa da Criança Maria Antônia</td></tr>
+          <tr><td>Instrução Musical</td><td>Professor(a)/Músico(a) designado(a)</td></tr>
+          <tr><td>Apoio Socioeducativo</td><td>Equipe técnica (assistente social/pedagogo)</td></tr>
+          <tr><td>Acompanhamento dos Alunos</td><td>Monitores e educadores da associação</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section">
+      <div class="section-title">7. Instrumentos Musicais e Equipamentos</div>
+      <p>Os instrumentos e suportes são provenientes de <strong>doações</strong> e <strong>aquisições com recursos de apoiadores</strong>, vinculados exclusivamente às atividades das oficinas musicais.</p>
+      <br/>
+      <ul>
+        <li>Violões e/ou guitarras</li>
+        <li>Teclado(s)</li>
+        <li>Instrumentos de sopro (flauta doce/transversal, trompete, etc.)</li>
+        <li>Instrumentos de percussão (caixa, pandeiro, xilofone, etc.)</li>
+        <li>Estantes de partitura</li>
+        <li>Material didático impresso e jogos musicais</li>
+        <li>Amplificadores e cabos (quando necessário)</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <div class="section-title">8. Demonstração da Adequação das Despesas</div>
+      <table>
+        <thead><tr><th>Item de Despesa</th><th>Finalidade</th><th>Vinculação</th></tr></thead>
+        <tbody>
+          <tr><td>Aquisição de instrumentos</td><td>Aulas práticas das Fases 2 e 3</td><td>Oficinas musicais</td></tr>
+          <tr><td>Material didático</td><td>Suporte às Fases 1 e 2</td><td>Alfabetização e leitura</td></tr>
+          <tr><td>Suportes e acessórios</td><td>Prática instrumental</td><td>Fases 2 e 3</td></tr>
+          <tr><td>Manutenção dos instrumentos</td><td>Uso contínuo</td><td>Todas as fases</td></tr>
+        </tbody>
+      </table>
+      <div class="highlight-box">Todos os recursos são administrados com transparência, com registros de entrada e destinação de cada bem adquirido ou recebido.</div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">9. Metas e Indicadores</div>
+      <table>
+        <thead><tr><th>Meta</th><th>Indicador</th></tr></thead>
+        <tbody>
+          <tr><td>Concluir Fase 1 com aprovação teórica</td><td>Nº de alunos aprovados / total matriculados</td></tr>
+          <tr><td>Concluir Fase 2 com aprovação prática</td><td>Nº de alunos aprovados na prova de leitura</td></tr>
+          <tr><td>Inserir alunos na orquestra</td><td>Nº de músicos integrados ao final do ano</td></tr>
+          <tr><td>Frequência mínima de 75%</td><td>Controle de chamada por aula</td></tr>
+          <tr><td>Atender público vulnerável</td><td>Participantes com perfil socioeducativo registrado</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section">
+      <div class="section-title">10. Cronograma Anual de Execução</div>
+      <table>
+        <thead><tr><th>Mês</th><th>Atividade Principal</th><th>Fase</th></tr></thead>
+        <tbody>
+          <tr><td>Janeiro</td><td>Matrícula, apresentação do projeto, diagnóstico</td><td><span class="badge" style="background:#888">Pré-fase</span></td></tr>
+          <tr><td>Fevereiro</td><td>Notas musicais, figuras, pautas e claves</td><td><span class="badge amarelo">Fase 1</span></td></tr>
+          <tr><td>Março</td><td>Compassos, fórmulas de compasso, solfejo</td><td><span class="badge amarelo">Fase 1</span></td></tr>
+          <tr><td>Abril</td><td>Revisão geral + <strong>Prova Teórica</strong></td><td><span class="badge amarelo">Fase 1</span></td></tr>
+          <tr><td>Maio</td><td>Leitura rítmica progressiva, nível básico</td><td><span class="badge">Fase 2</span></td></tr>
+          <tr><td>Junho</td><td>Leitura melódica, solfejo aplicado</td><td><span class="badge">Fase 2</span></td></tr>
+          <tr><td>Julho</td><td>Leitura em níveis crescentes de dificuldade</td><td><span class="badge">Fase 2</span></td></tr>
+          <tr><td>Agosto</td><td>Revisão + <strong>Prova Prática de Leitura</strong></td><td><span class="badge">Fase 2</span></td></tr>
+          <tr><td>Setembro</td><td>Técnica instrumental, postura, repertórios</td><td><span class="badge azul">Fase 3</span></td></tr>
+          <tr><td>Outubro</td><td>Repertório musical, prática em duplas e trios</td><td><span class="badge azul">Fase 3</span></td></tr>
+          <tr><td>Novembro</td><td>Ensaios coletivos da orquestra</td><td><span class="badge azul">Fase 3</span></td></tr>
+          <tr><td>Dezembro</td><td><strong>Apresentação pública</strong> e inserção formal na orquestra</td><td><span class="badge azul">Fase 3</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section">
+      <div class="section-title">11. Resultados Esperados</div>
+      <p>Ao final dos 12 meses, espera-se que os participantes tenham percorrido as três fases de formação musical, adquirindo competências para integrar a orquestra em formação. O projeto visa fortalecer disciplina, trabalho em equipe, autoconfiança e pertencimento comunitário das crianças e adolescentes atendidos.</p>
+    </div>
+
+    <div class="section">
+      <div class="section-title">12. Conclusão</div>
+      <p>O <strong>Projeto "Sons que Transformam"</strong> representa um investimento significativo no desenvolvimento humano de crianças e adolescentes em vulnerabilidade social. Através da educação musical estruturada e adequada à faixa etária, o projeto promove acesso à arte e à cultura como direitos fundamentais.</p>
+      <br/>
+      <p>A <strong>Associação Casa da Criança Maria Antônia</strong> compromete-se com a execução transparente deste plano, prestando contas de todos os recursos recebidos.</p>
+    </div>
+
+    <div class="section">
+      <div class="section-title">13. Assinaturas</div>
+      <br/>
+      <table style="border:none;margin-top:20px">
+        <tbody>
+          <tr>
+            <td style="border:none;text-align:center;padding:0 30px">
+              <div style="border-top:1px solid #333;padding-top:8px;margin-top:50px;font-size:0.82rem;color:#444">
+                Responsável pela Entidade<br/><strong>Associação Casa da Criança Maria Antônia</strong>
+              </div>
+            </td>
+            <td style="border:none;text-align:center;padding:0 30px">
+              <div style="border-top:1px solid #333;padding-top:8px;margin-top:50px;font-size:0.82rem;color:#444">
+                Coordenador(a) do Projeto<br/><strong>Projeto "Sons que Transformam"</strong>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <div class="footer-doc">
+    Documento elaborado em março de 2026 · Projeto "Sons que Transformam" · Associação Casa da Criança Maria Antônia
+  </div>
+
+</div>
+
+<script>
+function exportarPDF() {
+  const btn = document.querySelector('.btn-pdf');
+  btn.textContent = '⏳ Gerando PDF...';
+  btn.disabled = true;
+  const elemento = document.getElementById('documento');
+  const opcoes = {
+    margin: [10, 10, 10, 10],
+    filename: 'Plano_Sons_Transformam.pdf',
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2, useCORS: true, scrollY: 0 },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+    pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+  };
+  html2pdf().set(opcoes).from(elemento).save().then(() => {
+    btn.innerHTML = '⬇️ Exportar PDF';
+    btn.disabled = false;
+  });
+}
+</script>
+</body>
+</html>
