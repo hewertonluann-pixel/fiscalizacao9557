@@ -38,6 +38,29 @@
     .info-legal a{color:#7dd3fc;text-decoration:none}
     .info-legal a:hover{text-decoration:underline}
     .rodape{text-align:center;margin-top:40px;font-size:.75rem;color:#334155}
+
+    /* ── Contador de acessos ── */
+    .contador-acessos{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      margin-top:14px;
+      padding:4px 12px;
+      background:rgba(56,189,248,.05);
+      border:1px solid rgba(56,189,248,.12);
+      border-radius:999px;
+      font-size:.7rem;
+      color:#475569;
+      letter-spacing:.3px;
+      transition:opacity .3s;
+    }
+    .contador-acessos:hover{opacity:.8}
+    .contador-acessos .cnt-num{
+      color:#38bdf8;
+      font-weight:700;
+      font-variant-numeric:tabular-nums;
+    }
+
     @media(max-width:640px){
       .grid-2{grid-template-columns:1fr}
     }
@@ -143,10 +166,24 @@
 
   <div class="rodape">
     Base: LC nº 123/2006 (Simples Nacional) — Art. 21, §4º, inciso I • Diamantina/MG
+    <br>
+    <span class="contador-acessos" title="Acessos contabilizados neste dispositivo">
+      👁 Acessos neste dispositivo: <span class="cnt-num" id="cntNumero">0</span>
+    </span>
   </div>
 </div>
 
 <script>
+// ================================================================
+// CONTADOR DE ACESSOS (localStorage)
+// ================================================================
+(function() {
+  const CHAVE = 'retencao_simples_acessos';
+  const total = (parseInt(localStorage.getItem(CHAVE) || '0', 10)) + 1;
+  localStorage.setItem(CHAVE, total);
+  document.getElementById('cntNumero').textContent = total.toLocaleString('pt-BR');
+})();
+
 // ================================================================
 // TABELAS DOS ANEXOS III, IV E V
 // ================================================================
@@ -188,24 +225,16 @@ function formatarMoeda(valor) {
 }
 
 function removerFormatacao(valorFormatado) {
-  // Remove tudo exceto números e vírgula, depois substitui vírgula por ponto
   return parseFloat(valorFormatado.replace(/[^\d,]/g, '').replace(',', '.')) || 0;
 }
 
 function aplicarMascaraMoeda(input) {
-  // Remove caracteres não numéricos
   let valor = input.value.replace(/\D/g, '');
-  
-  // Se vazio, limpa o campo
   if (valor === '') {
     input.value = '';
     return;
   }
-  
-  // Converte para número (considera os últimos 2 dígitos como centavos)
   let numero = parseFloat(valor) / 100;
-  
-  // Formata com separadores brasileiros
   input.value = formatarMoeda(numero);
 }
 
@@ -228,7 +257,6 @@ function calcularAliquotaEfetiva() {
     return;
   }
 
-  // Identificar faixa
   let faixaData = null;
   for(let i = 0; i < tabela.length; i++){
     if(rbt12 <= tabela[i].ate){
@@ -238,42 +266,31 @@ function calcularAliquotaEfetiva() {
   }
 
   if(!faixaData){
-    // Excedeu última faixa
     faixaData = tabela[tabela.length - 1];
   }
 
-  // Cálculo da alíquota efetiva
   const aliquotaNominal = faixaData.aliquota;
   const deducao = faixaData.deducao;
   const percentualISS = faixaData.percentualISS;
   const faixa = faixaData.faixa;
 
-  // Fórmula da planilha Google Sheets:
-  // =SE(B6=6; 5; SE((((((D4*D6/100)-D7)/D4)*D8/100)*100)<=5; ARRED((((((D4*D6/100)-D7)/D4)*D8/100)*100);4); SE((((((D4*D6/100)-D7)/D4)*D8/100)*100)<2; 2; 5)))
-  
   let aliquotaFinal;
   
   if (faixa === 6) {
-    // Se faixa = 6, retorna 5%
     aliquotaFinal = 5.0;
   } else {
-    // Calcula a alíquota efetiva
     const aliquotaEfetiva = ((rbt12 * (aliquotaNominal / 100)) - deducao) / rbt12;
     const aliquotaEfetivaISS = (aliquotaEfetiva * (percentualISS / 100)) * 100;
     
     if (aliquotaEfetivaISS <= 5) {
-      // Se <= 5%, retorna o valor calculado arredondado com 4 casas decimais
       aliquotaFinal = Math.round(aliquotaEfetivaISS * 10000) / 10000;
     } else if (aliquotaEfetivaISS < 2) {
-      // Se < 2%, retorna 2%
       aliquotaFinal = 2.0;
     } else {
-      // Caso contrário, retorna 5%
       aliquotaFinal = 5.0;
     }
   }
 
-  // Exibir resultados
   document.getElementById('aliquotaEfetiva').textContent = aliquotaFinal.toFixed(4) + '%';
   document.getElementById('faixa').textContent = faixa + 'ª';
   document.getElementById('aliquotaFaixa').textContent = aliquotaNominal.toFixed(2) + '%';
@@ -320,13 +337,11 @@ function atualizarTabela(){
 // ================================================================
 const inputRbt = document.getElementById('rbt12');
 
-// Formatar ao digitar
 inputRbt.addEventListener('input', function(e) {
   aplicarMascaraMoeda(this);
   calcularAliquotaEfetiva();
 });
 
-// Formatar ao sair do campo
 inputRbt.addEventListener('blur', function() {
   if(this.value) {
     aplicarMascaraMoeda(this);
@@ -338,7 +353,6 @@ document.getElementById('anexo').addEventListener('change', function(){
   calcularAliquotaEfetiva();
 });
 
-// Inicializar com valor padrão formatado
 inputRbt.value = formatarMoeda(280140);
 atualizarTabela();
 calcularAliquotaEfetiva();
