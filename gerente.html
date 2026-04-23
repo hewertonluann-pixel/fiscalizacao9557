@@ -46,34 +46,70 @@
     h3{margin-top:20px;margin-bottom:8px;font-size:16px}
     #modalUser{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);display:none;justify-content:center;align-items:center;z-index:100}
     #modalUser .box{background:#fff;padding:20px;border-radius:12px;max-width:400px;width:90%;box-shadow:0 4px 12px rgba(0,0,0,.3)}
+    .msg{display:none;margin:10px 0;font-weight:600}
     .msg.ok{color:var(--good)}.msg.err{color:var(--bad)}
     .status-badge{display:inline-block;padding:4px 10px;border-radius:999px;font-size:11px;font-weight:600}
     .status-badge.ativo{background:#dcfce7;color:#16a34a}
     .status-badge.inativo{background:#fee2e2;color:#dc2626}
 
-    /* === Painel de resumos e gráfico === */
-    #painelResumo {
-      display: grid;
-      grid-template-columns: auto auto 1fr; /* duas colunas dinâmicas e o gráfico flexível */
-      gap: 16px;
-      align-items: start;
-      margin-top: 16px;
+    #painelResumo{
+      display:grid;
+      grid-template-columns:auto auto 1fr;
+      gap:16px;align-items:start;margin-top:16px;
     }
-    #painelResumo .card { margin-bottom: 0; }
-    #graficoResumo { width:100%; height:320px; }
+    #painelResumo .card{margin-bottom:0}
+    #graficoResumo{width:100%;height:320px}
+    @media(max-width:960px){#painelResumo{grid-template-columns:1fr}}
 
-    @media (max-width: 960px) {
-      #painelResumo {
-        grid-template-columns: 1fr;
-      }
+    /* === GERENCIAMENTO DE TIPOS === */
+    .tipo-item{
+      display:flex;align-items:center;justify-content:space-between;
+      padding:8px 12px;border-bottom:1px solid var(--border);
+      font-size:13px;
     }
+    .tipo-item:last-child{border-bottom:none}
+    .tipo-item:hover{background:#f9fafb}
+    .tipo-nome{flex-grow:1}
+    .tipo-actions{display:flex;gap:6px;margin-left:12px}
+    .btn-tipo-edit{
+      background:var(--chip);color:var(--chip-ink);
+      padding:4px 10px;font-size:11px;font-weight:600;
+      border:0;border-radius:6px;cursor:pointer;
+    }
+    .btn-tipo-del{
+      background:#fee2e2;color:var(--bad);
+      padding:4px 10px;font-size:11px;font-weight:600;
+      border:0;border-radius:6px;cursor:pointer;
+    }
+    .tipos-lista{
+      max-height:340px;overflow-y:auto;
+      border:1px solid var(--border);border-radius:10px;
+      margin-top:12px;
+    }
+    .tipos-count{
+      font-size:12px;color:var(--muted);margin-top:8px;
+    }
+    .input-novo-tipo{
+      display:flex;gap:8px;align-items:center;margin-bottom:4px;
+    }
+    .input-novo-tipo input{flex:1}
+    .btn-add-tipo{
+      white-space:nowrap;padding:10px 16px;
+    }
+    .edit-inline{
+      display:none;gap:6px;align-items:center;padding:8px 12px;
+      background:#eff6ff;border-bottom:1px solid var(--border);
+    }
+    .edit-inline.show{display:flex}
+    .edit-inline input{flex:1;padding:6px 10px;font-size:13px}
+    .edit-inline button{padding:6px 12px;font-size:12px}
   </style>
 </head>
 <body>
   <header class="header">
     <div>
       <div class="title">Sistema de Produção Tributário — Painel do Gerente</div>
-      <div class="sub">Relatórios e gestão de usuários</div>
+      <div class="sub">Relatórios, gestão de usuários e tipos de serviço</div>
     </div>
     <div class="right">
       <span id="who" class="who-badge">Conectando…</span>
@@ -113,7 +149,6 @@
           <button id="btnPDF" class="pill" style="background:#10b981;color:#fff">🖨️ Gerar PDF</button>
         </div>
 
-        <!-- Painel de resumos + gráfico -->
         <div id="painelResumo">
           <div class="card">
             <div class="hd">Resumo por Fiscal</div>
@@ -146,6 +181,29 @@
         </div>
       </div>
     </div>
+
+    <!-- NOVO: GERENCIAMENTO DE TIPOS DE SERVIÇO -->
+    <div class="card">
+      <div class="hd">
+        <span>⚙️ Tipos de Serviço</span>
+        <span id="tiposCount" class="tipos-count"></span>
+      </div>
+      <div class="bd">
+        <div class="input-novo-tipo">
+          <input id="inputNovoTipo" type="text" placeholder="Digite o nome do novo tipo de serviço…">
+          <button id="btnAddTipo" class="btn-add-tipo">➕ Adicionar</button>
+        </div>
+
+        <div id="editInline" class="edit-inline">
+          <input id="inputEditTipo" type="text" placeholder="Novo nome…">
+          <button id="btnSalvarEdit">💾 Salvar</button>
+          <button id="btnCancelarEdit" class="btn-ghost" style="padding:6px 12px;font-size:12px">Cancelar</button>
+        </div>
+
+        <div class="tipos-lista" id="tiposLista"></div>
+      </div>
+    </div>
+
   </div>
 
   <!-- Modal Usuário -->
@@ -177,7 +235,10 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-    import { getFirestore, collection, getDocs, query, where, orderBy } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+    import {
+      getFirestore, collection, getDocs, query, where, orderBy,
+      doc, getDoc, setDoc
+    } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
     import { gerarPDF } from "./relatorio.js";
     import { inicializarUsuarios } from "./usuarios.js";
     import { gerarGraficoResumo } from "./graficoResumo.js";
@@ -196,12 +257,18 @@
     const $ = s=>document.querySelector(s);
     const numberToBRL = n=>Number(n||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
 
+    const showMsg = (t, cls='ok') => {
+      const m=$('#msg'); m.textContent=t; m.className='msg '+cls;
+      m.style.display='block'; setTimeout(()=>m.style.display='none',3000);
+    };
+
     let sess=null;
     try{ sess=JSON.parse(localStorage.getItem('sessao_usuario')||'null'); }catch(e){ sess=null; }
     if(!sess || sess.tipo!=='gerente'){ location.href='index.html'; }
     $('#who').textContent=`${sess.nome} (Gerente)`;
     $('#btnSair').onclick=()=>{ localStorage.removeItem('sessao_usuario'); location.href='index.html'; };
 
+    // =================== RELATÓRIOS ===================
     let cacheLanc=[];
     async function filtrar(){
       const dIni=$('#dIni').value, dFim=$('#dFim').value;
@@ -234,20 +301,135 @@
       $('#tVal').textContent=numberToBRL(tVal);
       $('#resFiscal').innerHTML=Array.from(porFiscal.entries()).map(([k,v])=>`<div>• <strong>${k}:</strong> ${v}</div>`).join('')||'<em>—</em>';
       $('#resTipo').innerHTML=Array.from(porTipo.entries()).map(([k,v])=>`<div>• <strong>${k}:</strong> ${v}</div>`).join('')||'<em>—</em>';
-
-      // Atualiza o gráfico sempre que renderizar
       gerarGraficoResumo(rows);
     }
 
     $('#btnFiltrar').onclick=filtrar;
     $('#btnPDF').onclick=()=>gerarPDF(cacheLanc,sess,$('#dIni').value,$('#dFim').value,$('#numRel').value);
 
+    // =================== TIPOS DE SERVIÇO ===================
+    const TIPOS_FALLBACK = [
+      "Alteração CCIR","Análise da Documentação CCIR","Análise do Processo de ITBI","Apuração de TFLF",
+      "Auto de Infração","Auto Regularização ITR","Avaliação de ITBI","Bancos TEAF (Encerramento)",
+      "Bancos TIAF (Início)","Bloqueio Inscrição/Movimentação","Cadastro Municipal - Alteração","Cadastro Municipal - Baixa",
+      "Cadastro Municipal - Inscrição","Certidão","CFEM TEAF (Encerramento)","CFEM TIAF (Início)",
+      "Curso/Treinamento (Meio Periodo)","Curso/Treinamento (Tempo Integral)","Desenquad./Mud. Regime Tributário","Emissão CCIR",
+      "Informações a Contribuintes","Inscrição CCIR","Intimação ITR","ISSQN Construção Civil",
+      "Lançamento de Tributo","Levantamento ISSQN","Levantamento ISSQN (Simples Nacional)","Manifestação em Processo",
+      "Memorando/Ofício/Notificação/Termo","Montagem de Processo","Montagem de Processo ITR","NFS-e - Avulsa",
+      "NFS-e - Liberação de Acesso","NFS-e - Suporte","Ofício/Notificação/Termo","Parecer Fiscal",
+      "Parecer ITBI","Plantão","Pontos Google Earth","Recurso - 1ª Instância",
+      "Reenvio de Correspondência","Rejeição/Pendência CCIR","Relatório Gerencial","Reunião",
+      "Reunião PAD","RPA","Serviços Especiais","Serviços Especiais (Sec. Fazenda)",
+      "Tramitação de Processos","Verfiação de Livro Fiscal/Contábil","Verificação de NFS-e/Documentos","Viagem (por Dia)",
+      "Vinculação de CIB","Vistoria in loco"
+    ];
+
+    let tiposAtivos = [];
+    let editandoIndex = null;
+
+    const tiposDocRef = doc(db, 'tiposServico', 'lista');
+
+    async function carregarTipos(){
+      const snap = await getDoc(tiposDocRef);
+      if(snap.exists()){
+        tiposAtivos = snap.data().tipos || [];
+      } else {
+        // Primeira vez: inicializa com os tipos padrão
+        tiposAtivos = [...TIPOS_FALLBACK];
+        await setDoc(tiposDocRef, { tipos: tiposAtivos });
+      }
+      renderTipos();
+    }
+
+    async function salvarTipos(){
+      await setDoc(tiposDocRef, { tipos: tiposAtivos });
+    }
+
+    function renderTipos(){
+      const lista = $('#tiposLista');
+      $('#tiposCount').textContent = `${tiposAtivos.length} tipos cadastrados`;
+      lista.innerHTML = tiposAtivos.map((t, i) => `
+        <div class="tipo-item">
+          <span class="tipo-nome">${t}</span>
+          <div class="tipo-actions">
+            <button class="btn-tipo-edit" data-idx="${i}">✏️ Renomear</button>
+            <button class="btn-tipo-del" data-idx="${i}">🗑️ Excluir</button>
+          </div>
+        </div>
+      `).join('');
+
+      // Renomear
+      lista.querySelectorAll('.btn-tipo-edit').forEach(btn => {
+        btn.onclick = () => {
+          editandoIndex = parseInt(btn.getAttribute('data-idx'));
+          $('#inputEditTipo').value = tiposAtivos[editandoIndex];
+          $('#editInline').classList.add('show');
+          $('#inputEditTipo').focus();
+        };
+      });
+
+      // Excluir
+      lista.querySelectorAll('.btn-tipo-del').forEach(btn => {
+        btn.onclick = async () => {
+          const idx = parseInt(btn.getAttribute('data-idx'));
+          const nome = tiposAtivos[idx];
+          if(!confirm(`Excluir o tipo "${nome}"?\n\nLançamentos antigos com este tipo NÃO serão afetados.`)) return;
+          tiposAtivos.splice(idx, 1);
+          await salvarTipos();
+          showMsg(`Tipo "${nome}" excluído.`, 'ok');
+          renderTipos();
+        };
+      });
+    }
+
+    // Adicionar novo tipo
+    $('#btnAddTipo').onclick = async () => {
+      const val = $('#inputNovoTipo').value.trim();
+      if(!val){ showMsg('Digite o nome do tipo.', 'err'); return; }
+      if(tiposAtivos.includes(val)){ showMsg('Este tipo já existe.', 'err'); return; }
+      tiposAtivos.push(val);
+      tiposAtivos.sort((a,b) => a.localeCompare(b, 'pt-BR'));
+      await salvarTipos();
+      $('#inputNovoTipo').value = '';
+      showMsg(`Tipo "${val}" adicionado.`, 'ok');
+      renderTipos();
+    };
+
+    $('#inputNovoTipo').addEventListener('keydown', e => {
+      if(e.key === 'Enter') $('#btnAddTipo').click();
+    });
+
+    // Salvar renomeação
+    $('#btnSalvarEdit').onclick = async () => {
+      const novoNome = $('#inputEditTipo').value.trim();
+      if(!novoNome){ showMsg('Digite o novo nome.', 'err'); return; }
+      if(tiposAtivos.includes(novoNome) && tiposAtivos[editandoIndex] !== novoNome){
+        showMsg('Já existe um tipo com este nome.', 'err'); return;
+      }
+      const nomeAntigo = tiposAtivos[editandoIndex];
+      tiposAtivos[editandoIndex] = novoNome;
+      tiposAtivos.sort((a,b) => a.localeCompare(b, 'pt-BR'));
+      await salvarTipos();
+      $('#editInline').classList.remove('show');
+      editandoIndex = null;
+      showMsg(`"${nomeAntigo}" renomeado para "${novoNome}".`, 'ok');
+      renderTipos();
+    };
+
+    $('#btnCancelarEdit').onclick = () => {
+      $('#editInline').classList.remove('show');
+      editandoIndex = null;
+    };
+
+    // =================== INIT ===================
     (function init(){
       const fim=new Date(), ini=new Date(); ini.setDate(ini.getDate()-7);
       $('#dIni').value=ini.toISOString().slice(0,10);
       $('#dFim').value=fim.toISOString().slice(0,10);
       filtrar();
       inicializarUsuarios(db);
+      carregarTipos();
     })();
   </script>
 </body>
