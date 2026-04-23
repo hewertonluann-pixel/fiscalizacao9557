@@ -94,7 +94,6 @@
 
     .act{background:transparent; color:var(--primary); border:0; cursor:pointer; padding:6px}
     .act.del{color:var(--bad)}
-    .act[title]{position:relative}
 
     input[type="checkbox"]{ width:auto; cursor:pointer; }
 
@@ -109,7 +108,6 @@
       font-weight: 600;
     }
 
-    /* NOVO: Botão excluir erro individual */
     .btn-err-delete {
       background: var(--bad);
       color: #fff;
@@ -122,7 +120,6 @@
       margin-left: 6px;
     }
 
-    /* NOVO: Botão excluir todos os erros */
     .btn-err-delete-all {
       background: var(--bad);
       color: #fff;
@@ -149,7 +146,6 @@
       border-radius: 10px; display: none;
     }
     .duplicates-section.show { display: block; }
-    .duplicates-section h3 { margin: 0 0 12px; color: var(--warning); font-size: 14px; }
     .duplicate-group {
       background: #fff; border-left: 3px solid var(--warning);
       padding: 8px 12px; margin-bottom: 8px; border-radius: 4px; font-size: 13px;
@@ -191,7 +187,6 @@
     }
     .errors-section.show{ display:block; }
     .errors-section h3{ margin:0 0 12px; color:var(--bad); font-size:14px; }
-    .error-item:last-child{ margin-bottom:0; }
 
     .btn-reverificar {
       background: #fff; color: var(--bad);
@@ -283,7 +278,6 @@
         <button id="btnReverificar" class="btn-reverificar">🔄 Reverificar</button>
       </div>
       <div id="errorsList"></div>
-      <!-- NOVO: rodapé com botão excluir todos os erros -->
       <div id="errorsFooter" style="margin-top:10px; display:none;">
         <button id="btnDeleteAllErrors" class="btn-err-delete-all">🗑️ Excluir todos os lançamentos com erro</button>
       </div>
@@ -321,7 +315,8 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
     import {
-      getFirestore, collection, addDoc, serverTimestamp, query, where, orderBy, getDocs, deleteDoc, doc, updateDoc
+      getFirestore, collection, addDoc, serverTimestamp, query, where, orderBy,
+      getDocs, deleteDoc, doc, updateDoc, getDoc, setDoc
     } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
     import { inicializarConversor } from "./converter_xlsx.js";
@@ -353,18 +348,8 @@
       const selectedIds = new Set();
       const ignoredDuplicates = new Set();
 
-      function validarSessao(){
-        try{ sess = JSON.parse(localStorage.getItem('sessao_usuario')||'null'); }catch(e){ sess=null; }
-        if(!sess || sess.tipo!=='fiscal'){ location.href='index.html'; return; }
-        $('#conteudo').style.display='block';
-        $('#who').textContent = `${sess.nome} (Fiscal)`;
-        $('#fData').value = new Date().toISOString().slice(0,10);
-        $('#anoFiltro').value = new Date().getFullYear();
-        anoAtivo = parseInt($('#anoFiltro').value,10);
-      }
-      validarSessao();
-
-      const TIPOS = [
+      // ======= TIPOS DE SERVIÇO (carregados do Firestore) =======
+      const TIPOS_FALLBACK = [
         "Alteração CCIR","Análise da Documentação CCIR","Análise do Processo de ITBI","Apuração de TFLF",
         "Auto de Infração","Auto Regularização ITR","Avaliação de ITBI","Bancos TEAF (Encerramento)",
         "Bancos TIAF (Início)","Bloqueio Inscrição/Movimentação","Cadastro Municipal - Alteração","Cadastro Municipal - Baixa",
@@ -381,25 +366,49 @@
         "Vinculação de CIB","Vistoria in loco"
       ];
 
-      const datalist = $('#listaServicos');
-      datalist.innerHTML='';
-      TIPOS.forEach(t=>{ const o=document.createElement('option'); o.value=t; datalist.appendChild(o); });
+      let TIPOS = [...TIPOS_FALLBACK];
 
-      function isValidServiceType(tipo) { return TIPOS.includes(tipo); }
-
-      function detectDuplicates(lancamentos) {
-        const groups = {};
-        const duplicateIds = new Set();
-        lancamentos.forEach(l => {
-          const key = `${l.data}|${l.empresa}|${l.cnpj}|${l.descricao}|${l.quantidade}|${l.valor}|${l.descricaoResumida}`;
-          if (!groups[key]) groups[key] = [];
-          groups[key].push(l);
-        });
-        Object.values(groups).forEach(group => {
-          if (group.length > 1) group.forEach(item => duplicateIds.add(item.id));
-        });
-        return { groups, duplicateIds };
+      async function carregarTipos(){
+        try {
+          const snap = await getDoc(doc(db, 'tiposServico', 'lista'));
+          if(snap.exists() && snap.data().tipos?.length > 0){
+            TIPOS = snap.data().tipos;
+          }
+          // se não existe ainda, mantém TIPOS_FALLBACK — sem erro
+        } catch(e) {
+          console.warn('Tipos não carregados do Firestore, usando fallback.', e);
+        }
+        popularDatalist();
       }
+
+      function popularDatalist(){
+        const datalist = $('#listaServicos');
+        datalist.innerHTML = '';
+        TIPOS.forEach(t => {
+          const o = document.createElement('option');
+          o.value = t;
+          datalist.appendChild(o);
+        });
+      }
+
+      function isValidServiceType(tipo){
+        // Opção A: ausência de tipoValidoNaEpoca = válido (lançamentos antigos)
+        return TIPOS.includes(tipo);
+      }
+
+      function validarSessao(){
+        try{ sess = JSON.parse(localStorage.getItem('sessao_usuario')||'null'); }catch(e){ sess=null; }
+        if(!sess || sess.tipo!=='fiscal'){ location.href='index.html'; return; }
+        $('#conteudo').style.display='block';
+        $('#who').textContent = `${sess.nome} (Fiscal)`;
+        $('#fData').value = new Date().toISOString().slice(0,10);
+        $('#anoFiltro').value = new Date().getFullYear();
+        anoAtivo = parseInt($('#anoFiltro').value,10);
+      }
+      validarSessao();
+
+      // Carrega tipos do Firestore antes de tudo
+      carregarTipos().then(() => renderMeus());
 
       const cnpjEl = $('#fCnpjCpf');
       cnpjEl.addEventListener('input', ()=>{
@@ -459,9 +468,12 @@
             $('#tituloForm').textContent='Novo lançamento';
             $('#btnAdd').textContent='Adicionar';
           }else{
+            // ← NOVO: grava tipoValidoNaEpoca: true
             await addDoc(collection(db,'lancamentos'), {
               usuario:sess.nome, data:d, empresa, cnpj:cnpjcpf, descricao:desc,
-              quantidade:qtd, valor, destino, descricaoResumida:resumo, criadoEm:serverTimestamp()
+              quantidade:qtd, valor, destino, descricaoResumida:resumo,
+              tipoValidoNaEpoca: true,
+              criadoEm:serverTimestamp()
             });
             showMsg('Lançamento salvo.','ok');
           }
@@ -492,7 +504,10 @@
             empresa: r.empresa, cnpj: r.cnpj, descricao: r.descricao,
             quantidade: r.quantidade, valor: r.valor, destino: r.destino,
             descricaoResumida: r.descricaoResumida,
-            isValid: isValidServiceType(r.descricaoResumida)
+            // ← Opção A: ausência do campo = válido (lançamentos antigos)
+            isValid: r.tipoValidoNaEpoca !== false
+                     ? true
+                     : isValidServiceType(r.descricaoResumida)
           });
         });
 
@@ -519,6 +534,7 @@
           tbody.appendChild(tr);
         });
 
+        // Duplicidades
         const duplicatesSection = $('#duplicatesSection');
         const duplicatesList = $('#duplicatesList');
         if(duplicatesFiltered.length > 0){
@@ -548,7 +564,7 @@
           duplicatesList.innerHTML = '';
         }
 
-        // ======= ERROS DE TIPO (ATUALIZADO) =======
+        // ======= ERROS DE TIPO =======
         const lancamentosInvalidos = lancamentos.filter(l => !l.isValid);
         const errorsSection = $('#errorsSection');
         const errorsList = $('#errorsList');
@@ -570,7 +586,6 @@
           `).join('');
           errorsFooter.style.display = 'block';
 
-          // Excluir individual
           document.querySelectorAll('[data-del-erro]').forEach(btn => {
             btn.onclick = async () => {
               if(confirm('Deseja excluir este lançamento com tipo inválido? Esta ação não pode ser desfeita.')){
@@ -581,7 +596,6 @@
             };
           });
 
-          // Excluir todos os erros
           $('#btnDeleteAllErrors').onclick = async () => {
             const ids = lancamentosInvalidos.map(e => e.id);
             if(!confirm(`Deseja excluir ${ids.length} lançamento(s) com tipo inválido? Esta ação não pode ser desfeita.`)) return;
@@ -598,38 +612,37 @@
           errorsFooter.style.display = 'none';
         }
 
+        // Ordenação por colunas
         const headers = document.querySelectorAll('#tab thead th');
+        let thUltimo = null, ascUltima = true;
         headers.forEach((th, idx) => {
           if(idx === 0) return;
           th.style.cursor = 'pointer';
           th.title = 'Clique para ordenar';
-          th.onclick = () => ordenarTabela(idx);
+          th.onclick = () => {
+            const tbody = document.querySelector('#tab tbody');
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+            const asc = thUltimo !== idx ? true : !ascUltima;
+            thUltimo = idx; ascUltima = asc;
+            rows.sort((a, b) => {
+              let A = a.children[idx].innerText.trim();
+              let B = b.children[idx].innerText.trim();
+              const parseBRL = v => parseFloat(v.replace(/[^\d,.-]/g,'').replace(/\./g,'').replace(',','.')) || 0;
+              if(A.includes('R$') || B.includes('R$')){ A=parseBRL(A); B=parseBRL(B); return asc ? A-B : B-A; }
+              const parseDate = v => {
+                const parts = v.split(/[-/]/);
+                if(parts.length===3){ const [d,m,y]=parts.map(n=>parseInt(n,10)); if(!isNaN(d)&&!isNaN(m)&&!isNaN(y)) return new Date(y,m-1,d).getTime(); }
+                return null;
+              };
+              const dateA=parseDate(A), dateB=parseDate(B);
+              if(dateA&&dateB) return asc ? dateA-dateB : dateB-dateA;
+              const numA=parseFloat(A.replace(',','.')), numB=parseFloat(B.replace(',','.'));
+              if(!isNaN(numA)&&!isNaN(numB)) return asc ? numA-numB : numB-numA;
+              return asc ? A.localeCompare(B) : B.localeCompare(A);
+            });
+            rows.forEach(r => tbody.appendChild(r));
+          };
         });
-
-        let thUltimo = null, ascUltima = true;
-        function ordenarTabela(colIndex) {
-          const tbody = document.querySelector('#tab tbody');
-          const rows = Array.from(tbody.querySelectorAll('tr'));
-          const asc = thUltimo !== colIndex ? true : !ascUltima;
-          thUltimo = colIndex; ascUltima = asc;
-          rows.sort((a, b) => {
-            let A = a.children[colIndex].innerText.trim();
-            let B = b.children[colIndex].innerText.trim();
-            const parseBRL = v => parseFloat(v.replace(/[^\d,.-]/g,'').replace(/\./g,'').replace(',','.')) || 0;
-            if(A.includes('R$') || B.includes('R$')){ A=parseBRL(A); B=parseBRL(B); return asc ? A-B : B-A; }
-            const parseDate = v => {
-              const parts = v.split(/[-/]/);
-              if(parts.length===3){ const [d,m,y]=parts.map(n=>parseInt(n,10)); if(!isNaN(d)&&!isNaN(m)&&!isNaN(y)) return new Date(y,m-1,d).getTime(); }
-              return null;
-            };
-            const dateA=parseDate(A), dateB=parseDate(B);
-            if(dateA&&dateB) return asc ? dateA-dateB : dateB-dateA;
-            const numA=parseFloat(A.replace(',','.')), numB=parseFloat(B.replace(',','.'));
-            if(!isNaN(numA)&&!isNaN(numB)) return asc ? numA-numB : numB-numA;
-            return asc ? A.localeCompare(B) : B.localeCompare(A);
-          });
-          rows.forEach(r => tbody.appendChild(r));
-        }
 
         $('#tfootTotal').textContent = `Total do mês: ${numberToBRL(soma)}`;
         $('#totalMes').textContent = `Total filtrado: ${numberToBRL(soma)}`;
@@ -648,6 +661,20 @@
             }
           };
         });
+      }
+
+      function detectDuplicates(lancamentos) {
+        const groups = {};
+        const duplicateIds = new Set();
+        lancamentos.forEach(l => {
+          const key = `${l.data}|${l.empresa}|${l.cnpj}|${l.descricao}|${l.quantidade}|${l.valor}|${l.descricaoResumida}`;
+          if (!groups[key]) groups[key] = [];
+          groups[key].push(l);
+        });
+        Object.values(groups).forEach(group => {
+          if (group.length > 1) group.forEach(item => duplicateIds.add(item.id));
+        });
+        return { groups, duplicateIds };
       }
 
       function attachCheckboxListeners(){
@@ -764,8 +791,6 @@
           };
         });
       }
-
-      renderMeus();
 
       $('#btnReverificar').onclick = () => {
         showMsg('Reverificando lançamentos do período…', 'ok');
