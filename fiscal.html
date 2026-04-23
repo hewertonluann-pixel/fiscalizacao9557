@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Fiscal — Sistema de Produção </title>
 
-  <!-- Fonte & Reset visual -->
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 
@@ -23,7 +22,6 @@
       background:var(--bg); color:var(--ink);
     }
 
-    /* Header fixo */
     .header{
       position:fixed; top:0; left:0; right:0; z-index:50;
       background:#fff; border-bottom:1px solid var(--border);
@@ -76,7 +74,6 @@
       grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));
     }
 
-    /* Chips de meses */
     #mesBtns{display:flex; flex-wrap:wrap; gap:6px}
     .pill{
       background:var(--chip); color:var(--chip-ink);
@@ -84,200 +81,128 @@
     }
     .pill.is-active{background:var(--primary); color:#fff}
 
+    .table-wrap{ overflow:hidden; }
+    table{ width:100%; border-collapse:collapse; border-spacing:0; table-layout:fixed; }
+    th, td{
+      padding:10px 10px; border-bottom:1px solid var(--border);
+      text-align:left; font-size:13.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    }
+    thead th{ background:#f3f4f6; color:var(--muted); font-weight:600; }
+    tbody tr:nth-child(even){background:#f9fafb}
+    tbody tr.duplicate-row{ background:#fef3c7 !important; border-left: 4px solid var(--warning); }
+    tfoot td{ font-weight:700; background:#fafafa; }
 
-/* ======= TABELA OTIMIZADA PARA DESKTOP ======= */
-.table-wrap{
-  overflow:hidden;
-}
-table{
-  width:100%;
-  border-collapse:collapse;
-  border-spacing:0;
-  table-layout:fixed;
-}
-th, td{
-  padding:10px 10px;
-  border-bottom:1px solid var(--border);
-  text-align:left;
-  font-size:13.5px;
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
-}
-thead th{
-  background:#f3f4f6;
-  color:var(--muted);
-  font-weight:600;
-}
-tbody tr:nth-child(even){background:#f9fafb}
-tbody tr.duplicate-row{
-  background:#fef3c7 !important;
-  border-left: 4px solid var(--warning);
-}
-tfoot td{
-  font-weight:700;
-  background:#fafafa;
-}
-
-    /* Ações com ícones */
     .act{background:transparent; color:var(--primary); border:0; cursor:pointer; padding:6px}
     .act.del{color:var(--bad)}
     .act[title]{position:relative}
 
-    /* Checkbox na tabela */
-    input[type="checkbox"]{
-      width:auto; cursor:pointer;
-    }
+    input[type="checkbox"]{ width:auto; cursor:pointer; }
 
-    /* Botão de correção */
     .btn-corrigir {
-        padding: 6px 10px;
-        font-size: 12px;
-        background-color: var(--primary);
-        color: var(--primary-ink);
-        border: 0;
-        border-radius: 8px;
-        cursor: pointer;
-        font-weight: 600;
-    }
-
-    /* Botão de exclusão em massa */
-    .btn-delete-selected {
-      background: var(--bad);
-      color: #fff;
-      padding: 10px 14px;
+      padding: 6px 10px;
+      font-size: 12px;
+      background-color: var(--primary);
+      color: var(--primary-ink);
       border: 0;
-      border-radius: 10px;
-      cursor: pointer;
-      font-weight: 600;
-      display: none;
-    }
-    .btn-delete-selected.show {
-      display: inline-block;
-    }
-
-    /* Seção de duplicidades */
-    .duplicates-section {
-      margin-bottom: 20px;
-      padding: 12px 16px;
-      background: #fef3c7;
-      border: 1px solid #fcd34d;
-      border-radius: 10px;
-      display: none;
-    }
-    .duplicates-section.show {
-      display: block;
-    }
-    .duplicates-section h3 {
-      margin: 0 0 12px;
-      color: var(--warning);
-      font-size: 14px;
-    }
-    .duplicate-group {
-      background: #fff;
-      border-left: 3px solid var(--warning);
-      padding: 8px 12px;
-      margin-bottom: 8px;
-      border-radius: 4px;
-      font-size: 13px;
-    }
-    .duplicate-item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 4px 0;
-      border-bottom: 1px solid #f0f0f0;
-    }
-    .duplicate-item:last-child {
-      border-bottom: none;
-    }
-    .duplicate-actions {
-      display: flex;
-      gap: 4px;
-    }
-    .btn-dup-delete {
-      background: var(--bad);
-      color: #fff;
-      padding: 4px 8px;
-      border: 0;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 11px;
-      font-weight: 600;
-    }
-    .btn-dup-ignore {
-      background: var(--good);
-      color: #fff;
-      padding: 4px 8px;
-      border: 0;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 11px;
-      font-weight: 600;
-    }
-    .btn-dup-delete-all {
-      background: var(--bad);
-      color: #fff;
-      padding: 10px 14px;
-      border: 0;
-      border-radius: 10px;
-      cursor: pointer;
-      font-weight: 600;
-      margin-right: 8px;
-    }
-
-    /* Seção de erros no topo */
-    .error-item-details { flex-grow: 1; }
-    .error-item-actions { margin-left: 16px; }
-    .error-item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 8px 12px;
-      background: #fff;
-      border-left: 3px solid var(--bad);
-      margin-bottom: 8px;
-      border-radius: 4px;
-      font-size: 13px;
-    }
-    .errors-section{
-      margin-bottom:20px;
-      padding:12px 16px;
-      background:#fef2f2;
-      border:1px solid #fecaca;
-      border-radius:10px;
-      display:none;
-    }
-    .errors-section.show{
-      display:block;
-    }
-    .errors-section h3{
-      margin:0 0 12px;
-      color:var(--bad);
-      font-size:14px;
-    }
-    .error-item:last-child{
-      margin-bottom:0;
-    }
-
-    /* ALTERAÇÃO 1 — Botão Reverificar */
-    .btn-reverificar {
-      background: #fff;
-      color: var(--bad);
-      border: 1px solid var(--bad);
-      padding: 6px 14px;
       border-radius: 8px;
       cursor: pointer;
-      font-size: 12px;
       font-weight: 600;
-      margin-left: auto;
+    }
+
+    /* NOVO: Botão excluir erro individual */
+    .btn-err-delete {
+      background: var(--bad);
+      color: #fff;
+      padding: 6px 10px;
+      font-size: 12px;
+      border: 0;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      margin-left: 6px;
+    }
+
+    /* NOVO: Botão excluir todos os erros */
+    .btn-err-delete-all {
+      background: var(--bad);
+      color: #fff;
+      padding: 8px 14px;
+      border: 0;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 12px;
+      margin-top: 10px;
+    }
+    .btn-err-delete-all:hover { opacity: 0.88; }
+
+    .btn-delete-selected {
+      background: var(--bad); color: #fff;
+      padding: 10px 14px; border: 0; border-radius: 10px;
+      cursor: pointer; font-weight: 600; display: none;
+    }
+    .btn-delete-selected.show { display: inline-block; }
+
+    .duplicates-section {
+      margin-bottom: 20px; padding: 12px 16px;
+      background: #fef3c7; border: 1px solid #fcd34d;
+      border-radius: 10px; display: none;
+    }
+    .duplicates-section.show { display: block; }
+    .duplicates-section h3 { margin: 0 0 12px; color: var(--warning); font-size: 14px; }
+    .duplicate-group {
+      background: #fff; border-left: 3px solid var(--warning);
+      padding: 8px 12px; margin-bottom: 8px; border-radius: 4px; font-size: 13px;
+    }
+    .duplicate-item {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 4px 0; border-bottom: 1px solid #f0f0f0;
+    }
+    .duplicate-item:last-child { border-bottom: none; }
+    .duplicate-actions { display: flex; gap: 4px; }
+    .btn-dup-delete {
+      background: var(--bad); color: #fff;
+      padding: 4px 8px; border: 0; border-radius: 4px;
+      cursor: pointer; font-size: 11px; font-weight: 600;
+    }
+    .btn-dup-ignore {
+      background: var(--good); color: #fff;
+      padding: 4px 8px; border: 0; border-radius: 4px;
+      cursor: pointer; font-size: 11px; font-weight: 600;
+    }
+    .btn-dup-delete-all {
+      background: var(--bad); color: #fff;
+      padding: 10px 14px; border: 0; border-radius: 10px;
+      cursor: pointer; font-weight: 600; margin-right: 8px;
+    }
+
+    .error-item-details { flex-grow: 1; }
+    .error-item-actions { margin-left: 16px; display:flex; gap:6px; align-items:center; }
+    .error-item {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 8px 12px; background: #fff;
+      border-left: 3px solid var(--bad);
+      margin-bottom: 8px; border-radius: 4px; font-size: 13px;
+    }
+    .errors-section{
+      margin-bottom:20px; padding:12px 16px;
+      background:#fef2f2; border:1px solid #fecaca;
+      border-radius:10px; display:none;
+    }
+    .errors-section.show{ display:block; }
+    .errors-section h3{ margin:0 0 12px; color:var(--bad); font-size:14px; }
+    .error-item:last-child{ margin-bottom:0; }
+
+    .btn-reverificar {
+      background: #fff; color: var(--bad);
+      border: 1px solid var(--bad); padding: 6px 14px;
+      border-radius: 8px; cursor: pointer;
+      font-size: 12px; font-weight: 600; margin-left: auto;
     }
     .btn-reverificar:hover { background: #fef2f2; }
-
   </style>
 </head>
 <body>
-  <!-- Cabeçalho fixo padrão -->
   <header class="header">
     <div>
       <div class="title">Sistema de Produção Tributário — Painel do Fiscal </div>
@@ -300,7 +225,6 @@ tfoot td{
           <small class="sub">Campos obrigatórios: Data e Tipo de serviço (Resumo)</small>
         </div>
       </div>
-
       <div class="bd">
         <div class="form-grid">
           <div><label>Data</label><input id="fData" type="date"></div>
@@ -342,7 +266,7 @@ tfoot td{
       </div>
     </div>
 
-    <!-- Seção de Duplicidades -->
+    <!-- Duplicidades -->
     <div id="duplicatesSection" class="duplicates-section">
       <h3>⚠️ Duplicidades Detectadas</h3>
       <div id="duplicatesList"></div>
@@ -352,16 +276,20 @@ tfoot td{
       </div>
     </div>
 
-    <!-- ALTERAÇÃO 2 — Seção de Erros com cabeçalho flex + botão Reverificar -->
+    <!-- Erros de tipo -->
     <div id="errorsSection" class="errors-section">
       <div style="display:flex; align-items:center; margin-bottom:12px;">
         <h3 style="margin:0; color:var(--bad); font-size:14px;">⚠️ Correção Necessária - Tipos de Serviço Inválidos</h3>
         <button id="btnReverificar" class="btn-reverificar">🔄 Reverificar</button>
       </div>
       <div id="errorsList"></div>
+      <!-- NOVO: rodapé com botão excluir todos os erros -->
+      <div id="errorsFooter" style="margin-top:10px; display:none;">
+        <button id="btnDeleteAllErrors" class="btn-err-delete-all">🗑️ Excluir todos os lançamentos com erro</button>
+      </div>
     </div>
 
-    <!-- Lista -->
+    <!-- Tabela -->
     <div class="card">
       <div class="hd">
         <span>Meus lançamentos</span>
@@ -382,9 +310,7 @@ tfoot td{
             </thead>
             <tbody></tbody>
             <tfoot>
-              <tr>
-                <td colspan="10" id="tfootTotal">Total do mês: R$ 0,00</td>
-              </tr>
+              <tr><td colspan="10" id="tfootTotal">Total do mês: R$ 0,00</td></tr>
             </tfoot>
           </table>
         </div>
@@ -392,7 +318,6 @@ tfoot td{
     </div>
   </div>
 
-  <!-- =================== SCRIPT PRINCIPAL =================== -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
     import {
@@ -460,9 +385,7 @@ tfoot td{
       datalist.innerHTML='';
       TIPOS.forEach(t=>{ const o=document.createElement('option'); o.value=t; datalist.appendChild(o); });
 
-      function isValidServiceType(tipo) {
-        return TIPOS.includes(tipo);
-      }
+      function isValidServiceType(tipo) { return TIPOS.includes(tipo); }
 
       function detectDuplicates(lancamentos) {
         const groups = {};
@@ -625,25 +548,54 @@ tfoot td{
           duplicatesList.innerHTML = '';
         }
 
+        // ======= ERROS DE TIPO (ATUALIZADO) =======
         const lancamentosInvalidos = lancamentos.filter(l => !l.isValid);
         const errorsSection = $('#errorsSection');
         const errorsList = $('#errorsList');
+        const errorsFooter = $('#errorsFooter');
+
         if(lancamentosInvalidos.length > 0){
           errorsSection.classList.add('show');
           errorsList.innerHTML = lancamentosInvalidos.map(e => `
             <div class="error-item">
               <div class="error-item-details">
                 <strong>${e.empresa}</strong> — Tipo inválido: "<strong>${e.descricaoResumida}</strong>"
-                <br><small>Correção necessária! - Escolha um tipo de serviço válido. (Observação: Aproveite para revisar todos os campos)</small>
+                <br><small>Data: ${e.dd}-${e.mm}-${e.y} | Correção necessária! Escolha um tipo válido ou exclua este lançamento.</small>
               </div>
               <div class="error-item-actions">
-                <button class="btn-corrigir" data-edit="${e.id}">Corrigir</button>
+                <button class="btn-corrigir" data-edit="${e.id}">✏️ Corrigir</button>
+                <button class="btn-err-delete" data-del-erro="${e.id}">🗑️ Excluir</button>
               </div>
             </div>
           `).join('');
+          errorsFooter.style.display = 'block';
+
+          // Excluir individual
+          document.querySelectorAll('[data-del-erro]').forEach(btn => {
+            btn.onclick = async () => {
+              if(confirm('Deseja excluir este lançamento com tipo inválido? Esta ação não pode ser desfeita.')){
+                await deleteDoc(doc(db,'lancamentos', btn.getAttribute('data-del-erro')));
+                showMsg('Lançamento excluído.','ok');
+                renderMeus();
+              }
+            };
+          });
+
+          // Excluir todos os erros
+          $('#btnDeleteAllErrors').onclick = async () => {
+            const ids = lancamentosInvalidos.map(e => e.id);
+            if(!confirm(`Deseja excluir ${ids.length} lançamento(s) com tipo inválido? Esta ação não pode ser desfeita.`)) return;
+            try{
+              for(const id of ids) await deleteDoc(doc(db,'lancamentos',id));
+              showMsg(`${ids.length} lançamento(s) com erro excluído(s).`,'ok');
+              renderMeus();
+            }catch(err){ console.error(err); showMsg('Erro ao excluir.','err'); }
+          };
+
         }else{
           errorsSection.classList.remove('show');
           errorsList.innerHTML = '';
+          errorsFooter.style.display = 'none';
         }
 
         const headers = document.querySelectorAll('#tab thead th');
@@ -815,13 +767,11 @@ tfoot td{
 
       renderMeus();
 
-      // ALTERAÇÃO 3 — Evento do botão Reverificar
       $('#btnReverificar').onclick = () => {
         showMsg('Reverificando lançamentos do período…', 'ok');
         renderMeus();
       };
 
-      // 🧩 Inicializa o botão "Converter texto copiado"
       inicializarConversor(db, sess, addDoc, collection, serverTimestamp, renderMeus, showMsg);
 
       $('#btnSair').onclick=()=>{ localStorage.removeItem('sessao_usuario'); location.href='index.html'; };
