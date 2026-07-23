@@ -1,0 +1,2567 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>Controle de Frequência do Servidor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+<script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+<style>
+/* ===== RESET & BASE ===== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --navy: #0f2744;
+  --navy-light: #1a3a5c;
+  --navy-lighter: #254d75;
+  --emerald: #10b981;
+  --emerald-bg: #ecfdf5;
+  --amber: #f59e0b;
+  --amber-bg: #fffbeb;
+  --red: #ef4444;
+  --red-bg: #fef2f2;
+  --orange: #f97316;
+  --orange-bg: #fff7ed;
+  --blue: #3b82f6;
+  --blue-bg: #eff6ff;
+  --bg: #f8f9fb;
+  --card: #ffffff;
+  --border: #e2e5ea;
+  --text: #1a1a2e;
+  --text-secondary: #64748b;
+  --text-muted: #94a3b8;
+  --radius: 8px;
+  --shadow: 0 1px 3px rgba(0,0,0,0.06);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+  --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --mono: 'JetBrains Mono', 'Fira Code', monospace;
+}
+html, body { height: 100%; }
+html { font-size: 16px; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+a { text-decoration: none; color: inherit; }
+button { font-family: var(--font); cursor: pointer; }
+input, select, textarea { font-family: var(--font); }
+
+/* ===== LAYOUT ===== */
+.app { display: flex; height: 100vh; overflow: hidden; }
+
+/* Sidebar */
+.sidebar {
+  width: 240px;
+  min-width: 240px;
+  background: var(--navy);
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  z-index: 50;
+}
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 24px 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.sidebar-logo {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: var(--emerald);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.sidebar-logo .material-symbols-outlined { font-size: 22px; }
+.sidebar-brand-text h1 {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+  line-height: 1.2;
+}
+.sidebar-brand-text p {
+  font-size: 11px;
+  color: rgba(255,255,255,0.5);
+  font-weight: 500;
+}
+.sidebar-nav {
+  flex: 1;
+  padding: 16px 12px;
+  overflow-y: auto;
+}
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(255,255,255,0.55);
+  transition: all 0.15s ease;
+  margin-bottom: 2px;
+  cursor: pointer;
+}
+.nav-item:hover { color: #fff; background: rgba(255,255,255,0.06); }
+.nav-item.active {
+  color: #fff;
+  background: rgba(255,255,255,0.1);
+  font-weight: 600;
+}
+.nav-item .material-symbols-outlined { font-size: 18px; opacity: 0.7; }
+.nav-item.active .material-symbols-outlined { opacity: 1; }
+.sidebar-footer {
+  padding: 20px;
+  border-top: 1px solid rgba(255,255,255,0.08);
+}
+.sidebar-footer p {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: rgba(255,255,255,0.25);
+  line-height: 1.6;
+}
+
+/* Main content */
+.main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--bg);
+  min-height: 0;
+}
+.page-header {
+  padding: 24px 32px 0;
+}
+.page-header h2 {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  color: var(--text);
+}
+.page-header p {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+.page-content {
+  flex: 1;
+  padding: 20px 32px 32px;
+  overflow-y: auto;
+}
+
+/* ===== COMPONENTS ===== */
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+}
+.card-accent { border-top: 3px solid var(--navy); }
+.card-emerald { border-top: 3px solid var(--emerald); }
+.card-amber { border-top: 3px solid var(--amber); }
+.card-red { border-top: 3px solid var(--red); }
+.card-blue { border-top: 3px solid var(--blue); }
+
+.label-section {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  border: none;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+.btn:active { transform: scale(0.97); }
+.btn-primary {
+  background: var(--navy);
+  color: #fff;
+}
+.btn-primary:hover { background: var(--navy-light); }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-outline {
+  background: transparent;
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+.btn-outline:hover { background: var(--bg); }
+.btn-danger {
+  background: var(--red);
+  color: #fff;
+}
+.btn-danger:hover { background: #dc2626; }
+.btn-ghost {
+  background: transparent;
+  color: var(--text-secondary);
+  padding: 6px 8px;
+}
+.btn-ghost:hover { background: var(--bg); color: var(--red); }
+.btn-lg {
+  padding: 14px 24px;
+  font-size: 14px;
+  min-height: 48px;
+}
+.btn-block { width: 100%; }
+
+.form-group { margin-bottom: 16px; }
+.form-group label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 14px;
+  color: var(--text);
+  background: var(--card);
+  transition: border-color 0.15s;
+}
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: var(--navy);
+  box-shadow: 0 0 0 3px rgba(15,39,68,0.08);
+}
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.form-row-3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px;
+}
+
+/* ===== PONTAÇÃO REGISTRO ===== */
+.clock-display {
+  font-family: var(--mono);
+  font-size: 36px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: var(--text);
+  margin: 12px 0 20px;
+}
+.ponto-btn {
+  width: 100%;
+  padding: 20px 24px;
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--border);
+  border-radius: 8px;
+  background: var(--card);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: left;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.ponto-btn:hover { transform: translateY(-1px); box-shadow: var(--shadow-md); }
+.ponto-btn:active { transform: scale(0.99); }
+.ponto-btn.entrada { border-left-color: var(--emerald); }
+.ponto-btn.entrada:hover { background: var(--emerald-bg); }
+.ponto-btn.intervalo-inicio { border-left-color: var(--amber); }
+.ponto-btn.intervalo-inicio:hover { background: var(--amber-bg); }
+.ponto-btn.intervalo-fim { border-left-color: var(--orange); }
+.ponto-btn.intervalo-fim:hover { background: var(--orange-bg); }
+.ponto-btn.saida { border-left-color: var(--red); }
+.ponto-btn.saida:hover { background: var(--red-bg); }
+.ponto-btn.filled { opacity: 0.7; background: var(--bg); }
+.ponto-btn.filled:hover { opacity: 1; cursor: pointer; }
+.ponto-btn-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.ponto-btn.filled .ponto-btn-icon { background: var(--border); }
+.ponto-btn-icon .material-symbols-outlined { font-size: 22px; color: var(--text-secondary); }
+.ponto-btn-info { flex: 1; }
+.ponto-btn-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  margin-bottom: 2px;
+}
+.ponto-btn-value {
+  font-family: var(--mono);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text);
+}
+.ponto-btn-value.placeholder {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--text-muted);
+  font-family: var(--font);
+}
+
+/* ===== STATS CARDS ===== */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.stat-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  border-top: 3px solid var(--border);
+  padding: 20px;
+}
+.stat-card.emerald { border-top-color: var(--emerald); }
+.stat-card.red { border-top-color: var(--red); }
+.stat-card.blue { border-top-color: var(--blue); }
+.stat-card.amber { border-top-color: var(--amber); }
+.stat-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+.stat-value {
+  font-family: var(--mono);
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text);
+}
+.stat-sub {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+
+/* ===== CALENDAR ===== */
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+.cal-header {
+  text-align: center;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  padding: 8px 4px;
+}
+.cal-day {
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: default;
+  border: 1px solid transparent;
+}
+.cal-day.empty { background: transparent; }
+.cal-day.weekend { background: var(--amber-bg); color: var(--amber); border-color: var(--amber); font-weight: 600; }
+.cal-day.worked { background: var(--emerald-bg); border-color: var(--emerald); color: var(--emerald); font-weight: 700; }
+.cal-day.incomplete { background: var(--amber-bg); border-color: var(--amber); color: var(--amber); font-weight: 600; }
+.cal-day.missing { background: var(--red-bg); border-color: var(--red); color: var(--red); font-weight: 600; }
+.cal-day.today { ring: 2px solid var(--navy); box-shadow: 0 0 0 2px var(--navy); }
+.cal-day .cal-time {
+  font-size: 9px;
+  font-family: var(--mono);
+  font-weight: 500;
+  margin-top: 2px;
+  opacity: 0.7;
+}
+
+/* ===== TABLE ===== */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.data-table th {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  text-align: left;
+  padding: 10px 12px;
+  border-bottom: 2px solid var(--border);
+}
+.data-table td {
+  padding: 10px 12px;
+  font-size: 13px;
+  border-bottom: 1px solid var(--border);
+}
+.data-table .mono { font-family: var(--mono); font-weight: 500; }
+.data-table .hover-row:hover { background: var(--bg); }
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.badge-complete { background: var(--emerald-bg); color: #059669; }
+.badge-partial { background: var(--amber-bg); color: #d97706; }
+.badge-missing { background: var(--red-bg); color: var(--red); }
+.badge-weekend { background: var(--amber-bg); color: #d97706; }
+
+/* ===== SERVIROR CARD ===== */
+.servidor-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card);
+  cursor: pointer;
+  transition: all 0.15s;
+  margin-bottom: 8px;
+}
+.servidor-card:hover { box-shadow: var(--shadow); border-color: var(--navy-lighter); }
+.servidor-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(15,39,68,0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--navy);
+  flex-shrink: 0;
+}
+.servidor-info h4 { font-size: 14px; font-weight: 600; }
+.servidor-info p { font-size: 12px; color: var(--text-secondary); }
+.servidor-info .meta { font-size: 11px; font-family: var(--mono); color: var(--text-muted); margin-top: 2px; }
+
+/* ===== EMPTY STATE ===== */
+.empty-state {
+  text-align: center;
+  padding: 48px 24px;
+  border: 2px dashed var(--border);
+  border-radius: var(--radius);
+  background: var(--card);
+}
+.empty-state .material-symbols-outlined {
+  font-size: 48px;
+  color: var(--text-muted);
+  opacity: 0.3;
+  margin-bottom: 12px;
+}
+.empty-state h3 { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+.empty-state p { font-size: 13px; color: var(--text-secondary); }
+
+/* ===== MODAL ===== */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s;
+}
+.modal-overlay.active { opacity: 1; visibility: visible; }
+.modal {
+  background: var(--card);
+  border-radius: 12px;
+  width: 90%;
+  max-width: 520px;
+  max-height: 85vh;
+  overflow-y: auto;
+  padding: 28px;
+  box-shadow: var(--shadow-md);
+}
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+.modal-header h3 { font-size: 18px; font-weight: 700; }
+.modal-close {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  padding: 4px;
+  cursor: pointer;
+}
+.modal-close:hover { color: var(--text); }
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+/* ===== TOAST ===== */
+.toast-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.toast {
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #fff;
+  box-shadow: var(--shadow-md);
+  animation: slideIn 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.toast-success { background: var(--emerald); }
+.toast-error { background: var(--red); }
+.toast-info { background: var(--navy); }
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+/* ===== PÁGINA OCULTA ===== */
+.page { display: none; }
+.page.active { display: flex; flex-direction: column; height: 100%; min-height: 0; }
+
+/* ===== MOBILE ===== */
+.mobile-header {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+}
+.hamburger {
+  background: none;
+  border: none;
+  padding: 8px;
+  color: var(--text);
+}
+.hamburger .material-symbols-outlined { font-size: 24px; }
+
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed;
+    left: -260px;
+    top: 0;
+    bottom: 0;
+    transition: left 0.2s ease;
+    box-shadow: var(--shadow-md);
+  }
+  .sidebar.open { left: 0; }
+  .mobile-header { display: flex; }
+  .page-header { padding: 16px; }
+  .page-content { padding: 12px 16px 24px; }
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .form-row { grid-template-columns: 1fr; }
+  .form-row-3 { grid-template-columns: 1fr; }
+  .clock-display { font-size: 28px; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="sidebar-logo">
+        <span class="material-symbols-outlined">check_circle</span>
+      </div>
+      <div class="sidebar-brand-text">
+        <h1>Controle de</h1>
+        <p>Frequência</p>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-item active" data-page="ponto" onclick="navigate('ponto')">
+        <span class="material-symbols-outlined">schedule</span>
+        Ponto de Hoje
+      </div>
+      <div class="nav-item" data-page="dashboard" onclick="navigate('dashboard')">
+        <span class="material-symbols-outlined">dashboard</span>
+        Dashboard
+      </div>
+      <div class="nav-item" data-page="historico" onclick="navigate('historico')">
+        <span class="material-symbols-outlined">calendar_month</span>
+        Histórico
+      </div>
+      <div class="nav-item" data-page="servidores" onclick="navigate('servidores')">
+        <span class="material-symbols-outlined">group_add</span>
+        Servidores
+      </div>
+      <div class="nav-item" data-page="pdf" onclick="navigate('pdf')">
+        <span class="material-symbols-outlined">description</span>
+        Gerar Folha
+      </div>
+      <div class="nav-item" data-page="config" onclick="navigate('config')">
+        <span class="material-symbols-outlined">settings</span>
+        Configurações
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <p>Prefeitura Municipal</p>
+      <p>Controle de Frequência</p>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <div class="main">
+    <!-- Mobile header -->
+    <div class="mobile-header">
+      <button class="hamburger" onclick="toggleSidebar()">
+        <span class="material-symbols-outlined">menu</span>
+      </button>
+      <span id="mobilePageTitle" style="font-weight:700;font-size:14px">Ponto de Hoje</span>
+      <div style="width:40px"></div>
+    </div>
+
+    <!-- ===== PÁGINA: PONTO DE HOJE ===== -->
+    <div class="page active" id="page-ponto">
+      <div class="page-header">
+        <h2>Registro de Ponto</h2>
+        <div style="display:flex;align-items:center;gap:8px">
+          <button class="btn btn-ghost" id="btnDiaAnterior" onclick="navigatePontoDay(-1)" style="padding:6px 10px" title="Dia anterior">
+            <span class="material-symbols-outlined" style="font-size:18px">chevron_left</span>
+          </button>
+          <input type="date" id="pontoDateInput" style="padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:var(--mono);background:var(--card-bg);color:var(--text)" onchange="onPontoDateChange()">
+          <button class="btn btn-ghost" id="btnDiaSeguinte" onclick="navigatePontoDay(1)" style="padding:6px 10px" title="Dia seguinte">
+            <span class="material-symbols-outlined" style="font-size:18px">chevron_right</span>
+          </button>
+          <button class="btn btn-ghost" id="btnHoje" onclick="goToHoje()" style="padding:6px 10px;font-size:12px" title="Ir para hoje">
+            Hoje
+          </button>
+        </div>
+        <p id="pontoDataHoje"></p>
+      </div>
+      <div class="page-content">
+        <div class="clock-display" id="clockDisplay">--:--:--</div>
+
+        <!-- Servidor selector -->
+        <div class="card card-accent" style="margin-bottom:20px">
+          <div class="label-section">Servidor</div>
+          <div class="form-group" style="margin-bottom:0">
+            <select id="selectServidorPonto">
+              <option value="">Selecione o servidor...</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Warning weekend -->
+        <div class="card card-amber" id="weekendWarning" style="display:none;margin-bottom:20px">
+          <div style="display:flex;align-items:center;gap:12px">
+            <span class="material-symbols-outlined" style="color:var(--amber)">warning</span>
+            <p style="font-size:13px;font-weight:600;color:#92400e">Este dia é fim de semana. O registro será marcado como "Fim de Semana".</p>
+          </div>
+        </div>
+
+        <!-- Ponto buttons -->
+        <div id="pontoButtons" style="display:none">
+          <button class="ponto-btn entrada" onclick="registrarPonto('entrada')" id="btnEntrada" data-campo="entrada">
+            <div class="ponto-btn-icon"><span class="material-symbols-outlined">login</span></div>
+            <div class="ponto-btn-info">
+              <div class="ponto-btn-label">Registrar Entrada</div>
+              <div class="ponto-btn-value placeholder">Clique para registrar agora</div>
+            </div>
+          </button>
+          <button class="ponto-btn intervalo-inicio" onclick="registrarPonto('inicioIntervalo')" id="btnInicioIntervalo" data-campo="inicioIntervalo">
+            <div class="ponto-btn-icon"><span class="material-symbols-outlined">coffee</span></div>
+            <div class="ponto-btn-info">
+              <div class="ponto-btn-label">Início Intervalo</div>
+              <div class="ponto-btn-value placeholder">Clique para registrar agora</div>
+            </div>
+          </button>
+          <button class="ponto-btn intervalo-fim" onclick="registrarPonto('fimIntervalo')" id="btnFimIntervalo" data-campo="fimIntervalo">
+            <div class="ponto-btn-icon"><span class="material-symbols-outlined">coffee</span></div>
+            <div class="ponto-btn-info">
+              <div class="ponto-btn-label">Fim Intervalo</div>
+              <div class="ponto-btn-value placeholder">Clique para registrar agora</div>
+            </div>
+          </button>
+          <button class="ponto-btn saida" onclick="registrarPonto('saida')" id="btnSaida" data-campo="saida">
+            <div class="ponto-btn-icon"><span class="material-symbols-outlined">logout</span></div>
+            <div class="ponto-btn-info">
+              <div class="ponto-btn-label">Registrar Saída</div>
+              <div class="ponto-btn-value placeholder">Clique para registrar agora</div>
+            </div>
+          </button>
+        </div>
+
+        <!-- Botão apagar registro -->
+        <button class="btn btn-danger" id="btnApagarRegistro" style="display:none;margin-top:12px;width:100%" onclick="apagarRegistroHoje()">
+          <span class="material-symbols-outlined" style="font-size:18px">delete_sweep</span>
+          Apagar registro de hoje
+        </button>
+
+        <!-- Resumo -->
+        <div class="card card-accent" id="resumoDia" style="display:none;margin-top:16px">
+          <div class="label-section">Resumo do Dia</div>
+          <div class="stats-grid" style="margin-bottom:0;grid-template-columns:repeat(3,1fr)">
+            <div>
+              <div class="stat-label">Horas Trabalhadas</div>
+              <div class="stat-value" id="resumoHoras">0h00</div>
+            </div>
+            <div>
+              <div class="stat-label">Horas Extras</div>
+              <div class="stat-value" style="color:var(--emerald)" id="resumoExtras">0h00</div>
+            </div>
+            <div>
+              <div class="stat-label">Status</div>
+              <div id="resumoStatus" style="margin-top:4px"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Empty state -->
+        <div class="empty-state" id="pontoEmptyState">
+          <span class="material-symbols-outlined">schedule</span>
+          <h3>Nenhum servidor selecionado</h3>
+          <p>Selecione um servidor no menu acima para começar a registrar o ponto.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== PÁGINA: DASHBOARD ===== -->
+    <div class="page" id="page-dashboard">
+      <div class="page-header">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px">
+          <div>
+            <h2>Dashboard</h2>
+            <p id="dashboardSubtitle">Visão geral da frequência</p>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <select id="dashMes" onchange="renderDashboard()" style="padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:13px">
+              <option value="1">Janeiro</option><option value="2">Fevereiro</option><option value="3">Março</option>
+              <option value="4">Abril</option><option value="5">Maio</option><option value="6">Junho</option>
+              <option value="7">Julho</option><option value="8">Agosto</option><option value="9">Setembro</option>
+              <option value="10">Outubro</option><option value="11">Novembro</option><option value="12">Dezembro</option>
+            </select>
+            <select id="dashAno" onchange="renderDashboard()" style="padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:13px">
+              <option value="2025">2025</option><option value="2026" selected>2026</option><option value="2027">2027</option>
+            </select>
+            <select id="dashServidor" onchange="renderDashboard()" style="padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:13px">
+              <option value="">Servidor...</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="page-content">
+        <div class="stats-grid" id="dashStats">
+          <div class="stat-card emerald">
+            <div class="stat-label">Dias Trabalhados</div>
+            <div class="stat-value" id="statTrabalhados">0</div>
+            <div class="stat-sub" id="statTrabalhadosSub">de 0 dias úteis</div>
+          </div>
+          <div class="stat-card red">
+            <div class="stat-label">Faltas</div>
+            <div class="stat-value" id="statFaltas">0</div>
+            <div class="stat-sub" id="statFaltasSub">dias sem registro</div>
+          </div>
+          <div class="stat-card blue">
+            <div class="stat-label">Horas Totais</div>
+            <div class="stat-value" id="statHoras">0h</div>
+            <div class="stat-sub">no mês</div>
+          </div>
+          <div class="stat-card amber">
+            <div class="stat-label">Horas Extras</div>
+            <div class="stat-value" id="statExtras">0h</div>
+            <div class="stat-sub">acumuladas</div>
+          </div>
+        </div>
+
+        <!-- Calendar -->
+        <div class="card" id="dashCalendar" style="display:none">
+          <div class="label-section">Calendário do Mês</div>
+          <div class="calendar-grid" id="calendarGrid"></div>
+          <div style="display:flex;gap:16px;margin-top:16px;flex-wrap:wrap">
+            <span style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-muted)">
+              <span style="width:12px;height:12px;border-radius:3px;background:var(--emerald-bg);border:1px solid var(--emerald)"></span> Completo
+            </span>
+            <span style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-muted)">
+              <span style="width:12px;height:12px;border-radius:3px;background:var(--amber-bg);border:1px solid var(--amber)"></span> Parcial
+            </span>
+            <span style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-muted)">
+              <span style="width:12px;height:12px;border-radius:3px;background:var(--red-bg);border:1px solid var(--red)"></span> Falta
+            </span>
+            <span style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-muted)">
+              <span style="width:12px;height:12px;border-radius:3px;background:var(--bg);border:1px solid var(--border)"></span> Fim de Semana
+            </span>
+          </div>
+        </div>
+
+        <div class="empty-state" id="dashEmpty" style="display:none">
+          <span class="material-symbols-outlined">calendar_month</span>
+          <h3>Nenhum servidor cadastrado</h3>
+          <p>Cadastre um servidor na seção "Servidores" para começar.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== PÁGINA: HISTÓRICO ===== -->
+    <div class="page" id="page-historico">
+      <div class="page-header">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px">
+          <div>
+            <h2>Histórico</h2>
+            <p>Registros de frequência do servidor</p>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <select id="histServidor" onchange="renderHistorico()" style="padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:13px">
+              <option value="">Servidor...</option>
+            </select>
+            <select id="histMes" onchange="renderHistorico()" style="padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:13px">
+              <option value="1">Janeiro</option><option value="2">Fevereiro</option><option value="3">Março</option>
+              <option value="4">Abril</option><option value="5">Maio</option><option value="6">Junho</option>
+              <option value="7">Julho</option><option value="8">Agosto</option><option value="9">Setembro</option>
+              <option value="10">Outubro</option><option value="11">Novembro</option><option value="12">Dezembro</option>
+            </select>
+            <select id="histAno" onchange="renderHistorico()" style="padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:13px">
+              <option value="2025">2025</option><option value="2026" selected>2026</option><option value="2027">2027</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="page-content">
+        <div id="histTableContainer"></div>
+        <div class="empty-state" id="histEmpty" style="display:none">
+          <span class="material-symbols-outlined">calendar_month</span>
+          <h3>Nenhum registro encontrado</h3>
+          <p>Não há registros para o período selecionado.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== PÁGINA: SERVIDORES ===== -->
+    <div class="page" id="page-servidores">
+      <div class="page-header">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px">
+          <div>
+            <h2>Servidores</h2>
+            <p>Gerenciamento de servidores e configuração de jornada</p>
+          </div>
+          <button class="btn btn-primary" onclick="openServidorModal()">
+            <span class="material-symbols-outlined" style="font-size:16px">person_add</span>
+            Novo Servidor
+          </button>
+        </div>
+      </div>
+      <div class="page-content">
+        <div id="servidoresList"></div>
+        <div class="empty-state" id="servidoresEmpty" style="display:none">
+          <span class="material-symbols-outlined">group_add</span>
+          <h3>Nenhum servidor cadastrado</h3>
+          <p>Cadastre o primeiro servidor para começar a registrar pontos.</p>
+          <button class="btn btn-outline" style="margin-top:16px" onclick="openServidorModal()">Cadastrar Servidor</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== PÁGINA: GERAR FOLHA ===== -->
+    <div class="page" id="page-pdf">
+      <div class="page-header">
+        <h2>Gerar Folha de Frequência</h2>
+        <p>Gera a Folha Individual de Frequência no formato oficial da prefeitura</p>
+      </div>
+      <div class="page-content" style="max-width:700px">
+        <div class="card card-accent">
+          <div class="form-group">
+            <label>Servidor</label>
+            <select id="pdfServidor" style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:6px;font-size:14px">
+              <option value="">Selecione o servidor...</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Mês de Referência</label>
+              <select id="pdfMes" style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:6px;font-size:14px">
+                <option value="1">Janeiro</option><option value="2">Fevereiro</option><option value="3">Março</option>
+                <option value="4">Abril</option><option value="5">Maio</option><option value="6">Junho</option>
+                <option value="7" selected>Julho</option><option value="8">Agosto</option><option value="9">Setembro</option>
+                <option value="10">Outubro</option><option value="11">Novembro</option><option value="12">Dezembro</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Ano de Referência</label>
+              <select id="pdfAno" style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:6px;font-size:14px">
+                <option value="2025">2025</option><option value="2026" selected>2026</option><option value="2027">2027</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- PDF Template Upload -->
+          <div class="form-group">
+            <label>Template PDF (opcional — use o padrão se não tiver)</label>
+            <div style="display:flex;gap:8px;align-items:center">
+              <input type="file" id="pdfTemplate" accept=".pdf" style="flex:1;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:13px">
+            </div>
+            <p style="font-size:11px;color:var(--text-muted);margin-top:4px">
+              Upload o PDF oficial da folha de ponto. Se não fizer upload, o sistema gerará a folha diretamente.
+            </p>
+          </div>
+
+          <div id="pdfPreview" style="display:none;margin-top:16px;padding:16px;background:var(--bg);border-radius:6px">
+            <div class="label-section">Dados que serão preenchidos</div>
+            <div id="pdfPreviewContent" style="font-size:13px;color:var(--text-secondary)"></div>
+          </div>
+
+          <button class="btn btn-primary btn-lg btn-block" style="margin-top:20px" onclick="gerarPDF()">
+            <span class="material-symbols-outlined" style="font-size:18px">download</span>
+            Gerar Folha de Frequência
+          </button>
+        </div>
+
+        <div class="card" style="margin-top:16px">
+          <div style="display:flex;gap:12px;align-items:flex-start">
+            <span class="material-symbols-outlined" style="color:var(--text-muted);font-size:20px">description</span>
+            <div>
+              <h4 style="font-size:14px;font-weight:700;margin-bottom:4px">Sobre a geração</h4>
+              <p style="font-size:12px;color:var(--text-secondary);line-height:1.6">
+                O sistema utiliza o modelo oficial da Folha Individual de Frequência (Anexo I da Portaria SMPG nº 111/2014).
+                Os dados do servidor e os registros de ponto são preenchidos automaticamente nas posições corretas do formulário.
+                O PDF gerado pode ser impresso e arquivado diretamente.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== PÁGINA: CONFIGURAÇÕES ===== -->
+    <div class="page" id="page-config">
+      <div class="page-header">
+        <h2>Configurações</h2>
+        <p>Configurações gerais do sistema de controle de frequência</p>
+      </div>
+      <div class="page-content" style="max-width:600px">
+        <div class="card card-accent" style="margin-bottom:16px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px">
+            <span class="material-symbols-outlined" style="color:var(--text-muted);font-size:18px">business</span>
+            <div class="label-section" style="margin-bottom:0">Informações do Órgão</div>
+          </div>
+          <div class="form-group">
+            <label>Nome do Órgão</label>
+            <input type="text" id="cfgOrgao" value="Prefeitura Municipal">
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Cidade</label>
+              <input type="text" id="cfgCidade" placeholder="Cidade">
+            </div>
+            <div class="form-group">
+              <label>UF</label>
+              <input type="text" id="cfgUf" placeholder="MG" maxlength="2">
+            </div>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="salvarOrgao()">
+            <span class="material-symbols-outlined" style="font-size:16px">save</span> Salvar
+          </button>
+        </div>
+
+        <div class="card" style="margin-bottom:16px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px">
+            <span class="material-symbols-outlined" style="color:var(--text-muted);font-size:18px">schedule</span>
+            <div class="label-section" style="margin-bottom:0">Regras de Tolerância</div>
+          </div>
+          <div class="form-group">
+            <label>Tolerância de Atraso (minutos)</label>
+            <input type="number" id="cfgTolerancia" value="5" min="0" max="30">
+            <p style="font-size:11px;color:var(--text-muted);margin-top:4px">Minutos de tolerância antes de considerar atraso.</p>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="salvarTolerancia()">
+            <span class="material-symbols-outlined" style="font-size:16px">save</span> Salvar
+          </button>
+        </div>
+
+        <div class="card">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px">
+            <span class="material-symbols-outlined" style="color:var(--text-muted);font-size:18px">event</span>
+            <div class="label-section" style="margin-bottom:0">Feriados</div>
+          </div>
+          <div style="display:flex;gap:8px;margin-bottom:12px">
+            <input type="date" id="cfgFeriadoData" style="flex:1;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:13px">
+            <input type="text" id="cfgFeriadoDesc" placeholder="Descrição do feriado" style="flex:2;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:13px">
+            <button class="btn btn-primary btn-sm" onclick="addFeriado()">Adicionar</button>
+          </div>
+          <div id="feriadosList"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Servidor -->
+<div class="modal-overlay" id="modalServidor">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modalServidorTitle">Cadastrar Servidor</h3>
+      <button class="modal-close" onclick="closeServidorModal()">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+    <form id="formServidor" onsubmit="saveServidor(event)">
+      <input type="hidden" id="servidorEditId">
+      <div class="label-section">Dados Pessoais</div>
+      <div class="form-group">
+        <label>Nome Completo *</label>
+        <input type="text" id="sNome" required placeholder="Nome do servidor">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Matrícula</label>
+          <input type="text" id="sMatricula" placeholder="000000">
+        </div>
+        <div class="form-group">
+          <label>CPF</label>
+          <input type="text" id="sCpf" placeholder="000.000.000-00">
+        </div>
+      </div>
+      <div class="label-section" style="margin-top:8px">Lotação</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Função</label>
+          <input type="text" id="sFuncao" placeholder="Cargo/Função">
+        </div>
+        <div class="form-group">
+          <label>Secretaria</label>
+          <input type="text" id="sSecretaria" placeholder="Secretaria">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Setor</label>
+        <input type="text" id="sSetor" placeholder="Setor/Departamento">
+      </div>
+      <div class="label-section" style="margin-top:8px">Jornada de Trabalho</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Tipo de Jornada</label>
+          <select id="sTipoJornada">
+            <option value="normal">Normal (seg-sex)</option>
+            <option value="12x36">12x36</option>
+            <option value="plantao">Plantão</option>
+            <option value="custom">Personalizada</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Carga Horária (h)</label>
+          <input type="number" id="sCargaHoraria" value="8" min="1" max="40">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Horário Entrada Padrão</label>
+          <input type="time" id="sHorarioEntrada" value="08:00">
+        </div>
+        <div class="form-group">
+          <label>Horário Saída Padrão</label>
+          <input type="time" id="sHorarioSaida" value="17:00">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Início Intervalo</label>
+          <input type="time" id="sIntervaloInicio" value="12:00">
+        </div>
+        <div class="form-group">
+          <label>Fim Intervalo</label>
+          <input type="time" id="sIntervaloFim" value="13:00">
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-outline" onclick="closeServidorModal()">Cancelar</button>
+        <button type="submit" class="btn btn-primary">
+          <span class="material-symbols-outlined" style="font-size:16px">save</span>
+          <span id="btnServidorText">Cadastrar</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal Editar Horário -->
+<div class="modal-overlay" id="modalEditar">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-header">
+      <h3>Editar Horário</h3>
+      <button class="modal-close" onclick="closeEditarModal()">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+    <div class="form-group">
+      <label id="editarLabel">Horário</label>
+      <input type="time" id="editarTime" style="width:100%;padding:12px;border:1px solid var(--border);border-radius:6px;font-size:16px;font-family:var(--mono)">
+    </div>
+    <div class="form-group">
+      <label>Motivo da alteração (opcional)</label>
+      <input type="text" id="editarMotivo" placeholder="Ex: Esqueceu de registrar">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeEditarModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarEdicao()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+/* ========================================================================
+   BANCO DE DADOS (IndexedDB)
+   ======================================================================== */
+let db;
+const DB_NAME = 'ControlePontoDB';
+const DB_VERSION = 1;
+
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(DB_NAME, DB_VERSION);
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => { db = request.result; resolve(db); };
+    request.onupgradeneeded = (e) => {
+      const database = e.target.result;
+      if (!database.objectStoreNames.contains('servidores')) {
+        database.createObjectStore('servidores', { keyPath: 'id' });
+      }
+      if (!database.objectStoreNames.contains('registros')) {
+        const store = database.createObjectStore('registros', { keyPath: 'id' });
+        store.createIndex('servidorId', 'servidorId', { unique: false });
+        store.createIndex('data', 'data', { unique: false });
+        store.createIndex('servidorData', ['servidorId', 'data'], { unique: true });
+      }
+      if (!database.objectStoreNames.contains('config')) {
+        database.createObjectStore('config', { keyPath: 'key' });
+      }
+    };
+  });
+}
+
+async function dbGet(storeName, key) {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(storeName, 'readonly');
+    const store = tx.objectStore(storeName);
+    const req = store.get(key);
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function dbGetAll(storeName) {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(storeName, 'readonly');
+    const store = tx.objectStore(storeName);
+    const req = store.getAll();
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function dbPut(storeName, data) {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(storeName, 'readwrite');
+    const store = tx.objectStore(storeName);
+    const req = store.put(data);
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function dbDelete(storeName, key) {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(storeName, 'readwrite');
+    const store = tx.objectStore(storeName);
+    const req = store.delete(key);
+    req.onsuccess = () => resolve();
+    req.onerror = () => reject(req.error);
+  });
+}
+
+/* ========================================================================
+   UTILITÁRIOS
+   ======================================================================== */
+const MESES = ['','Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+const DIAS_SEMANA = ['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'];
+const DIAS_CURTO = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+
+function dataHoje() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function horaAtual() {
+  const d = new Date();
+  return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+}
+function horaAtualCompleta() {
+  const d = new Date();
+  return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}`;
+}
+function formatarData(dataStr) {
+  const [y,m,d] = dataStr.split('-').map(Number);
+  return `${String(d).padStart(2,'0')}/${String(m).padStart(2,'0')}/${y}`;
+}
+function getDiaSemana(dataStr) {
+  const [y,m,d] = dataStr.split('-').map(Number);
+  return DIAS_SEMANA[new Date(y,m-1,d).getDay()];
+}
+function getDiaSemanaCurto(dataStr) {
+  const [y,m,d] = dataStr.split('-').map(Number);
+  return DIAS_CURTO[new Date(y,m-1,d).getDay()];
+}
+function isFimDeSemana(dataStr) {
+  const [y,m,d] = dataStr.split('-').map(Number);
+  const dia = new Date(y,m-1,d).getDay();
+  return dia === 0 || dia === 6;
+}
+function getDiasUteisMes(ano, mes) {
+  const total = new Date(ano, mes, 0).getDate();
+  let uteis = 0;
+  for (let d = 1; d <= total; d++) {
+    const diaSemana = new Date(ano, mes-1, d).getDay();
+    if (diaSemana !== 0 && diaSemana !== 6) uteis++;
+  }
+  return uteis;
+}
+function timeToMin(t) {
+  if (!t) return 0;
+  const [h,m] = t.split(':').map(Number);
+  return h*60+m;
+}
+function minToTime(min) {
+  const h = Math.floor(min/60);
+  const m = min%60;
+  return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+}
+function formatarMinutos(min) {
+  const h = Math.floor(Math.abs(min)/60);
+  const m = Math.abs(min)%60;
+  return `${h}h${String(m).padStart(2,'0')}`;
+}
+function calcularHoras(entrada, inicioInt, fimInt, saida) {
+  if (!entrada || !saida) return 0;
+  let mins = timeToMin(saida) - timeToMin(entrada);
+  if (inicioInt && fimInt) mins -= (timeToMin(fimInt) - timeToMin(inicioInt));
+  return Math.max(0, mins);
+}
+
+/* ========================================================================
+   TOAST NOTIFICATIONS
+   ======================================================================== */
+function toast(msg, type='success') {
+  const container = document.getElementById('toastContainer');
+  const el = document.createElement('div');
+  el.className = `toast toast-${type}`;
+  el.innerHTML = `<span class="material-symbols-outlined" style="font-size:18px">${type==='success'?'check_circle':type==='error'?'error':'info'}</span> ${msg}`;
+  container.appendChild(el);
+  setTimeout(() => { el.style.opacity='0'; el.style.transform='translateX(20px)'; setTimeout(()=>el.remove(),200); }, 3500);
+}
+
+/* ========================================================================
+   NAVEGAÇÃO
+   ======================================================================== */
+let currentPage = 'ponto';
+const pageNames = { ponto:'Ponto de Hoje', dashboard:'Dashboard', historico:'Histórico', servidores:'Servidores', pdf:'Gerar Folha', config:'Configurações' };
+
+function navigate(page) {
+  currentPage = page;
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(`page-${page}`).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.querySelector(`.nav-item[data-page="${page}"]`).classList.add('active');
+  document.getElementById('mobilePageTitle').textContent = pageNames[page];
+  closeSidebar();
+
+  // Load page data
+  if (page === 'dashboard') renderDashboard();
+  if (page === 'historico') renderHistorico();
+  if (page === 'servidores') renderServidores();
+  if (page === 'config') loadConfig();
+  if (page === 'pdf') loadPDFPage();
+  if (page === 'ponto') loadPontoPage();
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+}
+
+/* ========================================================================
+   PONTO DE HOJE
+   ======================================================================== */
+let registroHoje = null;
+let servidorPontoSelecionado = null;
+let selectedPontoDate = dataHoje(); // Track selected date for editing any day
+
+async function loadPontoPage() {
+  selectedPontoDate = dataHoje();
+  document.getElementById('pontoDateInput').value = selectedPontoDate;
+  document.getElementById('pontoDataHoje').textContent = `${formatarData(selectedPontoDate)} — ${getDiaSemana(selectedPontoDate)}`;
+
+  // Load servers
+  const servidores = await dbGetAll('servidores');
+  const select = document.getElementById('selectServidorPonto');
+  const currentVal = select.value;
+  select.innerHTML = '<option value="">Selecione o servidor...</option>';
+  servidores.forEach(s => {
+    select.innerHTML += `<option value="${s.id}">${s.nome} — ${s.setor || ''}</option>`;
+  });
+  if (currentVal && servidores.find(s=>s.id===currentVal)) {
+    select.value = currentVal;
+  }
+
+  // Add change listener if not already added
+  if (!select.dataset.listenerAdded) {
+    select.addEventListener('change', onServidorPontoChange);
+    select.dataset.listenerAdded = 'true';
+  }
+
+  // Weekend check
+  document.getElementById('weekendWarning').style.display = isFimDeSemana(selectedPontoDate) ? 'block' : 'none';
+
+  // Reset visibility states
+  document.getElementById('pontoButtons').style.display = 'none';
+  document.getElementById('pontoEmptyState').style.display = 'block';
+  document.getElementById('resumoDia').style.display = 'none';
+
+  // Trigger onchange if a server is selected
+  if (select.value) {
+    await onServidorPontoChange();
+  }
+}
+
+async function onServidorPontoChange() {
+  const id = document.getElementById('selectServidorPonto').value;
+  servidorPontoSelecionado = id;
+
+  if (!id) {
+    registroHoje = null;
+    document.getElementById('pontoEmptyState').style.display = 'block';
+    document.getElementById('pontoButtons').style.display = 'none';
+    document.getElementById('resumoDia').style.display = 'none';
+    return;
+  }
+
+  try {
+    const allRegistros = await dbGetAll('registros');
+    registroHoje = allRegistros.find(r => r.servidorId === id && r.data === selectedPontoDate) || null;
+  } catch(e) {
+    console.error('Erro ao buscar registros:', e);
+    registroHoje = null;
+  }
+
+  // Show buttons whenever a servidor is selected (even without existing record)
+  document.getElementById('pontoEmptyState').style.display = 'none';
+  document.getElementById('pontoButtons').style.display = 'block';
+
+  if (registroHoje) {
+    renderPontoButtons();
+    document.getElementById('resumoDia').style.display = 'block';
+  } else {
+    // No record yet — show buttons in default state
+    document.getElementById('btnApagarRegistro').style.display = 'none';
+    renderPontoButtons();
+    document.getElementById('resumoDia').style.display = 'none';
+  }
+}
+
+function renderPontoButtons() {
+  const fields = [
+    { key: 'entrada', btn: 'btnEntrada', label: 'Registrar Entrada' },
+    { key: 'inicioIntervalo', btn: 'btnInicioIntervalo', label: 'Início Intervalo' },
+    { key: 'fimIntervalo', btn: 'btnFimIntervalo', label: 'Fim Intervalo' },
+    { key: 'saida', btn: 'btnSaida', label: 'Registrar Saída' },
+  ];
+
+  fields.forEach(f => {
+    const btn = document.getElementById(f.btn);
+    const val = registroHoje ? registroHoje[f.key] : null;
+    const iconEl = btn.querySelector('.ponto-btn-icon .material-symbols-outlined');
+    const labelEl = btn.querySelector('.ponto-btn-label');
+    const valueEl = btn.querySelector('.ponto-btn-value');
+
+    if (val) {
+      btn.classList.add('filled');
+      btn.onclick = () => openEditarModal(f.key, val);
+      labelEl.textContent = `${f.label.split(' ').pop() || f.label} registrada`;
+      valueEl.textContent = val;
+      valueEl.classList.remove('placeholder');
+      // Add edit icon
+      if (!btn.querySelector('.ponto-btn-edit')) {
+        const editIcon = document.createElement('span');
+        editIcon.className = 'material-symbols-outlined ponto-btn-edit';
+        editIcon.textContent = 'edit';
+        editIcon.style.cssText = 'font-size:16px;color:var(--text-muted);opacity:0;transition:opacity 0.15s;';
+        btn.querySelector('.ponto-btn-icon').appendChild(editIcon);
+        btn.addEventListener('mouseenter', () => editIcon.style.opacity = '1');
+        btn.addEventListener('mouseleave', () => editIcon.style.opacity = '0');
+      }
+    } else {
+      btn.classList.remove('filled');
+      btn.onclick = () => registrarPonto(f.key);
+      labelEl.textContent = f.label;
+      valueEl.textContent = 'Clique para registrar agora';
+      valueEl.classList.add('placeholder');
+      // Remove edit icon if present
+      const existingEdit = btn.querySelector('.ponto-btn-edit');
+      if (existingEdit) existingEdit.remove();
+    }
+  });
+
+  // Summary
+  if (registroHoje) {
+    // Show clear button only if there are records
+    const hasAnyRecord = registroHoje.entrada || registroHoje.inicioIntervalo || registroHoje.fimIntervalo || registroHoje.saida;
+    document.getElementById('btnApagarRegistro').style.display = hasAnyRecord ? 'block' : 'none';
+
+    document.getElementById('resumoDia').style.display = 'block';
+    const horas = calcularHoras(registroHoje.entrada, registroHoje.inicioIntervalo, registroHoje.fimIntervalo, registroHoje.saida);
+    document.getElementById('resumoHoras').textContent = formatarMinutos(horas);
+    document.getElementById('resumoExtras').textContent = formatarMinutos(registroHoje.horasExtras || 0);
+
+    const statusEl = document.getElementById('resumoStatus');
+    if (registroHoje.status === 'completo') {
+      statusEl.innerHTML = '<span class="badge badge-complete">Completo</span>';
+    } else if (registroHoje.status === 'parcial') {
+      statusEl.innerHTML = '<span class="badge badge-partial">Parcial</span>';
+    } else {
+      statusEl.innerHTML = '<span class="badge badge-missing">Falta</span>';
+    }
+  }
+}
+
+// Date navigation functions
+function navigatePontoDay(offset) {
+  const [y, m, d] = selectedPontoDate.split('-').map(Number);
+  const date = new Date(y, m - 1, d + offset);
+  selectedPontoDate = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
+  updatePontoDateUI();
+}
+
+function onPontoDateChange() {
+  const val = document.getElementById('pontoDateInput').value;
+  if (val) {
+    selectedPontoDate = val;
+    updatePontoDateUI();
+  }
+}
+
+function goToHoje() {
+  selectedPontoDate = dataHoje();
+  updatePontoDateUI();
+}
+
+async function updatePontoDateUI() {
+  document.getElementById('pontoDateInput').value = selectedPontoDate;
+  document.getElementById('pontoDataHoje').textContent = `${formatarData(selectedPontoDate)} — ${getDiaSemana(selectedPontoDate)}`;
+  document.getElementById('weekendWarning').style.display = isFimDeSemana(selectedPontoDate) ? 'block' : 'none';
+
+  // Update weekend warning text
+  const isToday = selectedPontoDate === dataHoje();
+  const warningText = document.querySelector('#weekendWarning p');
+  if (warningText) {
+    warningText.textContent = isToday
+      ? 'Hoje é fim de semana. O registro será marcado como "Fim de Semana".'
+      : 'Este dia é fim de semana. O registro será marcado como "Fim de Semana".';
+  }
+
+  // Update the apagar button text
+  const btnApagar = document.getElementById('btnApagarRegistro');
+  if (isToday) {
+    btnApagar.innerHTML = '<span class="material-symbols-outlined" style="font-size:18px">delete_sweep</span> Apagar registro de hoje';
+  } else {
+    btnApagar.innerHTML = '<span class="material-symbols-outlined" style="font-size:18px">delete_sweep</span> Apagar registro';
+  }
+
+  // Reload record for the selected date
+  await onServidorPontoChange();
+}
+
+async function registrarPonto(campo) {
+  if (!servidorPontoSelecionado) { toast('Selecione um servidor primeiro','error'); return; }
+
+  if (registroHoje && registroHoje[campo]) {
+    toast(`Já existe registro para "${campo}". Edite na tela.`, 'error');
+    return;
+  }
+
+  const hora = horaAtual();
+
+  if (!registroHoje) {
+    registroHoje = {
+      id: crypto.randomUUID(),
+      servidorId: servidorPontoSelecionado,
+      data: selectedPontoDate,
+      entrada: null, inicioIntervalo: null, fimIntervalo: null, saida: null,
+      horasExtras: 0, horasNormais: 0, horasFalta: 0,
+      observacao: '', status: 'parcial',
+      createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
+    };
+  }
+
+  registroHoje[campo] = hora;
+
+  // Calculate status & hours
+  if (registroHoje.entrada && registroHoje.saida) {
+    registroHoje.status = 'completo';
+  } else {
+    registroHoje.status = 'parcial';
+  }
+
+  const horasNormais = calcularHoras(registroHoje.entrada, registroHoje.inicioIntervalo, registroHoje.fimIntervalo, registroHoje.saida);
+  registroHoje.horasNormais = horasNormais;
+
+  // Calculate extras
+  const servidores = await dbGetAll('servidores');
+  const servidor = servidores.find(s => s.id === servidorPontoSelecionado);
+  if (servidor && registroHoje.entrada && registroHoje.saida) {
+    const cargaMin = servidor.cargaHoraria * 60;
+    registroHoje.horasExtras = Math.max(0, horasNormais - cargaMin);
+  }
+
+  registroHoje.updatedAt = new Date().toISOString();
+  await dbPut('registros', registroHoje);
+
+  const labels = { entrada:'Entrada', inicioIntervalo:'Início Intervalo', fimIntervalo:'Fim Intervalo', saida:'Saída' };
+  toast(`${labels[campo]} registrada às ${hora}`);
+  renderPontoButtons();
+  document.getElementById('resumoDia').style.display = 'block';
+  const horas = calcularHoras(registroHoje.entrada, registroHoje.inicioIntervalo, registroHoje.fimIntervalo, registroHoje.saida);
+  document.getElementById('resumoHoras').textContent = formatarMinutos(horas);
+  document.getElementById('resumoExtras').textContent = formatarMinutos(registroHoje.horasExtras || 0);
+  const statusEl = document.getElementById('resumoStatus');
+  if (registroHoje.status === 'completo') {
+    statusEl.innerHTML = '<span class="badge badge-complete">Completo</span>';
+  } else {
+    statusEl.innerHTML = '<span class="badge badge-partial">Parcial</span>';
+  }
+}
+
+/* ========================================================================
+   EDITAR HORÁRIO
+   ======================================================================== */
+let editContext = null;
+let editRegistroId = null;
+
+function openEditarModal(campo, valor) {
+  editContext = campo;
+  editRegistroId = registroHoje ? registroHoje.id : null;
+  const labels = { entrada:'Entrada', inicioIntervalo:'Início Intervalo', fimIntervalo:'Fim Intervalo', saida:'Saída' };
+  document.getElementById('editarLabel').textContent = labels[campo] || campo;
+  document.getElementById('editarTime').value = valor || '';
+  document.getElementById('editarMotivo').value = '';
+  document.getElementById('modalEditar').classList.add('active');
+}
+
+async function openEditarRegistro(id) {
+  const reg = await dbGet('registros', id);
+  if (!reg) return;
+  // Store current registro for edit
+  registroHoje = reg;
+  servidorPontoSelecionado = reg.servidorId;
+
+  // Build field choice selector
+  const modal = document.getElementById('modalEditar');
+  const fields = [
+    { key: 'entrada', label: 'Entrada' },
+    { key: 'inicioIntervalo', label: 'Início Intervalo' },
+    { key: 'fimIntervalo', label: 'Fim Intervalo' },
+    { key: 'saida', label: 'Saída' },
+  ];
+
+  // Determine which fields to show
+  const filledFields = fields.filter(f => reg[f.key]);
+  if (filledFields.length === 1) {
+    // Only one field — go directly
+    const f = filledFields[0];
+    openEditarModal(f.key, reg[f.key]);
+  } else {
+    // Show field selector
+    document.getElementById('modalEditar').classList.add('active');
+    document.getElementById('editarLabel').textContent = 'Selecionar campo para editar';
+    document.getElementById('editarTime').value = '';
+    document.getElementById('editarMotivo').value = '';
+
+    // Remove existing selector if present
+    const existingSelector = document.getElementById('editarFieldSelector');
+    if (existingSelector) existingSelector.remove();
+
+    const selector = document.createElement('div');
+    selector.id = 'editarFieldSelector';
+    selector.style.cssText = 'margin-bottom:16px';
+    let opts = '<option value="">Selecione o horário...</option>';
+    filledFields.forEach(f => {
+      opts += `<option value="${f.key}" data-valor="${reg[f.key]}">${f.label} — ${reg[f.key]}</option>`;
+    });
+    selector.innerHTML = `<select id="editarFieldSelect" style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:6px;font-size:14px;font-family:var(--mono)">${opts}</select>`;
+
+    const timeGroup = document.getElementById('editarTime').closest('.form-group');
+    timeGroup.parentNode.insertBefore(selector, timeGroup);
+
+    // Handle selection
+    document.getElementById('editarFieldSelect').onchange = function() {
+      const sel = this.value;
+      if (sel) {
+        const selectedOpt = this.querySelector(`option[value="${sel}"]`);
+        const valor = selectedOpt ? selectedOpt.dataset.valor : '';
+        editContext = sel;
+        editRegistroId = reg.id;
+        document.getElementById('editarLabel').textContent = filledFields.find(f => f.key === sel)?.label || sel;
+        document.getElementById('editarTime').value = valor || '';
+      }
+    };
+  }
+}
+
+function closeEditarModal() {
+  document.getElementById('modalEditar').classList.remove('active');
+  editContext = null;
+}
+
+async function salvarEdicao() {
+  if (!editContext || !registroHoje) return;
+  const novoValor = document.getElementById('editarTime').value || null;
+  const valorAntigo = registroHoje[editContext]; // Capture BEFORE changing
+  registroHoje[editContext] = novoValor;
+
+  if (registroHoje.entrada && registroHoje.saida) {
+    registroHoje.status = 'completo';
+  } else {
+    registroHoje.status = 'parcial';
+  }
+
+  const horasNormais = calcularHoras(registroHoje.entrada, registroHoje.inicioIntervalo, registroHoje.fimIntervalo, registroHoje.saida);
+  registroHoje.horasNormais = horasNormais;
+
+  const servidores = await dbGetAll('servidores');
+  const servidor = servidores.find(s => s.id === registroHoje.servidorId);
+  if (servidor && registroHoje.entrada && registroHoje.saida) {
+    const cargaMin = servidor.cargaHoraria * 60;
+    registroHoje.horasExtras = Math.max(0, horasNormais - cargaMin);
+  }
+
+  // Save audit log in observacao
+  const motivo = document.getElementById('editarMotivo').value;
+  const log = `[${new Date().toLocaleString('pt-BR')}] ${editContext} alterado de "${valorAntigo || 'nulo'}" para "${novoValor || 'nulo'}"${motivo ? ` — Motivo: ${motivo}` : ''}`;
+  registroHoje.observacao = registroHoje.observacao ? `${registroHoje.observacao}\n${log}` : log;
+  registroHoje.updatedAt = new Date().toISOString();
+
+  await dbPut('registros', registroHoje);
+  closeEditarModal();
+  // Remove field selector if present
+  const selector = document.getElementById('editarFieldSelector');
+  if (selector) selector.remove();
+  // Refresh current view
+  if (currentPage === 'ponto') {
+    renderPontoButtons();
+  }
+  if (currentPage === 'historico') {
+    renderHistorico();
+  }
+  toast('Horário atualizado com sucesso');
+}
+
+async function apagarRegistroHoje() {
+  if (!registroHoje) return;
+  if (!confirm('Tem certeza que deseja apagar o registro de hoje? Esta ação não pode ser desfeita.')) return;
+
+  await dbDelete('registros', registroHoje.id);
+  registroHoje = null;
+  document.getElementById('btnApagarRegistro').style.display = 'none';
+  document.getElementById('resumoDia').style.display = 'none';
+  renderPontoButtons();
+  toast('Registro de hoje apagado');
+}
+
+/* ========================================================================
+   DASHBOARD
+   ======================================================================== */
+async function renderDashboard() {
+  const mes = Number(document.getElementById('dashMes').value) || new Date().getMonth()+1;
+  const ano = Number(document.getElementById('dashAno').value) || new Date().getFullYear();
+  const servidorId = document.getElementById('dashServidor').value;
+
+  // Load servers for selector
+  const servidores = await dbGetAll('servidores');
+  const select = document.getElementById('dashServidor');
+  select.innerHTML = '<option value="">Servidor...</option>';
+  servidores.forEach(s => { select.innerHTML += `<option value="${s.id}">${s.nome}</option>`; });
+
+  document.getElementById('dashboardSubtitle').textContent = `Visão geral da frequência — ${MESES[mes]} ${ano}`;
+
+  if (!servidorId) {
+    document.getElementById('dashStats').style.display = 'none';
+    document.getElementById('dashCalendar').style.display = 'none';
+    document.getElementById('dashEmpty').style.display = 'block';
+    return;
+  }
+
+  document.getElementById('dashEmpty').style.display = 'none';
+  document.getElementById('dashStats').style.display = 'grid';
+
+  const diasUteis = getDiasUteisMes(ano, mes);
+  const totalDias = new Date(ano, mes, 0).getDate();
+  const prefix = `${ano}-${String(mes).padStart(2,'0')}`;
+
+  const allRegistros = await dbGetAll('registros');
+  const regs = allRegistros.filter(r => r.servidorId === servidorId && r.data.startsWith(prefix));
+  const mapaRegistros = {};
+  regs.forEach(r => { mapaRegistros[r.data] = r; });
+
+  let diasTrabalhados = 0;
+  let faltas = 0;
+  let totalHoras = 0;
+  let totalExtras = 0;
+
+  for (let d = 1; d <= totalDias; d++) {
+    const dataStr = `${ano}-${String(mes).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    if (isFimDeSemana(dataStr)) continue;
+    const reg = mapaRegistros[dataStr];
+    if (reg && reg.status === 'completo') { diasTrabalhados++; totalHoras += reg.horasNormais; totalExtras += reg.horasExtras || 0; }
+    else if (reg && reg.status === 'parcial') { diasTrabalhados++; totalHoras += reg.horasNormais; totalExtras += reg.horasExtras || 0; }
+    else { faltas++; }
+  }
+
+  document.getElementById('statTrabalhados').textContent = diasTrabalhados;
+  document.getElementById('statTrabalhadosSub').textContent = `de ${diasUteis} dias úteis`;
+  document.getElementById('statFaltas').textContent = faltas;
+  document.getElementById('statFaltasSub').textContent = 'dias sem registro';
+  document.getElementById('statHoras').textContent = formatarMinutos(totalHoras);
+  document.getElementById('statExtras').textContent = formatarMinutos(totalExtras);
+
+  // Calendar
+  document.getElementById('dashCalendar').style.display = 'block';
+  const grid = document.getElementById('calendarGrid');
+  grid.innerHTML = '';
+  ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'].forEach(d => {
+    grid.innerHTML += `<div class="cal-header">${d}</div>`;
+  });
+
+  const firstDay = new Date(ano, mes-1, 1).getDay();
+  for (let i = 0; i < firstDay; i++) {
+    grid.innerHTML += `<div class="cal-day empty"></div>`;
+  }
+
+  const hoje = dataHoje();
+  for (let d = 1; d <= totalDias; d++) {
+    const dataStr = `${ano}-${String(mes).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const isWd = isFimDeSemana(dataStr);
+    const isToday = dataStr === hoje;
+    const reg = mapaRegistros[dataStr];
+
+    let cls = 'cal-day';
+    if (isWd) cls += ' weekend';
+    else if (reg && reg.status === 'completo') cls += ' worked';
+    else if (reg && reg.status === 'parcial') cls += ' incomplete';
+    else if (!reg && !isWd) cls += ' missing';
+    if (isToday) cls += ' today';
+
+    grid.innerHTML += `<div class="${cls}">${d}${reg && reg.entrada ? `<span class="cal-time">${reg.entrada}</span>` : ''}</div>`;
+  }
+}
+
+/* ========================================================================
+   HISTÓRICO
+   ======================================================================== */
+async function renderHistorico() {
+  const servidorId = document.getElementById('histServidor').value;
+  const mes = Number(document.getElementById('histMes').value);
+  const ano = Number(document.getElementById('histAno').value);
+
+  // Load servers
+  const servidores = await dbGetAll('servidores');
+  const select = document.getElementById('histServidor');
+  select.innerHTML = '<option value="">Servidor...</option>';
+  servidores.forEach(s => { select.innerHTML += `<option value="${s.id}">${s.nome}</option>`; });
+
+  if (!servidorId) {
+    document.getElementById('histTableContainer').innerHTML = '';
+    document.getElementById('histEmpty').style.display = 'block';
+    return;
+  }
+
+  const prefix = `${ano}-${String(mes).padStart(2,'0')}`;
+  const allRegistros = await dbGetAll('registros');
+  const regs = allRegistros.filter(r => r.servidorId === servidorId && r.data.startsWith(prefix)).sort((a,b) => a.data.localeCompare(b.data));
+
+  if (regs.length === 0) {
+    document.getElementById('histTableContainer').innerHTML = '';
+    document.getElementById('histEmpty').style.display = 'block';
+    return;
+  }
+
+  document.getElementById('histEmpty').style.display = 'none';
+  let html = `<table class="data-table"><thead><tr>
+    <th>Dia</th><th>Entrada</th><th>Intervalo</th><th>Saída</th><th style="text-align:right">Horas</th><th style="text-align:right">Extras</th><th>Status</th><th></th>
+  </tr></thead><tbody>`;
+
+  regs.forEach(r => {
+    const isWd = isFimDeSemana(r.data);
+    let badge = '';
+    if (isWd) badge = '<span class="badge badge-weekend">FDS</span>';
+    else if (r.status === 'completo') badge = '<span class="badge badge-complete">Completo</span>';
+    else if (r.status === 'parcial') badge = '<span class="badge badge-partial">Parcial</span>';
+    else badge = '<span class="badge badge-missing">Falta</span>';
+
+    const rowClass = isWd ? 'weekend-row' : 'hover-row';
+    const rowStyle = isWd ? 'style="background:var(--bg-accent)"' : '';
+
+    html += `<tr class="${rowClass}" ${rowStyle}>
+      <td><span class="mono" style="font-weight:${isWd ? '700' : '600'};color:${isWd ? 'var(--amber)' : 'inherit'}">${parseInt(r.data.split('-')[2])}</span> <span style="font-size:10px;color:${isWd ? 'var(--amber)' : 'var(--text-muted)'}">${getDiaSemanaCurto(r.data)}</span></td>
+      <td class="mono">${r.entrada || '—'}</td>
+      <td class="mono">${r.inicioIntervalo && r.fimIntervalo ? `${r.inicioIntervalo} - ${r.fimIntervalo}` : '—'}</td>
+      <td class="mono">${r.saida || '—'}</td>
+      <td class="mono" style="text-align:right;font-weight:600">${formatarMinutos(r.horasNormais)}</td>
+      <td class="mono" style="text-align:right;color:var(--amber);font-weight:600">${r.horasExtras > 0 ? formatarMinutos(r.horasExtras) : '—'}</td>
+      <td>${badge}</td>
+      <td style="display:flex;gap:4px;justify-content:flex-end">
+        <button class="btn btn-ghost" onclick="openEditarRegistro('${r.id}')" style="padding:4px" title="Editar horário"><span class="material-symbols-outlined" style="font-size:16px">edit</span></button>
+        <button class="btn btn-ghost" onclick="deleteRegistro('${r.id}')" style="padding:4px" title="Excluir"><span class="material-symbols-outlined" style="font-size:16px">delete</span></button>
+      </td>
+    </tr>`;
+  });
+
+  html += '</tbody></table>';
+  document.getElementById('histTableContainer').innerHTML = html;
+}
+
+async function deleteRegistro(id) {
+  if (!confirm('Deseja realmente excluir este registro?')) return;
+  await dbDelete('registros', id);
+  if (registroHoje && registroHoje.id === id) registroHoje = null;
+  renderHistorico();
+  if (currentPage === 'ponto') loadPontoPage();
+  toast('Registro excluído');
+}
+
+/* ========================================================================
+   SERVIDORES
+   ======================================================================== */
+async function renderServidores() {
+  const servidores = await dbGetAll('servidores');
+  const list = document.getElementById('servidoresList');
+  const empty = document.getElementById('servidoresEmpty');
+
+  if (servidores.length === 0) {
+    list.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+
+  empty.style.display = 'none';
+  list.innerHTML = servidores.map(s => `
+    <div class="servidor-card" onclick="editServidor('${s.id}')">
+      <div class="servidor-avatar">${s.nome.charAt(0).toUpperCase()}</div>
+      <div class="servidor-info" style="flex:1">
+        <h4>${s.nome}</h4>
+        <p>${s.funcao || '—'} — ${s.setor || '—'} — ${s.secretaria || '—'}</p>
+        <div class="meta">Mat: ${s.matricula || '—'} | Jornada: ${s.tipoJornada} (${s.cargaHoraria}h)</div>
+      </div>
+      <button class="btn btn-ghost" onclick="event.stopPropagation();deleteServidor('${s.id}','${s.nome}')">
+        <span class="material-symbols-outlined" style="font-size:18px">delete</span>
+      </button>
+    </div>
+  `).join('');
+}
+
+function openServidorModal(id) {
+  document.getElementById('modalServidor').classList.add('active');
+  if (!id) {
+    document.getElementById('modalServidorTitle').textContent = 'Cadastrar Servidor';
+    document.getElementById('btnServidorText').textContent = 'Cadastrar';
+    document.getElementById('servidorEditId').value = '';
+    document.getElementById('sNome').value = '';
+    document.getElementById('sMatricula').value = '';
+    document.getElementById('sCpf').value = '';
+    document.getElementById('sFuncao').value = '';
+    document.getElementById('sSecretaria').value = '';
+    document.getElementById('sSetor').value = '';
+    document.getElementById('sTipoJornada').value = 'normal';
+    document.getElementById('sCargaHoraria').value = 8;
+    document.getElementById('sHorarioEntrada').value = '08:00';
+    document.getElementById('sHorarioSaida').value = '17:00';
+    document.getElementById('sIntervaloInicio').value = '12:00';
+    document.getElementById('sIntervaloFim').value = '13:00';
+  }
+}
+
+async function editServidor(id) {
+  const s = await dbGet('servidores', id);
+  if (!s) return;
+  document.getElementById('modalServidor').classList.add('active');
+  document.getElementById('modalServidorTitle').textContent = 'Editar Servidor';
+  document.getElementById('btnServidorText').textContent = 'Salvar';
+  document.getElementById('servidorEditId').value = id;
+  document.getElementById('sNome').value = s.nome;
+  document.getElementById('sMatricula').value = s.matricula || '';
+  document.getElementById('sCpf').value = s.cpf || '';
+  document.getElementById('sFuncao').value = s.funcao || '';
+  document.getElementById('sSecretaria').value = s.secretaria || '';
+  document.getElementById('sSetor').value = s.setor || '';
+  document.getElementById('sTipoJornada').value = s.tipoJornada || 'normal';
+  document.getElementById('sCargaHoraria').value = s.cargaHoraria || 8;
+  document.getElementById('sHorarioEntrada').value = s.horarioEntrada || '08:00';
+  document.getElementById('sHorarioSaida').value = s.horarioSaida || '17:00';
+  document.getElementById('sIntervaloInicio').value = s.intervaloInicio || '12:00';
+  document.getElementById('sIntervaloFim').value = s.intervaloFim || '13:00';
+}
+
+function closeServidorModal() {
+  document.getElementById('modalServidor').classList.remove('active');
+}
+
+async function saveServidor(e) {
+  e.preventDefault();
+  const id = document.getElementById('servidorEditId').value;
+  const data = {
+    nome: document.getElementById('sNome').value.trim(),
+    matricula: document.getElementById('sMatricula').value.trim(),
+    cpf: document.getElementById('sCpf').value.trim(),
+    funcao: document.getElementById('sFuncao').value.trim(),
+    secretaria: document.getElementById('sSecretaria').value.trim(),
+    setor: document.getElementById('sSetor').value.trim(),
+    tipoJornada: document.getElementById('sTipoJornada').value,
+    cargaHoraria: Number(document.getElementById('sCargaHoraria').value) || 8,
+    horarioEntrada: document.getElementById('sHorarioEntrada').value,
+    horarioSaida: document.getElementById('sHorarioSaida').value,
+    intervaloInicio: document.getElementById('sIntervaloInicio').value,
+    intervaloFim: document.getElementById('sIntervaloFim').value,
+    ativo: true,
+  };
+
+  if (!data.nome) { toast('Nome é obrigatório','error'); return; }
+
+  if (id) {
+    const existing = await dbGet('servidores', id);
+    data.id = id;
+    data.createdAt = existing.createdAt || new Date().toISOString();
+    data.updatedAt = new Date().toISOString();
+  } else {
+    data.id = crypto.randomUUID();
+    data.createdAt = new Date().toISOString();
+    data.updatedAt = new Date().toISOString();
+  }
+
+  await dbPut('servidores', data);
+  closeServidorModal();
+  renderServidores();
+  loadPontoPage();
+  toast(id ? 'Servidor atualizado' : 'Servidor cadastrado');
+}
+
+async function deleteServidor(id, nome) {
+  if (!confirm(`Deseja realmente excluir o servidor "${nome}"?`)) return;
+  await dbDelete('servidores', id);
+  renderServidores();
+  loadPontoPage();
+  toast('Servidor excluído');
+}
+
+/* ========================================================================
+   GERAR PDF
+   ======================================================================== */
+let pdfTemplateBytes = null;
+
+async function loadPDFPage() {
+  const servidores = await dbGetAll('servidores');
+  const select = document.getElementById('pdfServidor');
+  select.innerHTML = '<option value="">Selecione o servidor...</option>';
+  servidores.forEach(s => { select.innerHTML += `<option value="${s.id}">${s.nome} — ${s.setor||''}</option>`; });
+
+  // Preview update
+  document.getElementById('pdfServidor').onchange = updatePDFPreview;
+  document.getElementById('pdfMes').onchange = updatePDFPreview;
+  document.getElementById('pdfAno').onchange = updatePDFPreview;
+}
+
+function updatePDFPreview() {
+  const id = document.getElementById('pdfServidor').value;
+  const mes = document.getElementById('pdfMes').value;
+  const ano = document.getElementById('pdfAno').value;
+  const preview = document.getElementById('pdfPreview');
+  const content = document.getElementById('pdfPreviewContent');
+
+  if (!id) { preview.style.display = 'none'; return; }
+
+  // Async load
+  dbGet('servidores', id).then(s => {
+    if (!s) { preview.style.display = 'none'; return; }
+    preview.style.display = 'block';
+    const prefix = `${ano}-${String(mes).padStart(2,'0')}`;
+    dbGetAll('registros').then(regs => {
+      const count = regs.filter(r => r.servidorId === id && r.data.startsWith(prefix)).length;
+      content.innerHTML = `
+        <p><strong>Nome:</strong> ${s.nome}</p>
+        <p><strong>Função:</strong> ${s.funcao || '—'}</p>
+        <p><strong>Secretaria:</strong> ${s.secretaria || '—'}</p>
+        <p><strong>Setor:</strong> ${s.setor || '—'}</p>
+        <p><strong>Registros:</strong> ${count} dias registrados em ${MESES[Number(mes)]}/${ano}</p>
+      `;
+    });
+  });
+}
+
+document.getElementById('pdfTemplate').addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = async function(ev) {
+      pdfTemplateBytes = new Uint8Array(ev.target.result);
+      toast('Template PDF carregado');
+    };
+    reader.readAsArrayBuffer(file);
+  }
+});
+
+async function gerarPDF() {
+  const servidorId = document.getElementById('pdfServidor').value;
+  const mes = Number(document.getElementById('pdfMes').value);
+  const ano = Number(document.getElementById('pdfAno').value);
+
+  if (!servidorId) { toast('Selecione um servidor','error'); return; }
+
+  const servidor = await dbGet('servidores', servidorId);
+  if (!servidor) { toast('Servidor não encontrado','error'); return; }
+
+  const prefix = `${ano}-${String(mes).padStart(2,'0')}`;
+  const allRegistros = await dbGetAll('registros');
+  const registrosMes = allRegistros.filter(r => r.servidorId === servidorId && r.data.startsWith(prefix));
+
+  try {
+    const { PDFDocument, rgb, StandardFonts } = PDFLib;
+    let pdfDoc;
+
+    if (pdfTemplateBytes) {
+      // Use uploaded template — try to fill AcroForm fields first, then overlay text
+      pdfDoc = await PDFDocument.load(pdfTemplateBytes);
+
+      // Try to fill form fields if the template has them
+      try {
+        const form = pdfDoc.getForm();
+        const fields = form.getFields();
+        const fieldNames = fields.map(f => f.getName());
+
+        if (fieldNames.length > 0) {
+          // Fill all available form fields by matching field names
+          const mapaReg = {};
+          registrosMes.forEach(r => { mapaReg[Number(r.data.split('-')[2])] = r; });
+          let totalNormais = 0, totalExtras = 0;
+          registrosMes.forEach(r => { totalNormais += r.horasNormais || 0; totalExtras += r.horasExtras || 0; });
+
+          // Common field name patterns
+          const fillValue = (name) => {
+            const lower = name.toLowerCase();
+            // Server info
+            if (lower.includes('nome') || lower.includes('servidor')) return servidor.nome || '';
+            if (lower.includes('função') || lower.includes('funcao') || lower.includes('cargo')) return servidor.funcao || '';
+            if (lower.includes('secretaria')) return servidor.secretaria || '';
+            if (lower.includes('setor') || lower.includes('departamento')) return servidor.setor || '';
+            if (lower.includes('matricula') || lower.includes('matrícula')) return servidor.matricula || '';
+            if (lower.includes('cpf')) return servidor.cpf || '';
+            if (lower.includes('mês') || lower.includes('mes') || lower.includes('mês refer')) return MESES[mes] || '';
+            if (lower.includes('ano')) return String(ano);
+            if (lower.includes('referência') || lower.includes('referencia')) return `${String(mes).padStart(2,'0')}/${ano}`;
+            if (lower.includes('uf')) return document.getElementById('cfgUf')?.value || '';
+            if (lower.includes('cidade') || lower.includes('município') || lower.includes('municipio')) return document.getElementById('cfgCidade')?.value || '';
+            if (lower.includes('entidade') || lower.includes('órgão') || lower.includes('orgao')) return document.getElementById('cfgOrgao')?.value || '';
+            if (lower.includes('total') || lower.includes('normais') || lower.includes('hs normal')) return formatarMinutos(totalNormais);
+            if (lower.includes('extra')) return formatarMinutos(totalExtras);
+
+            // Day fields (e.g., "dia01", "d1", "01", etc.)
+            const dayMatch = lower.match(/(?:dia|d|day)?(\d{1,2})/);
+            if (dayMatch) {
+              const dia = parseInt(dayMatch[1]);
+              const reg = mapaReg[dia];
+              if (reg) {
+                if (lower.includes('entrada') || lower.includes('entr')) return reg.entrada || '';
+                if (lower.includes('intervalo') || lower.includes('int')) return reg.inicioIntervalo ? `${reg.inicioIntervalo} - ${reg.fimIntervalo}` : '';
+                if (lower.includes('saida') || lower.includes('saída') || lower.includes('exit')) return reg.saida || '';
+                if (lower.includes('extra')) return reg.horasExtras > 0 ? formatarMinutos(reg.horasExtras) : '';
+                if (lower.includes('falta')) return reg.horasFalta > 0 ? formatarMinutos(reg.horasFalta) : '';
+                // Default: return entry time if no specific match
+                return reg.entrada || '';
+              }
+              return '';
+            }
+
+            // Just day number
+            if (/^\d{1,2}$/.test(lower)) {
+              const dia = parseInt(lower);
+              const reg = mapaReg[dia];
+              if (reg) return `${reg.entrada || ''} | ${reg.saida || ''}`;
+            }
+
+            return '';
+          };
+
+          // Fill all fields
+          fields.forEach(field => {
+            const name = field.getName();
+            const value = fillValue(name);
+            try {
+              const fieldType = field.constructor.name;
+              if (fieldType.includes('Text')) {
+                field.setText(value);
+              } else if (fieldType.includes('Choice')) {
+                // Skip choice fields
+              } else {
+                field.setText(value);
+              }
+            } catch (e) {
+              console.warn(`Não foi possível preencher campo "${name}":`, e.message);
+            }
+          });
+        }
+      } catch (formErr) {
+        console.log('Template sem campos AcroForm, usando overlay de texto:', formErr.message);
+      }
+
+      // Always overlay text on the first page as a reliable fallback
+      // Coordinates calibrated from actual PDF analysis (A4: 595.2 x 841.68)
+      const pages = pdfDoc.getPages();
+      if (pages.length > 0) {
+        const page = pages[0];
+        const { width, height } = page.getSize();
+        const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+        const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+        const fontSize = 7.5;  // Match the PDF's text size (~7-8pt)
+
+        const mapaReg = {};
+        registrosMes.forEach(r => { mapaReg[Number(r.data.split('-')[2])] = r; });
+        let totalNormais = 0, totalExtras = 0;
+        registrosMes.forEach(r => { totalNormais += r.horasNormais || 0; totalExtras += r.horasExtras || 0; });
+
+        // Scale positions based on page size (A4 = 595.2x841.68)
+        const sx = width / 595.2;
+        const sy = height / 841.68;
+
+        // === SERVER INFO (pdf-lib y = page_height - y_from_top - center_offset) ===
+        // NOME DO SERVIDOR: y_from_top≈84.9 → pdf_y ≈ 756.8
+        page.drawText(servidor.nome || '', { x: 106 * sx, y: (841.68 - 84.9 - fontSize * 0.35) * sy, size: fontSize * sy, font: fontBold });
+
+        // FUNÇÃO: y_from_top≈110.2 → pdf_y ≈ 731.5
+        page.drawText(servidor.funcao || '', { x: 57 * sx, y: (841.68 - 110.2 - fontSize * 0.35) * sy, size: fontSize * sy, font });
+
+        // SECRETARIA: same y, x=357
+        page.drawText(servidor.secretaria || '', { x: 357 * sx, y: (841.68 - 110.2 - fontSize * 0.35) * sy, size: fontSize * sy, font });
+
+        // SETOR: y_from_top≈134.8 → pdf_y ≈ 706.9
+        page.drawText(servidor.setor || '', { x: 51 * sx, y: (841.68 - 134.8 - fontSize * 0.35) * sy, size: fontSize * sy, font });
+
+        // REFERÊNCIA: y_from_top≈69.0 → pdf_y ≈ 772.7, x=406
+        const refMonthYear = `${String(mes).padStart(2,'0')}/${ano}`;
+        page.drawText(refMonthYear, { x: 406 * sx, y: (841.68 - 69.0 - fontSize * 0.35) * sy, size: fontSize * sy, font });
+
+        // === TABLE 1: Days 11-31 ===
+        // Column positions from PDF analysis:
+        // ENTRADA: x=44.0, INTERVALO INÍCIO: x=106.9, INTERVALO TÉRMINO: x=141.9
+        // SAÍDA: x=209.0, H.EXTRA: x=255.5, AD.NOTU: x=307.1, H.FALTA: x=360.7
+
+        // Day 11: top=180.8, center y = 841.68 - 184.8 = 656.9
+        const table1FirstDayY = 841.68 - 184.8;
+        const table1RowH = 15.2; // pts per row
+        const table2RowH = 15.3;
+
+        // Draw days 11-31
+        for (let d = 11; d <= 31; d++) {
+          const reg = mapaReg[d];
+          const rowIndex = d - 11;
+          const rowTopY = table1FirstDayY - (rowIndex * table1RowH);
+          const textY = rowTopY - fontSize * 0.35;
+
+          // Check if this day is a weekend
+          const dayDate = new Date(ano, mes - 1, d);
+          const isWeekend = dayDate.getDay() === 0 || dayDate.getDay() === 6;
+
+          // Draw weekend background shading (centered on the text row)
+          if (isWeekend) {
+            // rowTopY is the center of the text; the cell extends ~rowH/2 above and below
+            const rectY = (rowTopY + fontSize * 0.35) * sy; // align with bottom of text
+            page.drawRectangle({
+              x: 19.3 * sx,
+              y: rectY - table1RowH * sy * 0.85 + 3 * sy,
+              width: 556.8 * sx,
+              height: table1RowH * sy,
+              color: rgb(1, 0.87, 0.6),
+              opacity: 0.25
+            });
+          }
+
+          if (reg) {
+            if (reg.entrada) page.drawText(reg.entrada, { x: 44 * sx, y: textY * sy, size: fontSize * sy, font });
+            if (reg.inicioIntervalo) page.drawText(reg.inicioIntervalo, { x: 108 * sx, y: textY * sy, size: fontSize * sy, font });
+            if (reg.fimIntervalo) page.drawText(reg.fimIntervalo, { x: 156 * sx, y: textY * sy, size: fontSize * sy, font });
+            if (reg.saida) page.drawText(reg.saida, { x: 209 * sx, y: textY * sy, size: fontSize * sy, font });
+            if (reg.horasExtras > 0) page.drawText(formatarMinutos(reg.horasExtras), { x: 255.5 * sx, y: textY * sy, size: fontSize * sy, font });
+            if (reg.horasFalta > 0) page.drawText(formatarMinutos(reg.horasFalta), { x: 360.7 * sx, y: textY * sy, size: fontSize * sy, font });
+          }
+          // Add Sábado/Domingo label for weekends
+          if (isWeekend) {
+            const wdLabel = dayDate.getDay() === 6 ? 'Sábado' : 'Domingo';
+            page.drawText(wdLabel, { x: 52 * sx, y: textY * sy, size: fontSize * sy * 0.7, font: fontBold, color: rgb(0.85, 0.47, 0.03) });
+          }
+        }
+
+        // === TABLE 2: Days 1-10 ===
+        // Day 1: top=539.2, center y = 841.68 - 543.3 = 298.4
+        const table2FirstDayY = 841.68 - 543.3;
+
+        for (let d = 1; d <= 10; d++) {
+          const reg = mapaReg[d];
+          const rowIndex = d - 1;
+          const rowTopY = table2FirstDayY - (rowIndex * table2RowH);
+          const textY = rowTopY - fontSize * 0.35;
+
+          // Check if this day is a weekend
+          const dayDate = new Date(ano, mes - 1, d);
+          const isWeekend = dayDate.getDay() === 0 || dayDate.getDay() === 6;
+
+          // Draw weekend background shading (centered on the text row)
+          if (isWeekend) {
+            const rectY = (rowTopY + fontSize * 0.35) * sy;
+            page.drawRectangle({
+              x: 19.3 * sx,
+              y: rectY - table2RowH * sy * 0.85 + 3 * sy,
+              width: 556.8 * sx,
+              height: table2RowH * sy,
+              color: rgb(1, 0.87, 0.6),
+              opacity: 0.25
+            });
+          }
+
+          if (reg) {
+            if (reg.entrada) page.drawText(reg.entrada, { x: 44 * sx, y: textY * sy, size: fontSize * sy, font });
+            if (reg.inicioIntervalo) page.drawText(reg.inicioIntervalo, { x: 108 * sx, y: textY * sy, size: fontSize * sy, font });
+            if (reg.fimIntervalo) page.drawText(reg.fimIntervalo, { x: 156 * sx, y: textY * sy, size: fontSize * sy, font });
+            if (reg.saida) page.drawText(reg.saida, { x: 209 * sx, y: textY * sy, size: fontSize * sy, font });
+            if (reg.horasExtras > 0) page.drawText(formatarMinutos(reg.horasExtras), { x: 255.5 * sx, y: textY * sy, size: fontSize * sy, font });
+            if (reg.horasFalta > 0) page.drawText(formatarMinutos(reg.horasFalta), { x: 360.7 * sx, y: textY * sy, size: fontSize * sy, font });
+          }
+          // Add Sábado/Domingo label for weekends
+          if (isWeekend) {
+            const wdLabel = dayDate.getDay() === 6 ? 'Sábado' : 'Domingo';
+            page.drawText(wdLabel, { x: 52 * sx, y: textY * sy, size: fontSize * sy * 0.7, font: fontBold, color: rgb(0.85, 0.47, 0.03) });
+          }
+        }
+
+        // === TOTALS ===
+        // Labels are at y_from_top≈694.2, data goes in the row below
+        // Move totals down ~15pts to sit in the data row beneath the labels
+        const totalsY = (841.68 - 709.2 - fontSize * 0.35) * sy;
+        page.drawText(formatarMinutos(totalNormais), { x: 44.4 * sx, y: totalsY, size: fontSize * sy, font });
+        page.drawText(formatarMinutos(totalExtras), { x: 136.1 * sx, y: totalsY, size: fontSize * sy, font });
+      }
+    } else {
+      // Generate PDF from scratch
+      pdfDoc = await PDFDocument.create();
+      const page = pdfDoc.addPage([595, 842]);
+      const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+      const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+      const fs = 9;
+      const fsTitle = 11;
+      const fsSmall = 7;
+
+      // Draw borders
+      page.drawRectangle({ x: 20, y: 20, width: 555, height: 802, borderColor: rgb(0,0,0), borderWidth: 1.5, fill: undefined });
+
+      // Header
+      page.drawText('ANEXO I', { x: 250, y: 805, size: 10, font: fontBold });
+      page.drawText('(a que se refere o artigo 1º da Portaria SMPG nº 111, de 15 de setembro de 2014', { x: 120, y: 792, size: 6, font });
+
+      page.drawRectangle({ x: 20, y: 750, width: 280, height: 40, borderColor: rgb(0,0,0), borderWidth: 0.5, fill: undefined });
+      page.drawText('UF: MINAS GERAIS', { x: 30, y: 782, size: fs, font: fontBold });
+      page.drawText('MUNICÍPIO: DIAMANTINA', { x: 30, y: 770, size: fs, font: fontBold });
+      page.drawText('ENTIDADE: PREFEITURA MUNICIPAL', { x: 30, y: 758, size: fs, font: fontBold });
+
+      page.drawRectangle({ x: 300, y: 750, width: 275, height: 40, borderColor: rgb(0,0,0), borderWidth: 0.5, fill: undefined });
+      page.drawText('FOLHA DE PONTO', { x: 310, y: 782, size: fsTitle, font: fontBold });
+      page.drawText('REFERÊNCIA:', { x: 310, y: 768, size: fs, font });
+
+      // Servidor info
+      page.drawText(`NOME DO SERVIDOR: ${servidor.nome}`, { x: 30, y: 735, size: fs, font: fontBold });
+      page.drawRectangle({ x: 20, y: 720, width: 280, height: 12, borderColor: rgb(0,0,0), borderWidth: 0.5, fill: undefined });
+      page.drawText(`FUNÇÃO: ${servidor.funcao || ''}`, { x: 30, y: 724, size: fs, font });
+      page.drawRectangle({ x: 300, y: 720, width: 275, height: 12, borderColor: rgb(0,0,0), borderWidth: 0.5, fill: undefined });
+      page.drawText(`SECRETARIA: ${servidor.secretaria || ''}`, { x: 310, y: 724, size: fs, font });
+
+      page.drawRectangle({ x: 20, y: 705, width: 555, height: 12, borderColor: rgb(0,0,0), borderWidth: 0.5, fill: undefined });
+      page.drawText(`SETOR: ${servidor.setor || ''}`, { x: 30, y: 709, size: fs, font });
+
+      // Table 1 header (days 11-31)
+      let y = 690;
+      const rowH = 13;
+
+      // Draw header row
+      page.drawRectangle({ x: 20, y: y-2, width: 555, height: 14, borderColor: rgb(0,0,0), borderWidth: 0.5, fill: undefined });
+      page.drawText('DIA', { x: 25, y: y+2, size: fsSmall, font: fontBold });
+      page.drawText('ENTRADA', { x: 50, y: y+2, size: fsSmall, font: fontBold });
+      page.drawText('INTERVALO', { x: 130, y: y+2, size: fsSmall, font: fontBold });
+      page.drawText('SAÍDA', { x: 230, y: y+2, size: fsSmall, font: fontBold });
+      page.drawText('H.EXTRA', { x: 310, y: y+2, size: fsSmall, font: fontBold });
+      page.drawText('AD.NOTU', { x: 360, y: y+2, size: fsSmall, font: fontBold });
+      page.drawText('H.FALTA', { x: 410, y: y+2, size: fsSmall, font: fontBold });
+      page.drawText('ASSINATURA', { x: 460, y: y+2, size: fsSmall, font: fontBold });
+
+      y -= 14;
+      const mapaReg = {};
+      registrosMes.forEach(r => { mapaReg[Number(r.data.split('-')[2])] = r; });
+
+      for (let d = 11; d <= 31; d++) {
+        const reg = mapaReg[d];
+        const dayDate = new Date(ano, mes-1, d);
+        const isWeekend = dayDate.getDay() === 0 || dayDate.getDay() === 6;
+        // Weekend shading: draw background first (centered on cell)
+        page.drawRectangle({ x: 20, y: y-rowH, width: 555, height: rowH,
+          borderColor: rgb(0,0,0), borderWidth: 0.3,
+          fill: isWeekend ? rgb(1, 0.87, 0.6) : undefined,
+          opacity: isWeekend ? 0.25 : undefined
+        });
+        // Day number
+        const dayLabelColor = isWeekend ? rgb(0.85, 0.47, 0.03) : rgb(0, 0, 0);
+        page.drawText(String(d), { x: 27, y: y-10, size: fsSmall, font: isWeekend ? fontBold : font, color: dayLabelColor });
+        // Add "Sábado" or "Domingo" label after the number
+        if (isWeekend) {
+          const wdLabel = dayDate.getDay() === 6 ? 'Sábado' : 'Domingo';
+          page.drawText(wdLabel, { x: 58, y: y-10, size: 5.5, font: fontBold, color: dayLabelColor });
+        }
+        if (reg) {
+          if (reg.entrada) page.drawText(reg.entrada, { x: 50, y: y-10, size: fsSmall, font });
+          if (reg.inicioIntervalo && reg.fimIntervalo) page.drawText(`${reg.inicioIntervalo}/${reg.fimIntervalo}`, { x: 130, y: y-10, size: 6, font });
+          if (reg.saida) page.drawText(reg.saida, { x: 230, y: y-10, size: fsSmall, font });
+          if (reg.horasExtras > 0) page.drawText(formatarMinutos(reg.horasExtras), { x: 310, y: y-10, size: fsSmall, font });
+          if (reg.horasFalta > 0) page.drawText(formatarMinutos(reg.horasFalta), { x: 410, y: y-10, size: fsSmall, font });
+        }
+        y -= rowH;
+      }
+
+      // Mês/Ano
+      y -= 4;
+      page.drawText(`MÊS: ${String(mes).padStart(2,'0')}        ANO: ${ano}`, { x: 30, y: y, size: fs, font: fontBold });
+      y -= 16;
+
+      // Table 2 header (days 1-10)
+      page.drawRectangle({ x: 20, y: y-2, width: 555, height: 14, borderColor: rgb(0,0,0), borderWidth: 0.5, fill: undefined });
+      page.drawText('DIA', { x: 25, y: y+2, size: fsSmall, font: fontBold });
+      page.drawText('ENTRADA', { x: 50, y: y+2, size: fsSmall, font: fontBold });
+      page.drawText('INTERVALO', { x: 130, y: y+2, size: fsSmall, font: fontBold });
+      page.drawText('SAÍDA', { x: 230, y: y+2, size: fsSmall, font: fontBold });
+      page.drawText('H.EXTRA', { x: 310, y: y+2, size: fsSmall, font: fontBold });
+      page.drawText('AD.NOTU', { x: 360, y: y+2, size: fsSmall, font: fontBold });
+      page.drawText('H.FALTA', { x: 410, y: y+2, size: fsSmall, font: fontBold });
+      page.drawText('ASSINATURA', { x: 460, y: y+2, size: fsSmall, font: fontBold });
+
+      y -= 14;
+      for (let d = 1; d <= 10; d++) {
+        const reg = mapaReg[d];
+        const dayDate = new Date(ano, mes-1, d);
+        const isWeekend = dayDate.getDay() === 0 || dayDate.getDay() === 6;
+        // Weekend shading: draw background first (centered on cell)
+        page.drawRectangle({ x: 20, y: y-rowH, width: 555, height: rowH,
+          borderColor: rgb(0,0,0), borderWidth: 0.3,
+          fill: isWeekend ? rgb(1, 0.87, 0.6) : undefined,
+          opacity: isWeekend ? 0.25 : undefined
+        });
+        // Day number
+        const dayLabelColor = isWeekend ? rgb(0.85, 0.47, 0.03) : rgb(0, 0, 0);
+        page.drawText(String(d), { x: 27, y: y-10, size: fsSmall, font: isWeekend ? fontBold : font, color: dayLabelColor });
+        // Add "Sábado" or "Domingo" label after the number
+        if (isWeekend) {
+          const wdLabel = dayDate.getDay() === 6 ? 'Sábado' : 'Domingo';
+          page.drawText(wdLabel, { x: 58, y: y-10, size: 5.5, font: fontBold, color: dayLabelColor });
+        }
+        if (reg) {
+          if (reg.entrada) page.drawText(reg.entrada, { x: 50, y: y-10, size: fsSmall, font });
+          if (reg.inicioIntervalo && reg.fimIntervalo) page.drawText(`${reg.inicioIntervalo}/${reg.fimIntervalo}`, { x: 130, y: y-10, size: 6, font });
+          if (reg.saida) page.drawText(reg.saida, { x: 230, y: y-10, size: fsSmall, font });
+          if (reg.horasExtras > 0) page.drawText(formatarMinutos(reg.horasExtras), { x: 310, y: y-10, size: fsSmall, font });
+          if (reg.horasFalta > 0) page.drawText(formatarMinutos(reg.horasFalta), { x: 410, y: y-10, size: fsSmall, font });
+        }
+        y -= rowH;
+      }
+
+      // Totals
+      y -= 4;
+      page.drawRectangle({ x: 20, y: y-12, width: 555, height: 14, borderColor: rgb(0,0,0), borderWidth: 0.5, fill: undefined });
+      page.drawText(`HS. NORMAIS: ${formatarMinutos(totalNormais)}`, { x: 25, y: y-10, size: fsSmall, font: fontBold });
+      page.drawText(`HS. EXTRAS: ${formatarMinutos(totalExtras)}`, { x: 150, y: y-10, size: fsSmall, font: fontBold });
+
+      y -= 18;
+      page.drawText(`OBSERVAÇÕES: ${registrosMes.map(r => r.observacao).filter(Boolean).join('; ') || ''}`, { x: 30, y: y, size: fs, font });
+
+      y -= 30;
+      page.drawRectangle({ x: 20, y: y-20, width: 260, height: 22, borderColor: rgb(0,0,0), borderWidth: 0.5, fill: undefined });
+      page.drawText('Assinatura do Responsável', { x: 60, y: y-12, size: fsSmall, font });
+      page.drawRectangle({ x: 300, y: y-20, width: 260, height: 22, borderColor: rgb(0,0,0), borderWidth: 0.5, fill: undefined });
+      page.drawText('Visto do Departamento Pessoal', { x: 340, y: y-12, size: fsSmall, font });
+    }
+
+    const pdfBytes = await pdfDoc.save();
+    const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Folha_Ponto_${MESES[mes]}_${ano}_${servidor.nome.replace(/\s+/g,'_')}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    toast('PDF gerado com sucesso');
+  } catch (err) {
+    console.error('Erro ao gerar PDF:', err);
+    toast('Erro ao gerar PDF: ' + err.message, 'error');
+  }
+}
+
+/* ========================================================================
+   CONFIGURAÇÕES
+   ======================================================================== */
+async function loadConfig() {
+  const orgao = await dbGet('config', 'nome_orgao');
+  if (orgao) document.getElementById('cfgOrgao').value = orgao.value;
+  const cidade = await dbGet('config', 'cidade');
+  if (cidade) document.getElementById('cfgCidade').value = cidade.value;
+  const uf = await dbGet('config', 'uf');
+  if (uf) document.getElementById('cfgUf').value = uf.value;
+  const tol = await dbGet('config', 'tolerancia_minutos');
+  if (tol) document.getElementById('cfgTolerancia').value = tol.value;
+
+  const feriadosStr = await dbGet('config', 'feriados');
+  if (feriadosStr) {
+    const feriados = JSON.parse(feriadosStr.value);
+    renderFeriados(feriados);
+  }
+}
+
+async function salvarOrgao() {
+  await dbPut('config', { key: 'nome_orgao', value: document.getElementById('cfgOrgao').value });
+  await dbPut('config', { key: 'cidade', value: document.getElementById('cfgCidade').value });
+  await dbPut('config', { key: 'uf', value: document.getElementById('cfgUf').value });
+  toast('Dados do órgão salvos');
+}
+
+async function salvarTolerancia() {
+  await dbPut('config', { key: 'tolerancia_minutos', value: document.getElementById('cfgTolerancia').value });
+  toast('Tolerância atualizada');
+}
+
+async function addFeriado() {
+  const data = document.getElementById('cfgFeriadoData').value;
+  const desc = document.getElementById('cfgFeriadoDesc').value;
+  if (!data || !desc) { toast('Preencha data e descrição','error'); return; }
+
+  const feriadosStr = await dbGet('config', 'feriados');
+  let feriados = feriadosStr ? JSON.parse(feriadosStr.value) : [];
+  feriados.push({ data, descricao: desc });
+  feriados.sort((a,b) => a.data.localeCompare(b.data));
+  await dbPut('config', { key: 'feriados', value: JSON.stringify(feriados) });
+  renderFeriados(feriados);
+  document.getElementById('cfgFeriadoData').value = '';
+  document.getElementById('cfgFeriadoDesc').value = '';
+  toast('Feriado adicionado');
+}
+
+function renderFeriados(feriados) {
+  const container = document.getElementById('feriadosList');
+  if (!feriados || feriados.length === 0) {
+    container.innerHTML = '<p style="font-size:12px;color:var(--text-muted);text-align:center;padding:16px">Nenhum feriado cadastrado</p>';
+    return;
+  }
+  container.innerHTML = feriados.map((f, i) => `
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--bg);border:1px solid var(--border);border-radius:6px;margin-bottom:4px">
+      <div><span class="mono" style="font-size:13px">${f.data}</span><span style="font-size:13px;margin-left:12px">${f.descricao}</span></div>
+      <button class="btn btn-ghost" onclick="removeFeriado(${i})" style="padding:4px"><span class="material-symbols-outlined" style="font-size:16px">delete</span></button>
+    </div>
+  `).join('');
+}
+
+async function removeFeriado(index) {
+  const feriadosStr = await dbGet('config', 'feriados');
+  let feriados = feriadosStr ? JSON.parse(feriadosStr.value) : [];
+  feriados.splice(index, 1);
+  await dbPut('config', { key: 'feriados', value: JSON.stringify(feriados) });
+  renderFeriados(feriados);
+  toast('Feriado removido');
+}
+
+/* ========================================================================
+   RELÓGIO
+   ======================================================================== */
+function updateClock() {
+  document.getElementById('clockDisplay').textContent = horaAtualCompleta();
+}
+setInterval(updateClock, 1000);
+
+/* ========================================================================
+   INICIALIZAÇÃO
+   ======================================================================== */
+async function init() {
+  await openDB();
+  loadPontoPage();
+
+  // Set current month/year in selects
+  const now = new Date();
+  document.getElementById('dashMes').value = now.getMonth()+1;
+  document.getElementById('histMes').value = now.getMonth()+1;
+}
+
+init();
+</script>
+</body>
+</html>
