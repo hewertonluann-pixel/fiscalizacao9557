@@ -31,6 +31,9 @@
     .header .title{font-weight:700}
     .header .sub{color:var(--muted); font-size:14px}
     .header .right{margin-left:auto; display:flex; align-items:center; gap:10px}
+    .nav-top{display:flex;align-items:center;gap:10px;margin-left:14px;flex-wrap:wrap}
+    .nav-link-ponto{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;background:rgba(37,99,235,.08);border:1px solid rgba(37,99,235,.2);border-radius:10px;color:#1e40af;text-decoration:none;font-weight:700;font-size:13px;transition:.2s}
+    .nav-link-ponto:hover{background:rgba(37,99,235,.14);border-color:#2563eb;color:#0f2f8a}
     .btn-ghost{
       background:#eef2ff; color:#1e40af; border:0; border-radius:10px;
       padding:8px 12px; cursor:pointer; font-weight:600;
@@ -195,16 +198,16 @@
       font-size: 12px; font-weight: 600; margin-left: auto;
     }
     .btn-reverificar:hover { background: #fef2f2; }
-  
-.nav-link-ponto{display:inline-flex;align-items:center;gap:6px;padding:10px 14px;margin-left:10px;background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.3);border-radius:10px;color:#7dd3fc;text-decoration:none;font-weight:700;transition:.2s}.nav-link-ponto:hover{background:rgba(56,189,248,.18);border-color:#38bdf8;color:#e0f2fe}
-</style>
+  </style>
 </head>
 <body>
-  <div style="padding:10px 0;text-align:center"><a href="ponto.html" class="nav-link-ponto">⏱ Controle de ponto</a></div>
   <header class="header">
     <div>
       <div class="title">Sistema de Produção Tributário — Painel do Fiscal </div>
       <div class="sub">Registre seus serviços, valide tipos, exclua múltiplos lançamentos e detecte duplicidades</div>
+    </div>
+    <div class="nav-top">
+      <a href="ponto.html" class="nav-link-ponto">⏱ Controle de ponto</a>
     </div>
     <div class="right">
       <span id="who" class="who-badge">Conectando…</span>
