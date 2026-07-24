@@ -648,8 +648,8 @@ input, select, textarea { font-family: var(--font); }
         Histórico
       </div>
       <div class="nav-item" data-page="servidores" onclick="navigate('servidores')">
-        <span class="material-symbols-outlined">group_add</span>
-        Servidores
+        <span class="material-symbols-outlined">person</span>
+        Meu Perfil
       </div>
       <div class="nav-item" data-page="pdf" onclick="navigate('pdf')">
         <span class="material-symbols-outlined">description</span>
@@ -698,14 +698,10 @@ input, select, textarea { font-family: var(--font); }
       <div class="page-content">
         <div class="clock-display" id="clockDisplay">--:--:--</div>
 
-        <!-- Servidor selector -->
-        <div class="card card-accent" style="margin-bottom:20px">
-          <div class="label-section">Servidor</div>
-          <div class="form-group" style="margin-bottom:0">
-            <select id="selectServidorPonto">
-              <option value="">Selecione o servidor...</option>
-            </select>
-          </div>
+        <!-- Perfil único carregado automaticamente -->
+        <div class="card card-accent" id="pontoPerfilCard" style="margin-bottom:20px;display:none">
+          <div class="label-section">Perfil ativo neste dispositivo</div>
+          <div id="pontoPerfilAtivo" style="font-size:14px;font-weight:600"></div>
         </div>
 
         <!-- Warning weekend -->
@@ -782,8 +778,8 @@ input, select, textarea { font-family: var(--font); }
         <!-- Empty state -->
         <div class="empty-state" id="pontoEmptyState">
           <span class="material-symbols-outlined">schedule</span>
-          <h3>Nenhum servidor selecionado</h3>
-          <p>Selecione um servidor no menu acima para começar a registrar o ponto.</p>
+          <h3>Nenhum perfil cadastrado</h3>
+          <p>Cadastre o perfil deste dispositivo em “Meu Perfil” para começar a registrar o ponto.</p>
         </div>
       </div>
     </div>
@@ -805,9 +801,6 @@ input, select, textarea { font-family: var(--font); }
             </select>
             <select id="dashAno" onchange="renderDashboard()" style="padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:13px">
               <option value="2025">2025</option><option value="2026" selected>2026</option><option value="2027">2027</option>
-            </select>
-            <select id="dashServidor" onchange="renderDashboard()" style="padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:13px">
-              <option value="">Servidor...</option>
             </select>
           </div>
         </div>
@@ -858,8 +851,8 @@ input, select, textarea { font-family: var(--font); }
 
         <div class="empty-state" id="dashEmpty" style="display:none">
           <span class="material-symbols-outlined">calendar_month</span>
-          <h3>Nenhum servidor cadastrado</h3>
-          <p>Cadastre um servidor na seção "Servidores" para começar.</p>
+          <h3>Nenhum perfil cadastrado</h3>
+          <p>Cadastre o perfil deste dispositivo em “Meu Perfil” para começar.</p>
         </div>
       </div>
     </div>
@@ -873,9 +866,6 @@ input, select, textarea { font-family: var(--font); }
             <p>Registros de frequência do servidor</p>
           </div>
           <div style="display:flex;gap:8px;align-items:center">
-            <select id="histServidor" onchange="renderHistorico()" style="padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:13px">
-              <option value="">Servidor...</option>
-            </select>
             <select id="histMes" onchange="renderHistorico()" style="padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:13px">
               <option value="1">Janeiro</option><option value="2">Fevereiro</option><option value="3">Março</option>
               <option value="4">Abril</option><option value="5">Maio</option><option value="6">Junho</option>
@@ -903,22 +893,22 @@ input, select, textarea { font-family: var(--font); }
       <div class="page-header">
         <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px">
           <div>
-            <h2>Servidores</h2>
-            <p>Gerenciamento de servidores e configuração de jornada</p>
+            <h2>Meu Perfil</h2>
+            <p>Dados do único servidor cadastrado neste dispositivo e configuração de jornada</p>
           </div>
-          <button class="btn btn-primary" onclick="openServidorModal()">
+          <button class="btn btn-primary" id="btnNovoServidor" onclick="openServidorModal()">
             <span class="material-symbols-outlined" style="font-size:16px">person_add</span>
-            Novo Servidor
+            Cadastrar Perfil
           </button>
         </div>
       </div>
       <div class="page-content">
         <div id="servidoresList"></div>
         <div class="empty-state" id="servidoresEmpty" style="display:none">
-          <span class="material-symbols-outlined">group_add</span>
-          <h3>Nenhum servidor cadastrado</h3>
-          <p>Cadastre o primeiro servidor para começar a registrar pontos.</p>
-          <button class="btn btn-outline" style="margin-top:16px" onclick="openServidorModal()">Cadastrar Servidor</button>
+          <span class="material-symbols-outlined">person_add</span>
+          <h3>Nenhum perfil cadastrado</h3>
+          <p>Cadastre o perfil que será utilizado exclusivamente neste dispositivo.</p>
+          <button class="btn btn-outline" style="margin-top:16px" onclick="openServidorModal()">Cadastrar Perfil</button>
         </div>
       </div>
     </div>
@@ -931,11 +921,10 @@ input, select, textarea { font-family: var(--font); }
       </div>
       <div class="page-content" style="max-width:700px">
         <div class="card card-accent">
-          <div class="form-group">
-            <label>Servidor</label>
-            <select id="pdfServidor" style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:6px;font-size:14px">
-              <option value="">Selecione o servidor...</option>
-            </select>
+          <input type="hidden" id="pdfServidor">
+          <div class="form-group" id="pdfPerfilAtivoWrap" style="display:none">
+            <label>Perfil</label>
+            <div id="pdfPerfilAtivo" style="padding:10px 12px;border:1px solid var(--border);border-radius:6px;font-size:14px;background:var(--bg)"></div>
           </div>
           <div class="form-row">
             <div class="form-group">
@@ -1351,7 +1340,7 @@ function toast(msg, type='success') {
    NAVEGAÇÃO
    ======================================================================== */
 let currentPage = 'ponto';
-const pageNames = { ponto:'Ponto de Hoje', dashboard:'Dashboard', historico:'Histórico', servidores:'Servidores', pdf:'Gerar Folha', config:'Configurações' };
+const pageNames = { ponto:'Ponto de Hoje', dashboard:'Dashboard', historico:'Histórico', servidores:'Meu Perfil', pdf:'Gerar Folha', config:'Configurações' };
 
 function navigate(page) {
   currentPage = page;
@@ -1383,48 +1372,74 @@ function closeSidebar() {
    ======================================================================== */
 let registroHoje = null;
 let servidorPontoSelecionado = null;
-let selectedPontoDate = dataHoje(); // Track selected date for editing any day
+let servidorAtivo = null;
+let selectedPontoDate = dataHoje(); // Data exibida no registro de ponto
+
+/**
+ * Recupera o único perfil associado ao dispositivo. A preferência persistida
+ * preserva a compatibilidade com instalações que já possuam dados antigos.
+ */
+async function obterServidorAtivo() {
+  const preferencia = await dbGet('config', 'servidor_ativo_id');
+
+  // Depois de definida, a preferência impede que perfis antigos ou órfãos
+  // sejam carregados automaticamente no dispositivo.
+  if (preferencia) {
+    return preferencia.value ? await dbGet('servidores', preferencia.value) : null;
+  }
+
+  // Migração não destrutiva: em instalações anteriores, adota o perfil mais
+  // antigo uma única vez e o fixa como o único perfil visível daqui em diante.
+  const servidores = await dbGetAll('servidores');
+  if (servidores.length === 0) return null;
+
+  const servidor = servidores
+    .slice()
+    .sort((a, b) => (a.createdAt || '').localeCompare(b.createdAt || ''))[0];
+
+  await dbPut('config', { key: 'servidor_ativo_id', value: servidor.id });
+  return servidor;
+}
+
+async function carregarServidorAtivo() {
+  servidorAtivo = await obterServidorAtivo();
+  servidorPontoSelecionado = servidorAtivo ? servidorAtivo.id : null;
+  return servidorAtivo;
+}
+
+function atualizarPerfilPonto(servidor) {
+  const card = document.getElementById('pontoPerfilCard');
+  const conteudo = document.getElementById('pontoPerfilAtivo');
+  if (!servidor) {
+    card.style.display = 'none';
+    conteudo.textContent = '';
+    return;
+  }
+
+  const detalhes = [servidor.nome, servidor.setor, servidor.secretaria].filter(Boolean);
+  conteudo.textContent = detalhes.join(' — ');
+  card.style.display = 'block';
+}
 
 async function loadPontoPage() {
   selectedPontoDate = dataHoje();
   document.getElementById('pontoDateInput').value = selectedPontoDate;
   document.getElementById('pontoDataHoje').textContent = `${formatarData(selectedPontoDate)} — ${getDiaSemana(selectedPontoDate)}`;
 
-  // Load servers
-  const servidores = await dbGetAll('servidores');
-  const select = document.getElementById('selectServidorPonto');
-  const currentVal = select.value;
-  select.innerHTML = '<option value="">Selecione o servidor...</option>';
-  servidores.forEach(s => {
-    select.innerHTML += `<option value="${s.id}">${s.nome} — ${s.setor || ''}</option>`;
-  });
-  if (currentVal && servidores.find(s=>s.id===currentVal)) {
-    select.value = currentVal;
-  }
+  const servidor = await carregarServidorAtivo();
+  atualizarPerfilPonto(servidor);
 
-  // Add change listener if not already added
-  if (!select.dataset.listenerAdded) {
-    select.addEventListener('change', onServidorPontoChange);
-    select.dataset.listenerAdded = 'true';
-  }
-
-  // Weekend check
+  // Atualiza o aviso de fim de semana e limpa o estado anterior da tela.
   document.getElementById('weekendWarning').style.display = isFimDeSemana(selectedPontoDate) ? 'block' : 'none';
-
-  // Reset visibility states
   document.getElementById('pontoButtons').style.display = 'none';
   document.getElementById('pontoEmptyState').style.display = 'block';
   document.getElementById('resumoDia').style.display = 'none';
 
-  // Trigger onchange if a server is selected
-  if (select.value) {
-    await onServidorPontoChange();
-  }
+  if (servidor) await onServidorPontoChange();
 }
 
 async function onServidorPontoChange() {
-  const id = document.getElementById('selectServidorPonto').value;
-  servidorPontoSelecionado = id;
+  const id = servidorPontoSelecionado;
 
   if (!id) {
     registroHoje = null;
@@ -1442,21 +1457,18 @@ async function onServidorPontoChange() {
     registroHoje = null;
   }
 
-  // Show buttons whenever a servidor is selected (even without existing record)
+  // Exibe ações sempre que houver um perfil ativo, mesmo sem registro no dia.
   document.getElementById('pontoEmptyState').style.display = 'none';
   document.getElementById('pontoButtons').style.display = 'block';
 
   if (registroHoje) {
     renderPontoButtons();
     document.getElementById('resumoDia').style.display = 'block';
-    // Check if this day is already a justificativa
     document.getElementById('btnJustificativa').style.display = registroHoje.justificativa ? 'none' : 'block';
     if (registroHoje.justificativa) {
-      // Update resumo to show justificativa info
       document.getElementById('resumoStatus').innerHTML = `<span class="badge badge-justificativa">${registroHoje.justificativa.tipo || 'JUSTIFICADO'}</span>`;
     }
   } else {
-    // No record yet — show buttons in default state
     document.getElementById('btnApagarRegistro').style.display = 'none';
     document.getElementById('btnJustificativa').style.display = 'block';
     renderPontoButtons();
@@ -1597,7 +1609,7 @@ async function updatePontoDateUI() {
 }
 
 async function registrarPonto(campo) {
-  if (!servidorPontoSelecionado) { toast('Selecione um servidor primeiro','error'); return; }
+  if (!servidorPontoSelecionado) { toast('Cadastre um perfil neste dispositivo primeiro.', 'error'); return; }
 
   if (registroHoje && registroHoje[campo]) {
     toast(`Já existe registro para "${campo}". Edite na tela.`, 'error');
@@ -1823,7 +1835,7 @@ async function salvarJustificativa() {
   if (!tipo) { toast('Preencha o tipo de justificativa', 'error'); return; }
   if (dataInicio > dataFim) { toast('Data início deve ser anterior à data fim', 'error'); return; }
 
-  if (!servidorPontoSelecionado) { toast('Selecione um servidor primeiro', 'error'); return; }
+  if (!servidorPontoSelecionado) { toast('Cadastre um perfil neste dispositivo primeiro.', 'error'); return; }
 
   const toast_id = toast('Registrando justificativa...', 'info');
 
@@ -1909,15 +1921,12 @@ async function apagarRegistroHoje() {
 async function renderDashboard() {
   const mes = Number(document.getElementById('dashMes').value) || new Date().getMonth()+1;
   const ano = Number(document.getElementById('dashAno').value) || new Date().getFullYear();
-  const servidorId = document.getElementById('dashServidor').value;
+  const servidor = await carregarServidorAtivo();
+  const servidorId = servidor ? servidor.id : null;
 
-  // Load servers for selector
-  const servidores = await dbGetAll('servidores');
-  const select = document.getElementById('dashServidor');
-  select.innerHTML = '<option value="">Servidor...</option>';
-  servidores.forEach(s => { select.innerHTML += `<option value="${s.id}">${s.nome}</option>`; });
-
-  document.getElementById('dashboardSubtitle').textContent = `Visão geral da frequência — ${MESES[mes]} ${ano}`;
+  document.getElementById('dashboardSubtitle').textContent = servidor
+    ? `Visão geral de ${servidor.nome} — ${MESES[mes]} ${ano}`
+    : `Visão geral da frequência — ${MESES[mes]} ${ano}`;
 
   if (!servidorId) {
     document.getElementById('dashStats').style.display = 'none';
@@ -1953,12 +1962,10 @@ async function renderDashboard() {
     else if (reg && reg.status === 'parcial') { diasTrabalhados++; totalHoras += reg.horasNormais; totalExtras += reg.horasExtras || 0; }
     else { faltas++; }
   }
-  document.getElementById('statFaltasSub').textContent = `dias sem registro (${diasJustificados} justificado${diasJustificados !== 1 ? 's' : ''})`;
-
   document.getElementById('statTrabalhados').textContent = diasTrabalhados;
   document.getElementById('statTrabalhadosSub').textContent = `de ${diasUteis} dias úteis`;
   document.getElementById('statFaltas').textContent = faltas;
-  document.getElementById('statFaltasSub').textContent = 'dias sem registro';
+  document.getElementById('statFaltasSub').textContent = `dias sem registro (${diasJustificados} justificado${diasJustificados !== 1 ? 's' : ''})`;
   document.getElementById('statHoras').textContent = formatarMinutos(totalHoras);
   document.getElementById('statExtras').textContent = formatarMinutos(totalExtras);
 
@@ -1999,15 +2006,10 @@ async function renderDashboard() {
    HISTÓRICO
    ======================================================================== */
 async function renderHistorico() {
-  const servidorId = document.getElementById('histServidor').value;
   const mes = Number(document.getElementById('histMes').value);
   const ano = Number(document.getElementById('histAno').value);
-
-  // Load servers
-  const servidores = await dbGetAll('servidores');
-  const select = document.getElementById('histServidor');
-  select.innerHTML = '<option value="">Servidor...</option>';
-  servidores.forEach(s => { select.innerHTML += `<option value="${s.id}">${s.nome}</option>`; });
+  const servidor = await carregarServidorAtivo();
+  const servidorId = servidor ? servidor.id : null;
 
   if (!servidorId) {
     document.getElementById('histTableContainer').innerHTML = '';
@@ -2075,36 +2077,39 @@ async function deleteRegistro(id) {
    SERVIDORES
    ======================================================================== */
 async function renderServidores() {
-  const servidores = await dbGetAll('servidores');
+  const servidor = await carregarServidorAtivo();
   const list = document.getElementById('servidoresList');
   const empty = document.getElementById('servidoresEmpty');
+  const botaoNovo = document.getElementById('btnNovoServidor');
 
-  if (servidores.length === 0) {
+  if (!servidor) {
     list.innerHTML = '';
     empty.style.display = 'block';
+    botaoNovo.style.display = 'inline-flex';
     return;
   }
 
   empty.style.display = 'none';
-  list.innerHTML = servidores.map(s => `
-    <div class="servidor-card" onclick="editServidor('${s.id}')">
-      <div class="servidor-avatar">${s.nome.charAt(0).toUpperCase()}</div>
+  botaoNovo.style.display = 'none';
+  list.innerHTML = `
+    <div class="servidor-card" onclick="editServidor('${servidor.id}')">
+      <div class="servidor-avatar">${servidor.nome.charAt(0).toUpperCase()}</div>
       <div class="servidor-info" style="flex:1">
-        <h4>${s.nome}</h4>
-        <p>${s.funcao || '—'} — ${s.setor || '—'} — ${s.secretaria || '—'}</p>
-        <div class="meta">Mat: ${s.matricula || '—'} | Jornada: ${s.tipoJornada} (${s.cargaHoraria}h)</div>
+        <h4>${servidor.nome}</h4>
+        <p>${servidor.funcao || '—'} — ${servidor.setor || '—'} — ${servidor.secretaria || '—'}</p>
+        <div class="meta">Mat: ${servidor.matricula || '—'} | Jornada: ${servidor.tipoJornada} (${servidor.cargaHoraria}h)</div>
       </div>
-      <button class="btn btn-ghost" onclick="event.stopPropagation();deleteServidor('${s.id}','${s.nome}')">
+      <button class="btn btn-ghost" onclick="event.stopPropagation();deleteServidor('${servidor.id}','${servidor.nome}')" title="Excluir perfil e registros">
         <span class="material-symbols-outlined" style="font-size:18px">delete</span>
       </button>
     </div>
-  `).join('');
+  `;
 }
 
 function openServidorModal(id) {
   document.getElementById('modalServidor').classList.add('active');
   if (!id) {
-    document.getElementById('modalServidorTitle').textContent = 'Cadastrar Servidor';
+    document.getElementById('modalServidorTitle').textContent = 'Cadastrar Perfil';
     document.getElementById('btnServidorText').textContent = 'Cadastrar';
     document.getElementById('servidorEditId').value = '';
     document.getElementById('sNome').value = '';
@@ -2126,7 +2131,7 @@ async function editServidor(id) {
   const s = await dbGet('servidores', id);
   if (!s) return;
   document.getElementById('modalServidor').classList.add('active');
-  document.getElementById('modalServidorTitle').textContent = 'Editar Servidor';
+  document.getElementById('modalServidorTitle').textContent = 'Editar Perfil';
   document.getElementById('btnServidorText').textContent = 'Salvar';
   document.getElementById('servidorEditId').value = id;
   document.getElementById('sNome').value = s.nome;
@@ -2174,24 +2179,44 @@ async function saveServidor(e) {
     data.createdAt = existing.createdAt || new Date().toISOString();
     data.updatedAt = new Date().toISOString();
   } else {
+    const existente = await obterServidorAtivo();
+    if (existente) {
+      closeServidorModal();
+      toast('Este dispositivo já possui um perfil cadastrado. Edite-o em “Meu Perfil”.', 'error');
+      return;
+    }
     data.id = crypto.randomUUID();
     data.createdAt = new Date().toISOString();
     data.updatedAt = new Date().toISOString();
   }
 
   await dbPut('servidores', data);
+  await dbPut('config', { key: 'servidor_ativo_id', value: data.id });
+  servidorAtivo = data;
+  servidorPontoSelecionado = data.id;
   closeServidorModal();
-  renderServidores();
-  loadPontoPage();
-  toast(id ? 'Servidor atualizado' : 'Servidor cadastrado');
+  await renderServidores();
+  await loadPontoPage();
+  toast(id ? 'Perfil atualizado' : 'Perfil cadastrado');
 }
 
 async function deleteServidor(id, nome) {
-  if (!confirm(`Deseja realmente excluir o servidor "${nome}"?`)) return;
+  const servidor = await obterServidorAtivo();
+  if (!servidor || servidor.id !== id) return;
+  if (!confirm(`Deseja excluir o perfil "${nome}" e todos os registros de ponto vinculados a ele neste dispositivo?`)) return;
+
+  const registros = await dbGetAll('registros');
+  for (const registro of registros.filter(r => r.servidorId === id)) {
+    await dbDelete('registros', registro.id);
+  }
   await dbDelete('servidores', id);
-  renderServidores();
-  loadPontoPage();
-  toast('Servidor excluído');
+  await dbPut('config', { key: 'servidor_ativo_id', value: null });
+  servidorAtivo = null;
+  servidorPontoSelecionado = null;
+  registroHoje = null;
+  await renderServidores();
+  await loadPontoPage();
+  toast('Perfil e registros locais excluídos');
 }
 
 /* ========================================================================
@@ -2199,15 +2224,23 @@ async function deleteServidor(id, nome) {
    ======================================================================== */
 
 async function loadPDFPage() {
-  const servidores = await dbGetAll('servidores');
-  const select = document.getElementById('pdfServidor');
-  select.innerHTML = '<option value="">Selecione o servidor...</option>';
-  servidores.forEach(s => { select.innerHTML += `<option value="${s.id}">${s.nome} — ${s.setor||''}</option>`; });
+  const servidor = await carregarServidorAtivo();
+  const inputServidor = document.getElementById('pdfServidor');
+  const perfilWrap = document.getElementById('pdfPerfilAtivoWrap');
+  const perfilNome = document.getElementById('pdfPerfilAtivo');
 
-  // Preview update
-  document.getElementById('pdfServidor').onchange = updatePDFPreview;
+  inputServidor.value = servidor ? servidor.id : '';
+  if (servidor) {
+    perfilNome.textContent = [servidor.nome, servidor.setor, servidor.secretaria].filter(Boolean).join(' — ');
+    perfilWrap.style.display = 'block';
+  } else {
+    perfilNome.textContent = '';
+    perfilWrap.style.display = 'none';
+  }
+
   document.getElementById('pdfMes').onchange = updatePDFPreview;
   document.getElementById('pdfAno').onchange = updatePDFPreview;
+  updatePDFPreview();
 }
 
 function updatePDFPreview() {
@@ -2242,7 +2275,7 @@ async function gerarPDF() {
   const mes = Number(document.getElementById('pdfMes').value);
   const ano = Number(document.getElementById('pdfAno').value);
 
-  if (!servidorId) { toast('Selecione um servidor','error'); return; }
+  if (!servidorId) { toast('Cadastre um perfil neste dispositivo antes de gerar a folha.', 'error'); return; }
 
   const servidor = await dbGet('servidores', servidorId);
   if (!servidor) { toast('Servidor não encontrado','error'); return; }
