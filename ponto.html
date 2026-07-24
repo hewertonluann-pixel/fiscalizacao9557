@@ -917,7 +917,7 @@ input, select, textarea { font-family: var(--font); }
     <div class="page" id="page-pdf">
       <div class="page-header">
         <h2>Gerar Folha de Frequência</h2>
-        <p>Gera a Folha Individual de Frequência no formato oficial da prefeitura</p>
+        <p>Gera a Folha Individual de Frequência no formato oficial da prefeitura &mdash; período do dia 11 ao dia 10 do mês seguinte</p>
       </div>
       <div class="page-content" style="max-width:700px">
         <div class="card card-accent">
@@ -928,7 +928,7 @@ input, select, textarea { font-family: var(--font); }
           </div>
           <div class="form-row">
             <div class="form-group">
-              <label>Mês de Referência</label>
+              <label>Mês de Referência <small style="font-weight:400;color:var(--text-muted)">(mês acima do dia 01)</small></label>
               <select id="pdfMes" style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:6px;font-size:14px">
                 <option value="1">Janeiro</option><option value="2">Fevereiro</option><option value="3">Março</option>
                 <option value="4">Abril</option><option value="5">Maio</option><option value="6">Junho</option>
@@ -964,6 +964,11 @@ input, select, textarea { font-family: var(--font); }
                 O sistema utiliza o modelo oficial da Folha Individual de Frequência (Anexo I da Portaria SMPG nº 111/2014).
                 Os dados do servidor e os registros de ponto são preenchidos automaticamente nas posições corretas do formulário.
                 O PDF gerado pode ser impresso e arquivado diretamente.
+              </p>
+              <p style="font-size:12px;color:var(--text-secondary);line-height:1.6;margin-top:6px">
+                <strong>Período da folha:</strong> os dias <strong>11 a 31</strong> pertencem ao mês anterior ao selecionado,
+                e os dias <strong>1 a 10</strong> pertencem ao mês selecionado no formulário acima.
+                Exemplo: selecionando <em>Agosto/2026</em>, a folha abrange 11/07/2026 a 10/08/2026.
               </p>
             </div>
           </div>
@@ -2238,6 +2243,24 @@ async function loadPDFPage() {
     perfilWrap.style.display = 'none';
   }
 
+  // Inicializa o seletor de mês com o mês subsequente ao atual apenas na primeira carga.
+  // Pois os dias 1-10 da folha pertencem ao mês seguinte ao mês de início (dia 11).
+  if (!document.getElementById('pdfMes').dataset.userSet) {
+    const hoje = new Date();
+    const mesSubsequente = hoje.getMonth() + 2; // getMonth() é 0-based; +1 = mês atual, +2 = próximo
+    const anoSubsequente = mesSubsequente > 12 ? hoje.getFullYear() + 1 : hoje.getFullYear();
+    const mesSubsequenteNorm = mesSubsequente > 12 ? 1 : mesSubsequente;
+    document.getElementById('pdfMes').value = String(mesSubsequenteNorm);
+    // Garante que o ano correto esteja selecionado (pode ser o próximo se mês = 13)
+    const pdfAnoSel = document.getElementById('pdfAno');
+    if ([...pdfAnoSel.options].some(o => o.value === String(anoSubsequente))) {
+      pdfAnoSel.value = String(anoSubsequente);
+    }
+  }
+  // Marca que o usuário pode alterar o valor livremente após a primeira carga
+  document.getElementById('pdfMes').dataset.userSet = 'true';
+  document.getElementById('pdfAno').dataset.userSet = 'true';
+
   document.getElementById('pdfMes').onchange = updatePDFPreview;
   document.getElementById('pdfAno').onchange = updatePDFPreview;
   updatePDFPreview();
@@ -2245,8 +2268,12 @@ async function loadPDFPage() {
 
 function updatePDFPreview() {
   const id = document.getElementById('pdfServidor').value;
-  const mes = document.getElementById('pdfMes').value;
-  const ano = document.getElementById('pdfAno').value;
+  // mes/ano aqui representam o mês SUBSEQUENTE (acima do dia 01)
+  const mesProx = Number(document.getElementById('pdfMes').value);
+  const anoProx = Number(document.getElementById('pdfAno').value);
+  // Mês de início da folha (dias 11-31): mês anterior ao selecionado
+  const mesAtual = mesProx === 1 ? 12 : mesProx - 1;
+  const anoAtual = mesProx === 1 ? anoProx - 1 : anoProx;
   const preview = document.getElementById('pdfPreview');
   const content = document.getElementById('pdfPreviewContent');
 
@@ -2256,15 +2283,20 @@ function updatePDFPreview() {
   dbGet('servidores', id).then(s => {
     if (!s) { preview.style.display = 'none'; return; }
     preview.style.display = 'block';
-    const prefix = `${ano}-${String(mes).padStart(2,'0')}`;
+    // Prefixos dos dois períodos: dias 11-31 do mês atual e dias 1-10 do mês subsequente
+    const prefixAtual = `${anoAtual}-${String(mesAtual).padStart(2,'0')}`;
+    const prefixProx  = `${anoProx}-${String(mesProx).padStart(2,'0')}`;
     dbGetAll('registros').then(regs => {
-      const count = regs.filter(r => r.servidorId === id && r.data.startsWith(prefix)).length;
+      const diasAtual = regs.filter(r => r.servidorId === id && r.data.startsWith(prefixAtual) && Number(r.data.split('-')[2]) >= 11).length;
+      const diasProx  = regs.filter(r => r.servidorId === id && r.data.startsWith(prefixProx)  && Number(r.data.split('-')[2]) <= 10).length;
+      const count = diasAtual + diasProx;
       content.innerHTML = `
         <p><strong>Nome:</strong> ${s.nome}</p>
         <p><strong>Função:</strong> ${s.funcao || '—'}</p>
         <p><strong>Secretaria:</strong> ${s.secretaria || '—'}</p>
         <p><strong>Setor:</strong> ${s.setor || '—'}</p>
-        <p><strong>Registros:</strong> ${count} dias registrados em ${MESES[Number(mes)]}/${ano}</p>
+        <p><strong>Período:</strong> 11/${String(mesAtual).padStart(2,'0')}/${anoAtual} a 10/${String(mesProx).padStart(2,'0')}/${anoProx}</p>
+        <p><strong>Registros:</strong> ${count} dias registrados no período</p>
       `;
     });
   });
@@ -2272,17 +2304,28 @@ function updatePDFPreview() {
 
 async function gerarPDF() {
   const servidorId = document.getElementById('pdfServidor').value;
-  const mes = Number(document.getElementById('pdfMes').value);
-  const ano = Number(document.getElementById('pdfAno').value);
+  // mesProx/anoProx = mês selecionado no formulário (mês SUBSEQUENTE, acima do dia 01)
+  const mesProx = Number(document.getElementById('pdfMes').value);
+  const anoProx = Number(document.getElementById('pdfAno').value);
+  // mesAtual/anoAtual = mês de início da folha (dias 11-31)
+  const mesAtual = mesProx === 1 ? 12 : mesProx - 1;
+  const anoAtual = mesProx === 1 ? anoProx - 1 : anoProx;
+  // Compatível com o restante do código que usa 'mes' e 'ano' para os dias 11-31
+  const mes = mesAtual;
+  const ano = anoAtual;
 
   if (!servidorId) { toast('Cadastre um perfil neste dispositivo antes de gerar a folha.', 'error'); return; }
 
   const servidor = await dbGet('servidores', servidorId);
   if (!servidor) { toast('Servidor não encontrado','error'); return; }
 
-  const prefix = `${ano}-${String(mes).padStart(2,'0')}`;
+  // Busca registros dos dois períodos: dias 11-31 do mês atual e dias 1-10 do mês subsequente
+  const prefixAtual = `${anoAtual}-${String(mesAtual).padStart(2,'0')}`;
+  const prefixProx  = `${anoProx}-${String(mesProx).padStart(2,'0')}`;
   const allRegistros = await dbGetAll('registros');
-  const registrosMes = allRegistros.filter(r => r.servidorId === servidorId && r.data.startsWith(prefix));
+  const regsMesAtual = allRegistros.filter(r => r.servidorId === servidorId && r.data.startsWith(prefixAtual) && Number(r.data.split('-')[2]) >= 11);
+  const regsMesProx  = allRegistros.filter(r => r.servidorId === servidorId && r.data.startsWith(prefixProx)  && Number(r.data.split('-')[2]) <= 10);
+  const registrosMes = [...regsMesAtual, ...regsMesProx];
 
   try {
     const { PDFDocument, rgb, StandardFonts } = PDFLib;
@@ -2328,9 +2371,10 @@ async function gerarPDF() {
             if (lower.includes('setor') || lower.includes('departamento')) return servidor.setor || '';
             if (lower.includes('matricula') || lower.includes('matrícula')) return servidor.matricula || '';
             if (lower.includes('cpf')) return servidor.cpf || '';
-            if (lower.includes('mês') || lower.includes('mes') || lower.includes('mês refer')) return MESES[mes] || '';
-            if (lower.includes('ano')) return String(ano);
-            if (lower.includes('referência') || lower.includes('referencia')) return `${String(mes).padStart(2,'0')}/${ano}`;
+            // Campo mês: usa o mês subsequente (acima do dia 01)
+            if (lower.includes('mês') || lower.includes('mes') || lower.includes('mês refer')) return MESES[mesProx] || '';
+            if (lower.includes('ano')) return String(anoProx);
+            if (lower.includes('referência') || lower.includes('referencia')) return `${String(mesProx).padStart(2,'0')}/${anoProx}`;
             if (lower.includes('uf')) return document.getElementById('cfgUf')?.value || '';
             if (lower.includes('cidade') || lower.includes('município') || lower.includes('municipio')) return document.getElementById('cfgCidade')?.value || '';
             if (lower.includes('entidade') || lower.includes('órgão') || lower.includes('orgao')) return document.getElementById('cfgOrgao')?.value || '';
@@ -2419,7 +2463,8 @@ async function gerarPDF() {
         page.drawText(servidor.setor || '', { x: 51 * sx, y: (841.68 - 134.8 - fontSize * 0.35) * sy, size: fontSize * sy, font });
 
         // REFERÊNCIA: y_from_top≈69.0 → pdf_y ≈ 772.7, x=406
-        const refMonthYear = `${String(mes).padStart(2,'0')}/${ano}`;
+        // Usa o mês subsequente (acima do dia 01) como referência
+        const refMonthYear = `${String(mesProx).padStart(2,'0')}/${anoProx}`;
         page.drawText(refMonthYear, { x: 406 * sx, y: (841.68 - 69.0 - fontSize * 0.35) * sy, size: fontSize * sy, font });
 
         // === TABLE 1: Days 11-31 ===
@@ -2488,7 +2533,7 @@ async function gerarPDF() {
           }
         }
 
-        // === TABLE 2: Days 1-10 ===
+        // === TABLE 2: Days 1-10 (pertencem ao mês SUBSEQUENTE) ===
         // Day 1: top=539.2, center y = 841.68 - 543.3 = 298.4
         const table2FirstDayY = 841.68 - 543.3;
 
@@ -2498,8 +2543,8 @@ async function gerarPDF() {
           const rowTopY = table2FirstDayY - (rowIndex * table2RowH);
           const textY = rowTopY - fontSize * 0.35;
 
-          // Check if this day is a weekend
-          const dayDate = new Date(ano, mes - 1, d);
+          // Dias 1-10 pertencem ao mês subsequente (mesProx/anoProx)
+          const dayDate = new Date(anoProx, mesProx - 1, d);
           const isWeekend = dayDate.getDay() === 0 || dayDate.getDay() === 6;
 
           // Draw weekend or justificativa background shading
@@ -2607,6 +2652,8 @@ async function gerarPDF() {
       y -= 14;
       const mapaReg = {};
       registrosMes.forEach(r => { mapaReg[Number(r.data.split('-')[2])] = r; });
+      let totalNormais = 0, totalExtras = 0;
+      registrosMes.forEach(r => { totalNormais += r.horasNormais || 0; totalExtras += r.horasExtras || 0; });
 
       for (let d = 11; d <= 31; d++) {
         const reg = mapaReg[d];
@@ -2644,7 +2691,7 @@ async function gerarPDF() {
 
       // Mês/Ano
       y -= 4;
-      page.drawText(`MÊS: ${String(mes).padStart(2,'0')}        ANO: ${ano}`, { x: 30, y: y, size: fs, font: fontBold });
+      page.drawText(`MÊS: ${String(mesProx).padStart(2,'0')}        ANO: ${anoProx}`, { x: 30, y: y, size: fs, font: fontBold });
       y -= 16;
 
       // Table 2 header (days 1-10)
@@ -2661,7 +2708,8 @@ async function gerarPDF() {
       y -= 14;
       for (let d = 1; d <= 10; d++) {
         const reg = mapaReg[d];
-        const dayDate = new Date(ano, mes-1, d);
+        // Dias 1-10 pertencem ao mês subsequente (mesProx/anoProx)
+        const dayDate = new Date(anoProx, mesProx - 1, d);
         const isWeekend = dayDate.getDay() === 0 || dayDate.getDay() === 6;
         const isJustificativa = reg && reg.justificativa && reg.justificativa.tipo;
         // Weekend or justificativa shading: draw background first
@@ -2714,7 +2762,7 @@ async function gerarPDF() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `Folha_Ponto_${MESES[mes]}_${ano}_${servidor.nome.replace(/\s+/g,'_')}.pdf`;
+    a.download = `Folha_Ponto_${MESES[mesAtual]}_${anoAtual}_a_${MESES[mesProx]}_${anoProx}_${servidor.nome.replace(/\s+/g,'_')}.pdf`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
