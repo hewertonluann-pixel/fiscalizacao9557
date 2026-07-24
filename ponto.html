@@ -395,10 +395,11 @@ input, select, textarea { font-family: var(--font); }
   align-items: center;
   justify-content: center;
   border-radius: 6px;
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 500;
   cursor: default;
   border: 1px solid transparent;
+  padding: 2px;
 }
 .cal-day.empty { background: transparent; }
 .cal-day.weekend { background: var(--amber-bg); color: var(--amber); border-color: var(--amber); font-weight: 600; }
@@ -830,7 +831,7 @@ input, select, textarea { font-family: var(--font); }
         </div>
 
         <!-- Calendar -->
-        <div class="card" id="dashCalendar" style="display:none">
+        <div class="card" id="dashCalendar" style="display:none; max-width: 320px;">
           <div class="label-section">Calendário do Mês</div>
           <div class="calendar-grid" id="calendarGrid"></div>
           <div style="display:flex;gap:16px;margin-top:16px;flex-wrap:wrap">
