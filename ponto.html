@@ -1846,8 +1846,11 @@ async function salvarJustificativa() {
   const toast_id = toast('Registrando justificativa...', 'info');
 
   // Iterate through each day in the period
-  const start = new Date(dataInicio);
-  const end = new Date(dataFim);
+  // Usamos split e map para evitar problemas de fuso horário com new Date(string)
+  const [startY, startM, startD] = dataInicio.split('-').map(Number);
+  const [endY, endM, endD] = dataFim.split('-').map(Number);
+  const start = new Date(startY, startM - 1, startD);
+  const end = new Date(endY, endM - 1, endD);
   let count = 0;
 
   for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
@@ -2482,13 +2485,16 @@ async function gerarPDF() {
 
         // Draw days 11-31
         for (let d = 11; d <= 31; d++) {
+          // Verifica se o dia existe no mês (ex: evita dia 31 em meses de 30 dias)
+          const dayDate = new Date(ano, mes - 1, d);
+          if (dayDate.getMonth() !== mes - 1) continue;
+
           const reg = mapaReg[d];
           const rowIndex = d - 11;
           const rowTopY = table1FirstDayY - (rowIndex * table1RowH);
           const textY = rowTopY - fontSize * 0.35;
 
           // Check if this day is a weekend
-          const dayDate = new Date(ano, mes - 1, d);
           const isWeekend = dayDate.getDay() === 0 || dayDate.getDay() === 6;
 
           // Draw weekend or justificativa background shading
@@ -2666,8 +2672,11 @@ async function gerarPDF() {
       registrosMes.forEach(r => { totalNormais += r.horasNormais || 0; totalExtras += r.horasExtras || 0; });
 
       for (let d = 11; d <= 31; d++) {
-        const reg = mapaReg[d];
+        // Verifica se o dia existe no mês
         const dayDate = new Date(ano, mes-1, d);
+        if (dayDate.getMonth() !== mes - 1) continue;
+
+        const reg = mapaReg[d];
         const isWeekend = dayDate.getDay() === 0 || dayDate.getDay() === 6;
         const isJustificativa = reg && reg.justificativa && reg.justificativa.tipo;
         // Weekend or justificativa shading: draw background first
