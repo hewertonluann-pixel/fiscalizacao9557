@@ -2295,6 +2295,7 @@ function updatePDFPreview() {
         <p><strong>Função:</strong> ${s.funcao || '—'}</p>
         <p><strong>Secretaria:</strong> ${s.secretaria || '—'}</p>
         <p><strong>Setor:</strong> ${s.setor || '—'}</p>
+        <p><strong>Referência:</strong> ${MESES[mesAtual]}/${anoAtual}</p>
         <p><strong>Período:</strong> 11/${String(mesAtual).padStart(2,'0')}/${anoAtual} a 10/${String(mesProx).padStart(2,'0')}/${anoProx}</p>
         <p><strong>Registros:</strong> ${count} dias registrados no período</p>
       `;
@@ -2374,7 +2375,8 @@ async function gerarPDF() {
             // Campo mês: usa o mês subsequente (acima do dia 01)
             if (lower.includes('mês') || lower.includes('mes') || lower.includes('mês refer')) return MESES[mesProx] || '';
             if (lower.includes('ano')) return String(anoProx);
-            if (lower.includes('referência') || lower.includes('referencia')) return `${String(mesProx).padStart(2,'0')}/${anoProx}`;
+            // REFERÊNCIA: Usa o mês de início (11-31), conforme solicitado pelo usuário
+            if (lower.includes('referência') || lower.includes('referencia')) return `${String(mesAtual).padStart(2,'0')}/${anoAtual}`;
             if (lower.includes('uf')) return document.getElementById('cfgUf')?.value || '';
             if (lower.includes('cidade') || lower.includes('município') || lower.includes('municipio')) return document.getElementById('cfgCidade')?.value || '';
             if (lower.includes('entidade') || lower.includes('órgão') || lower.includes('orgao')) return document.getElementById('cfgOrgao')?.value || '';
@@ -2463,8 +2465,8 @@ async function gerarPDF() {
         page.drawText(servidor.setor || '', { x: 51 * sx, y: (841.68 - 134.8 - fontSize * 0.35) * sy, size: fontSize * sy, font });
 
         // REFERÊNCIA: y_from_top≈69.0 → pdf_y ≈ 772.7, x=406
-        // Usa o mês subsequente (acima do dia 01) como referência
-        const refMonthYear = `${String(mesProx).padStart(2,'0')}/${anoProx}`;
+        // REFERÊNCIA: Usa o mês de início (11-31), conforme solicitado pelo usuário
+        const refMonthYear = `${String(mesAtual).padStart(2,'0')}/${anoAtual}`;
         page.drawText(refMonthYear, { x: 406 * sx, y: (841.68 - 69.0 - fontSize * 0.35) * sy, size: fontSize * sy, font });
 
         // === TABLE 1: Days 11-31 ===
@@ -2532,6 +2534,9 @@ async function gerarPDF() {
             page.drawText(wdLabel, { x: 52 * sx, y: textY * sy, size: fontSize * sy * 0.7, font: fontBold, color: rgb(0.85, 0.47, 0.03) });
           }
         }
+
+        // Texto MÊS/ANO acima da Tabela 2 (dia 01) - y_from_top≈528.0
+        page.drawText(`MÊS: ${String(mesProx).padStart(2,'0')}        ANO: ${anoProx}`, { x: 44 * sx, y: (841.68 - 528.0 - fontSize * 0.35) * sy, size: fontSize * sy, font: fontBold });
 
         // === TABLE 2: Days 1-10 (pertencem ao mês SUBSEQUENTE) ===
         // Day 1: top=539.2, center y = 841.68 - 543.3 = 298.4
@@ -2622,7 +2627,7 @@ async function gerarPDF() {
 
       page.drawRectangle({ x: 300, y: 750, width: 275, height: 40, borderColor: rgb(0,0,0), borderWidth: 0.5, fill: undefined });
       page.drawText('FOLHA DE PONTO', { x: 310, y: 782, size: fsTitle, font: fontBold });
-      page.drawText('REFERÊNCIA:', { x: 310, y: 768, size: fs, font });
+      page.drawText(`REFERÊNCIA: ${String(mesAtual).padStart(2,'0')}/${anoAtual}`, { x: 310, y: 768, size: fs, font });
 
       // Servidor info
       page.drawText(`NOME DO SERVIDOR: ${servidor.nome}`, { x: 30, y: 735, size: fs, font: fontBold });
@@ -2762,7 +2767,7 @@ async function gerarPDF() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `Folha_Ponto_${MESES[mesAtual]}_${anoAtual}_a_${MESES[mesProx]}_${anoProx}_${servidor.nome.replace(/\s+/g,'_')}.pdf`;
+    a.download = `Folha_Ponto_${MESES[mesAtual]}_${anoAtual}_${servidor.nome.replace(/\s+/g,'_')}.pdf`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
