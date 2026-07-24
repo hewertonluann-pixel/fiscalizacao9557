@@ -2535,8 +2535,12 @@ async function gerarPDF() {
           }
         }
 
-        // Texto MÊS/ANO acima da Tabela 2 (dia 01) - y_from_top≈528.0
-        page.drawText(`MÊS: ${String(mesProx).padStart(2,'0')}        ANO: ${anoProx}`, { x: 44 * sx, y: (841.68 - 528.0 - fontSize * 0.35) * sy, size: fontSize * sy, font: fontBold });
+        // Texto MÊS/ANO acima da Tabela 2 (dia 01)
+        // Posicionamento preciso nos campos "MÊS:" e "ANO:" existentes no PDF
+        // MÊS: y_from_top≈506.0, x≈51.0
+        page.drawText(String(mesProx).padStart(2,'0'), { x: 51 * sx, y: (841.68 - 506.0 - fontSize * 0.35) * sy, size: fontSize * sy, font: fontBold });
+        // ANO: y_from_top≈506.0, x≈255.0
+        page.drawText(String(anoProx), { x: 255 * sx, y: (841.68 - 506.0 - fontSize * 0.35) * sy, size: fontSize * sy, font: fontBold });
 
         // === TABLE 2: Days 1-10 (pertencem ao mês SUBSEQUENTE) ===
         // Day 1: top=539.2, center y = 841.68 - 543.3 = 298.4
