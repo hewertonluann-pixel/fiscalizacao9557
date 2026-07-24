@@ -405,6 +405,7 @@ input, select, textarea { font-family: var(--font); }
 .cal-day.worked { background: var(--emerald-bg); border-color: var(--emerald); color: var(--emerald); font-weight: 700; }
 .cal-day.incomplete { background: var(--amber-bg); border-color: var(--amber); color: var(--amber); font-weight: 600; }
 .cal-day.missing { background: var(--red-bg); border-color: var(--red); color: var(--red); font-weight: 600; }
+.cal-day.justified { background: #dbeafe; border-color: #3b82f6; color: #1d4ed8; font-weight: 600; }
 .cal-day.today { ring: 2px solid var(--navy); box-shadow: 0 0 0 2px var(--navy); }
 .cal-day .cal-time {
   font-size: 9px;
@@ -449,6 +450,9 @@ input, select, textarea { font-family: var(--font); }
 .badge-partial { background: var(--amber-bg); color: #d97706; }
 .badge-missing { background: var(--red-bg); color: var(--red); }
 .badge-weekend { background: var(--amber-bg); color: #d97706; }
+.badge-justificativa { background: #eff6ff; color: #1d4ed8; }
+.weekend-row { background: var(--bg-accent); }
+.justificativa-row { background: #f0f9ff; }
 
 /* ===== SERVIROR CARD ===== */
 .servidor-card {
@@ -743,6 +747,12 @@ input, select, textarea { font-family: var(--font); }
             </div>
           </button>
         </div>
+
+        <!-- Botão justificativa -->
+        <button class="btn btn-outline" id="btnJustificativa" style="display:none;margin-top:12px;width:100%" onclick="openJustificativaModal()">
+          <span class="material-symbols-outlined" style="font-size:18px">note_add</span>
+          Registrar Justificativa
+        </button>
 
         <!-- Botão apagar registro -->
         <button class="btn btn-danger" id="btnApagarRegistro" style="display:none;margin-top:12px;width:100%" onclick="apagarRegistroHoje()">
@@ -1123,6 +1133,43 @@ input, select, textarea { font-family: var(--font); }
   </div>
 </div>
 
+<!-- Modal Justificativa -->
+<div class="modal-overlay" id="modalJustificativa">
+  <div class="modal" style="max-width:450px">
+    <div class="modal-header">
+      <h3>Registrar Justificativa</h3>
+      <button class="modal-close" onclick="closeJustificativaModal()">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Data Início *</label>
+        <input type="date" id="justDataInicio" style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:6px;font-size:14px">
+      </div>
+      <div class="form-group">
+        <label>Data Fim *</label>
+        <input type="date" id="justDataFim" style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:6px;font-size:14px">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Tipo de Justificativa *</label>
+      <input type="text" id="justTipo" placeholder="Ex: FÉRIAS, ATESTADO, LICENÇA-SAÚDE, LICENÇA-PRÊMIO" style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:6px;font-size:14px">
+    </div>
+    <div class="form-group">
+      <label>Observação (opcional)</label>
+      <input type="text" id="justObservacao" placeholder="Ex: Período de férias regulamentar" style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:6px;font-size:14px">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeJustificativaModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarJustificativa()">
+        <span class="material-symbols-outlined" style="font-size:16px">save</span>
+        Registrar Justificativa
+      </button>
+    </div>
+  </div>
+</div>
+
 <!-- Modal Editar Horário -->
 <div class="modal-overlay" id="modalEditar">
   <div class="modal" style="max-width:400px">
@@ -1402,9 +1449,16 @@ async function onServidorPontoChange() {
   if (registroHoje) {
     renderPontoButtons();
     document.getElementById('resumoDia').style.display = 'block';
+    // Check if this day is already a justificativa
+    document.getElementById('btnJustificativa').style.display = registroHoje.justificativa ? 'none' : 'block';
+    if (registroHoje.justificativa) {
+      // Update resumo to show justificativa info
+      document.getElementById('resumoStatus').innerHTML = `<span class="badge badge-justificativa">${registroHoje.justificativa.tipo || 'JUSTIFICADO'}</span>`;
+    }
   } else {
     // No record yet — show buttons in default state
     document.getElementById('btnApagarRegistro').style.display = 'none';
+    document.getElementById('btnJustificativa').style.display = 'block';
     renderPontoButtons();
     document.getElementById('resumoDia').style.display = 'none';
   }
@@ -1452,6 +1506,26 @@ function renderPontoButtons() {
       if (existingEdit) existingEdit.remove();
     }
   });
+
+  // If day is justified, hide ponto buttons and show justificativa summary
+  if (registroHoje && registroHoje.justificativa) {
+    document.getElementById('pontoButtons').style.display = 'none';
+    document.getElementById('resumoDia').style.display = 'block';
+    document.getElementById('resumoHoras').textContent = '—';
+    document.getElementById('resumoExtras').textContent = '—';
+    document.getElementById('resumoStatus').innerHTML = `<span class="badge badge-justificativa">${registroHoje.justificativa.tipo || 'JUSTIFICADO'}</span>`;
+    // Show two action buttons: Editar e Remover
+    const btnJust = document.getElementById('btnJustificativa');
+    btnJust.style.display = 'block';
+    btnJust.innerHTML = '<span class="material-symbols-outlined" style="font-size:18px">edit_note</span> Editar Justificativa';
+    btnJust.onclick = () => openJustificativaModalEdit();
+
+    const btnApagar = document.getElementById('btnApagarRegistro');
+    btnApagar.style.display = 'block';
+    btnApagar.innerHTML = '<span class="material-symbols-outlined" style="font-size:18px">cancel</span> Remover Justificativa';
+    btnApagar.onclick = removerJustificativa;
+    return;
+  }
 
   // Summary
   if (registroHoje) {
@@ -1706,6 +1780,117 @@ async function salvarEdicao() {
   toast('Horário atualizado com sucesso');
 }
 
+/* ========================================================================
+   JUSTIFICATIVA
+   ======================================================================== */
+function openJustificativaModal() {
+  // Pre-fill start date with selectedPontoDate
+  document.getElementById('justDataInicio').value = selectedPontoDate;
+  document.getElementById('justDataFim').value = selectedPontoDate;
+  document.getElementById('justTipo').value = '';
+  document.getElementById('justObservacao').value = '';
+  document.getElementById('modalJustificativa').classList.add('active');
+}
+
+function openJustificativaModalEdit() {
+  // Load existing justificativa data into the modal for editing
+  if (registroHoje && registroHoje.justificativa) {
+    const j = registroHoje.justificativa;
+    document.getElementById('justDataInicio').value = j.dataInicio || selectedPontoDate;
+    document.getElementById('justDataFim').value = j.dataFim || selectedPontoDate;
+    document.getElementById('justTipo').value = j.tipo || '';
+    document.getElementById('justObservacao').value = j.observacao || '';
+  } else {
+    document.getElementById('justDataInicio').value = selectedPontoDate;
+    document.getElementById('justDataFim').value = selectedPontoDate;
+    document.getElementById('justTipo').value = '';
+    document.getElementById('justObservacao').value = '';
+  }
+  document.getElementById('modalJustificativa').classList.add('active');
+}
+
+function closeJustificativaModal() {
+  document.getElementById('modalJustificativa').classList.remove('active');
+}
+
+async function salvarJustificativa() {
+  const dataInicio = document.getElementById('justDataInicio').value;
+  const dataFim = document.getElementById('justDataFim').value;
+  const tipo = document.getElementById('justTipo').value.trim().toUpperCase();
+  const observacao = document.getElementById('justObservacao').value.trim();
+
+  if (!dataInicio || !dataFim) { toast('Preencha as datas', 'error'); return; }
+  if (!tipo) { toast('Preencha o tipo de justificativa', 'error'); return; }
+  if (dataInicio > dataFim) { toast('Data início deve ser anterior à data fim', 'error'); return; }
+
+  if (!servidorPontoSelecionado) { toast('Selecione um servidor primeiro', 'error'); return; }
+
+  const toast_id = toast('Registrando justificativa...', 'info');
+
+  // Iterate through each day in the period
+  const start = new Date(dataInicio);
+  const end = new Date(dataFim);
+  let count = 0;
+
+  for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+    const dataStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+
+    // Skip weekends
+    const dayOfWeek = d.getDay();
+    if (dayOfWeek === 0 || dayOfWeek === 6) continue;
+
+    // Check if record already exists
+    const allRegistros = await dbGetAll('registros');
+    let reg = allRegistros.find(r => r.servidorId === servidorPontoSelecionado && r.data === dataStr);
+
+    if (reg && reg.justificativa) {
+      // Update existing justificativa record
+      reg.justificativa = { tipo, dataInicio, dataFim, observacao };
+      reg.observacao = (reg.observacao || '') + `\nJustificativa atualizada: ${tipo} (${dataInicio} a ${dataFim})`;
+    } else if (reg) {
+      // Record exists with hours — add justificativa info
+      reg.justificativa = { tipo, dataInicio, dataFim, observacao };
+      reg.observacao = (reg.observacao || '') + `\nJustificativa adicionada: ${tipo} (${dataInicio} a ${dataFim})`;
+    } else {
+      // Create new justificativa record (no hours)
+      reg = {
+        id: crypto.randomUUID(),
+        servidorId: servidorPontoSelecionado,
+        data: dataStr,
+        entrada: null, inicioIntervalo: null, fimIntervalo: null, saida: null,
+        horasExtras: 0, horasNormais: 0, horasFalta: 0,
+        observacao: observacao || '',
+        status: 'justificado',
+        justificativa: { tipo, dataInicio, dataFim, observacao },
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+    }
+
+    reg.updatedAt = new Date().toISOString();
+    await dbPut('registros', reg);
+    count++;
+  }
+
+  closeJustificativaModal();
+  toast(`${count} dia(s) justificado(s) como "${tipo}"`, 'success');
+
+  // Reload the current date view
+  await onServidorPontoChange();
+}
+
+async function removerJustificativa() {
+  if (!registroHoje || !registroHoje.justificativa) return;
+  if (!confirm(`Remover justificativa "${registroHoje.justificativa.tipo}" deste dia?`)) return;
+
+  delete registroHoje.justificativa;
+  registroHoje.observacao = (registroHoje.observacao || '') + `\nJustificativa removida em ${new Date().toLocaleString('pt-BR')}`;
+  registroHoje.updatedAt = new Date().toISOString();
+  await dbPut('registros', registroHoje);
+  await onServidorPontoChange();
+  toast('Justificativa removida');
+}
+
 async function apagarRegistroHoje() {
   if (!registroHoje) return;
   if (!confirm('Tem certeza que deseja apagar o registro de hoje? Esta ação não pode ser desfeita.')) return;
@@ -1758,14 +1943,17 @@ async function renderDashboard() {
   let totalHoras = 0;
   let totalExtras = 0;
 
+  let diasJustificados = 0;
   for (let d = 1; d <= totalDias; d++) {
     const dataStr = `${ano}-${String(mes).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     if (isFimDeSemana(dataStr)) continue;
     const reg = mapaRegistros[dataStr];
+    if (reg && reg.justificativa) { diasJustificados++; continue; }
     if (reg && reg.status === 'completo') { diasTrabalhados++; totalHoras += reg.horasNormais; totalExtras += reg.horasExtras || 0; }
     else if (reg && reg.status === 'parcial') { diasTrabalhados++; totalHoras += reg.horasNormais; totalExtras += reg.horasExtras || 0; }
     else { faltas++; }
   }
+  document.getElementById('statFaltasSub').textContent = `dias sem registro (${diasJustificados} justificado${diasJustificados !== 1 ? 's' : ''})`;
 
   document.getElementById('statTrabalhados').textContent = diasTrabalhados;
   document.getElementById('statTrabalhadosSub').textContent = `de ${diasUteis} dias úteis`;
@@ -1796,12 +1984,14 @@ async function renderDashboard() {
 
     let cls = 'cal-day';
     if (isWd) cls += ' weekend';
+    else if (reg && reg.justificativa) cls += ' justified';
     else if (reg && reg.status === 'completo') cls += ' worked';
     else if (reg && reg.status === 'parcial') cls += ' incomplete';
     else if (!reg && !isWd) cls += ' missing';
     if (isToday) cls += ' today';
 
-    grid.innerHTML += `<div class="${cls}">${d}${reg && reg.entrada ? `<span class="cal-time">${reg.entrada}</span>` : ''}</div>`;
+    const calTimeHtml = reg && reg.entrada ? `<span class="cal-time">${reg.entrada}</span>` : (reg && reg.justificativa ? `<span class="cal-time">${reg.justificativa.tipo || 'JUS'}</span>` : '');
+    grid.innerHTML += `<div class="${cls}">${d}${calTimeHtml}</div>`;
   }
 }
 
@@ -1842,22 +2032,24 @@ async function renderHistorico() {
 
   regs.forEach(r => {
     const isWd = isFimDeSemana(r.data);
+    const isJust = r.justificativa && r.justificativa.tipo;
     let badge = '';
     if (isWd) badge = '<span class="badge badge-weekend">FDS</span>';
+    else if (isJust) badge = `<span class="badge badge-justificativa">${r.justificativa.tipo}</span>`;
     else if (r.status === 'completo') badge = '<span class="badge badge-complete">Completo</span>';
     else if (r.status === 'parcial') badge = '<span class="badge badge-partial">Parcial</span>';
     else badge = '<span class="badge badge-missing">Falta</span>';
 
-    const rowClass = isWd ? 'weekend-row' : 'hover-row';
-    const rowStyle = isWd ? 'style="background:var(--bg-accent)"' : '';
+    const rowClass = isWd ? 'weekend-row' : (isJust ? 'justificativa-row' : 'hover-row');
+    const rowStyle = isWd ? 'style="background:var(--bg-accent)"' : (isJust ? 'style="background:#f0f9ff"' : '');
 
     html += `<tr class="${rowClass}" ${rowStyle}>
-      <td><span class="mono" style="font-weight:${isWd ? '700' : '600'};color:${isWd ? 'var(--amber)' : 'inherit'}">${parseInt(r.data.split('-')[2])}</span> <span style="font-size:10px;color:${isWd ? 'var(--amber)' : 'var(--text-muted)'}">${getDiaSemanaCurto(r.data)}</span></td>
-      <td class="mono">${r.entrada || '—'}</td>
-      <td class="mono">${r.inicioIntervalo && r.fimIntervalo ? `${r.inicioIntervalo} - ${r.fimIntervalo}` : '—'}</td>
-      <td class="mono">${r.saida || '—'}</td>
-      <td class="mono" style="text-align:right;font-weight:600">${formatarMinutos(r.horasNormais)}</td>
-      <td class="mono" style="text-align:right;color:var(--amber);font-weight:600">${r.horasExtras > 0 ? formatarMinutos(r.horasExtras) : '—'}</td>
+      <td><span class="mono" style="font-weight:${isWd ? '700' : '600'};color:${isWd ? 'var(--amber)' : (isJust ? '#1d4ed8' : 'inherit')}">${parseInt(r.data.split('-')[2])}</span> <span style="font-size:10px;color:${isWd ? 'var(--amber)' : (isJust ? '#3b82f6' : 'var(--text-muted)')}">${getDiaSemanaCurto(r.data)}</span></td>
+      <td class="mono">${isJust ? '—' : (r.entrada || '—')}</td>
+      <td class="mono">${isJust ? '—' : (r.inicioIntervalo && r.fimIntervalo ? `${r.inicioIntervalo} - ${r.fimIntervalo}` : '—')}</td>
+      <td class="mono">${isJust ? '—' : (r.saida || '—')}</td>
+      <td class="mono" style="text-align:right;font-weight:600">${isJust ? '—' : formatarMinutos(r.horasNormais)}</td>
+      <td class="mono" style="text-align:right;color:var(--amber);font-weight:600">${isJust ? '—' : (r.horasExtras > 0 ? formatarMinutos(r.horasExtras) : '—')}</td>
       <td>${badge}</td>
       <td style="display:flex;gap:4px;justify-content:flex-end">
         <button class="btn btn-ghost" onclick="openEditarRegistro('${r.id}')" style="padding:4px" title="Editar horário"><span class="material-symbols-outlined" style="font-size:16px">edit</span></button>
@@ -2218,10 +2410,10 @@ async function gerarPDF() {
           const dayDate = new Date(ano, mes - 1, d);
           const isWeekend = dayDate.getDay() === 0 || dayDate.getDay() === 6;
 
-          // Draw weekend background shading (centered on the text row)
+          // Draw weekend or justificativa background shading
+          const isJustificativa = reg && reg.justificativa && reg.justificativa.tipo;
           if (isWeekend) {
-            // rowTopY is the center of the text; the cell extends ~rowH/2 above and below
-            const rectY = (rowTopY + fontSize * 0.35) * sy; // align with bottom of text
+            const rectY = (rowTopY + fontSize * 0.35) * sy;
             page.drawRectangle({
               x: 19.3 * sx,
               y: rectY - table1RowH * sy * 0.85 + 3 * sy,
@@ -2230,15 +2422,31 @@ async function gerarPDF() {
               color: rgb(1, 0.87, 0.6),
               opacity: 0.25
             });
+          } else if (isJustificativa) {
+            const rectY = (rowTopY + fontSize * 0.35) * sy;
+            page.drawRectangle({
+              x: 19.3 * sx,
+              y: rectY - table1RowH * sy * 0.85 + 3 * sy,
+              width: 556.8 * sx,
+              height: table1RowH * sy,
+              color: rgb(0.74, 0.85, 0.96),
+              opacity: 0.3
+            });
           }
 
           if (reg) {
-            if (reg.entrada) page.drawText(reg.entrada, { x: 44 * sx, y: textY * sy, size: fontSize * sy, font });
-            if (reg.inicioIntervalo) page.drawText(reg.inicioIntervalo, { x: 108 * sx, y: textY * sy, size: fontSize * sy, font });
-            if (reg.fimIntervalo) page.drawText(reg.fimIntervalo, { x: 156 * sx, y: textY * sy, size: fontSize * sy, font });
-            if (reg.saida) page.drawText(reg.saida, { x: 209 * sx, y: textY * sy, size: fontSize * sy, font });
-            if (reg.horasExtras > 0) page.drawText(formatarMinutos(reg.horasExtras), { x: 255.5 * sx, y: textY * sy, size: fontSize * sy, font });
-            if (reg.horasFalta > 0) page.drawText(formatarMinutos(reg.horasFalta), { x: 360.7 * sx, y: textY * sy, size: fontSize * sy, font });
+            if (isJustificativa) {
+              // Draw justificativa type text
+              const justText = reg.justificativa.tipo || 'JUSTIFICADO';
+              page.drawText(justText, { x: 44 * sx, y: textY * sy, size: fontSize * sy * 0.75, font: fontBold, color: rgb(0.11, 0.31, 0.85) });
+            } else {
+              if (reg.entrada) page.drawText(reg.entrada, { x: 44 * sx, y: textY * sy, size: fontSize * sy, font });
+              if (reg.inicioIntervalo) page.drawText(reg.inicioIntervalo, { x: 108 * sx, y: textY * sy, size: fontSize * sy, font });
+              if (reg.fimIntervalo) page.drawText(reg.fimIntervalo, { x: 156 * sx, y: textY * sy, size: fontSize * sy, font });
+              if (reg.saida) page.drawText(reg.saida, { x: 209 * sx, y: textY * sy, size: fontSize * sy, font });
+              if (reg.horasExtras > 0) page.drawText(formatarMinutos(reg.horasExtras), { x: 255.5 * sx, y: textY * sy, size: fontSize * sy, font });
+              if (reg.horasFalta > 0) page.drawText(formatarMinutos(reg.horasFalta), { x: 360.7 * sx, y: textY * sy, size: fontSize * sy, font });
+            }
           }
           // Add Sábado/Domingo label for weekends
           if (isWeekend) {
@@ -2261,7 +2469,8 @@ async function gerarPDF() {
           const dayDate = new Date(ano, mes - 1, d);
           const isWeekend = dayDate.getDay() === 0 || dayDate.getDay() === 6;
 
-          // Draw weekend background shading (centered on the text row)
+          // Draw weekend or justificativa background shading
+          const isJustificativa = reg && reg.justificativa && reg.justificativa.tipo;
           if (isWeekend) {
             const rectY = (rowTopY + fontSize * 0.35) * sy;
             page.drawRectangle({
@@ -2272,15 +2481,30 @@ async function gerarPDF() {
               color: rgb(1, 0.87, 0.6),
               opacity: 0.25
             });
+          } else if (isJustificativa) {
+            const rectY = (rowTopY + fontSize * 0.35) * sy;
+            page.drawRectangle({
+              x: 19.3 * sx,
+              y: rectY - table2RowH * sy * 0.85 + 3 * sy,
+              width: 556.8 * sx,
+              height: table2RowH * sy,
+              color: rgb(0.74, 0.85, 0.96),
+              opacity: 0.3
+            });
           }
 
           if (reg) {
-            if (reg.entrada) page.drawText(reg.entrada, { x: 44 * sx, y: textY * sy, size: fontSize * sy, font });
-            if (reg.inicioIntervalo) page.drawText(reg.inicioIntervalo, { x: 108 * sx, y: textY * sy, size: fontSize * sy, font });
-            if (reg.fimIntervalo) page.drawText(reg.fimIntervalo, { x: 156 * sx, y: textY * sy, size: fontSize * sy, font });
-            if (reg.saida) page.drawText(reg.saida, { x: 209 * sx, y: textY * sy, size: fontSize * sy, font });
-            if (reg.horasExtras > 0) page.drawText(formatarMinutos(reg.horasExtras), { x: 255.5 * sx, y: textY * sy, size: fontSize * sy, font });
-            if (reg.horasFalta > 0) page.drawText(formatarMinutos(reg.horasFalta), { x: 360.7 * sx, y: textY * sy, size: fontSize * sy, font });
+            if (isJustificativa) {
+              const justText = reg.justificativa.tipo || 'JUSTIFICADO';
+              page.drawText(justText, { x: 44 * sx, y: textY * sy, size: fontSize * sy * 0.75, font: fontBold, color: rgb(0.11, 0.31, 0.85) });
+            } else {
+              if (reg.entrada) page.drawText(reg.entrada, { x: 44 * sx, y: textY * sy, size: fontSize * sy, font });
+              if (reg.inicioIntervalo) page.drawText(reg.inicioIntervalo, { x: 108 * sx, y: textY * sy, size: fontSize * sy, font });
+              if (reg.fimIntervalo) page.drawText(reg.fimIntervalo, { x: 156 * sx, y: textY * sy, size: fontSize * sy, font });
+              if (reg.saida) page.drawText(reg.saida, { x: 209 * sx, y: textY * sy, size: fontSize * sy, font });
+              if (reg.horasExtras > 0) page.drawText(formatarMinutos(reg.horasExtras), { x: 255.5 * sx, y: textY * sy, size: fontSize * sy, font });
+              if (reg.horasFalta > 0) page.drawText(formatarMinutos(reg.horasFalta), { x: 360.7 * sx, y: textY * sy, size: fontSize * sy, font });
+            }
           }
           // Add Sábado/Domingo label for weekends
           if (isWeekend) {
@@ -2355,26 +2579,32 @@ async function gerarPDF() {
         const reg = mapaReg[d];
         const dayDate = new Date(ano, mes-1, d);
         const isWeekend = dayDate.getDay() === 0 || dayDate.getDay() === 6;
-        // Weekend shading: draw background first (centered on cell)
+        const isJustificativa = reg && reg.justificativa && reg.justificativa.tipo;
+        // Weekend or justificativa shading: draw background first
         page.drawRectangle({ x: 20, y: y-rowH, width: 555, height: rowH,
           borderColor: rgb(0,0,0), borderWidth: 0.3,
-          fill: isWeekend ? rgb(1, 0.87, 0.6) : undefined,
-          opacity: isWeekend ? 0.25 : undefined
+          fill: isWeekend ? rgb(1, 0.87, 0.6) : (isJustificativa ? rgb(0.74, 0.85, 0.96) : undefined),
+          opacity: isWeekend ? 0.25 : (isJustificativa ? 0.3 : undefined)
         });
         // Day number
-        const dayLabelColor = isWeekend ? rgb(0.85, 0.47, 0.03) : rgb(0, 0, 0);
-        page.drawText(String(d), { x: 27, y: y-10, size: fsSmall, font: isWeekend ? fontBold : font, color: dayLabelColor });
+        const dayLabelColor = isWeekend ? rgb(0.85, 0.47, 0.03) : (isJustificativa ? rgb(0.11, 0.31, 0.85) : rgb(0, 0, 0));
+        page.drawText(String(d), { x: 27, y: y-10, size: fsSmall, font: (isWeekend || isJustificativa) ? fontBold : font, color: dayLabelColor });
         // Add "Sábado" or "Domingo" label after the number
         if (isWeekend) {
           const wdLabel = dayDate.getDay() === 6 ? 'Sábado' : 'Domingo';
           page.drawText(wdLabel, { x: 58, y: y-10, size: 5.5, font: fontBold, color: dayLabelColor });
         }
         if (reg) {
-          if (reg.entrada) page.drawText(reg.entrada, { x: 50, y: y-10, size: fsSmall, font });
-          if (reg.inicioIntervalo && reg.fimIntervalo) page.drawText(`${reg.inicioIntervalo}/${reg.fimIntervalo}`, { x: 130, y: y-10, size: 6, font });
-          if (reg.saida) page.drawText(reg.saida, { x: 230, y: y-10, size: fsSmall, font });
-          if (reg.horasExtras > 0) page.drawText(formatarMinutos(reg.horasExtras), { x: 310, y: y-10, size: fsSmall, font });
-          if (reg.horasFalta > 0) page.drawText(formatarMinutos(reg.horasFalta), { x: 410, y: y-10, size: fsSmall, font });
+          if (isJustificativa) {
+            const justText = reg.justificativa.tipo || 'JUSTIFICADO';
+            page.drawText(justText, { x: 50, y: y-10, size: 6, font: fontBold, color: rgb(0.11, 0.31, 0.85) });
+          } else {
+            if (reg.entrada) page.drawText(reg.entrada, { x: 50, y: y-10, size: fsSmall, font });
+            if (reg.inicioIntervalo && reg.fimIntervalo) page.drawText(`${reg.inicioIntervalo}/${reg.fimIntervalo}`, { x: 130, y: y-10, size: 6, font });
+            if (reg.saida) page.drawText(reg.saida, { x: 230, y: y-10, size: fsSmall, font });
+            if (reg.horasExtras > 0) page.drawText(formatarMinutos(reg.horasExtras), { x: 310, y: y-10, size: fsSmall, font });
+            if (reg.horasFalta > 0) page.drawText(formatarMinutos(reg.horasFalta), { x: 410, y: y-10, size: fsSmall, font });
+          }
         }
         y -= rowH;
       }
@@ -2400,26 +2630,32 @@ async function gerarPDF() {
         const reg = mapaReg[d];
         const dayDate = new Date(ano, mes-1, d);
         const isWeekend = dayDate.getDay() === 0 || dayDate.getDay() === 6;
-        // Weekend shading: draw background first (centered on cell)
+        const isJustificativa = reg && reg.justificativa && reg.justificativa.tipo;
+        // Weekend or justificativa shading: draw background first
         page.drawRectangle({ x: 20, y: y-rowH, width: 555, height: rowH,
           borderColor: rgb(0,0,0), borderWidth: 0.3,
-          fill: isWeekend ? rgb(1, 0.87, 0.6) : undefined,
-          opacity: isWeekend ? 0.25 : undefined
+          fill: isWeekend ? rgb(1, 0.87, 0.6) : (isJustificativa ? rgb(0.74, 0.85, 0.96) : undefined),
+          opacity: isWeekend ? 0.25 : (isJustificativa ? 0.3 : undefined)
         });
         // Day number
-        const dayLabelColor = isWeekend ? rgb(0.85, 0.47, 0.03) : rgb(0, 0, 0);
-        page.drawText(String(d), { x: 27, y: y-10, size: fsSmall, font: isWeekend ? fontBold : font, color: dayLabelColor });
+        const dayLabelColor = isWeekend ? rgb(0.85, 0.47, 0.03) : (isJustificativa ? rgb(0.11, 0.31, 0.85) : rgb(0, 0, 0));
+        page.drawText(String(d), { x: 27, y: y-10, size: fsSmall, font: (isWeekend || isJustificativa) ? fontBold : font, color: dayLabelColor });
         // Add "Sábado" or "Domingo" label after the number
         if (isWeekend) {
           const wdLabel = dayDate.getDay() === 6 ? 'Sábado' : 'Domingo';
           page.drawText(wdLabel, { x: 58, y: y-10, size: 5.5, font: fontBold, color: dayLabelColor });
         }
         if (reg) {
-          if (reg.entrada) page.drawText(reg.entrada, { x: 50, y: y-10, size: fsSmall, font });
-          if (reg.inicioIntervalo && reg.fimIntervalo) page.drawText(`${reg.inicioIntervalo}/${reg.fimIntervalo}`, { x: 130, y: y-10, size: 6, font });
-          if (reg.saida) page.drawText(reg.saida, { x: 230, y: y-10, size: fsSmall, font });
-          if (reg.horasExtras > 0) page.drawText(formatarMinutos(reg.horasExtras), { x: 310, y: y-10, size: fsSmall, font });
-          if (reg.horasFalta > 0) page.drawText(formatarMinutos(reg.horasFalta), { x: 410, y: y-10, size: fsSmall, font });
+          if (isJustificativa) {
+            const justText = reg.justificativa.tipo || 'JUSTIFICADO';
+            page.drawText(justText, { x: 50, y: y-10, size: 6, font: fontBold, color: rgb(0.11, 0.31, 0.85) });
+          } else {
+            if (reg.entrada) page.drawText(reg.entrada, { x: 50, y: y-10, size: fsSmall, font });
+            if (reg.inicioIntervalo && reg.fimIntervalo) page.drawText(`${reg.inicioIntervalo}/${reg.fimIntervalo}`, { x: 130, y: y-10, size: 6, font });
+            if (reg.saida) page.drawText(reg.saida, { x: 230, y: y-10, size: fsSmall, font });
+            if (reg.horasExtras > 0) page.drawText(formatarMinutos(reg.horasExtras), { x: 310, y: y-10, size: fsSmall, font });
+            if (reg.horasFalta > 0) page.drawText(formatarMinutos(reg.horasFalta), { x: 410, y: y-10, size: fsSmall, font });
+          }
         }
         y -= rowH;
       }
