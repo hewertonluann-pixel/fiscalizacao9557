@@ -745,10 +745,14 @@ input, select, textarea { font-family: var(--font); }
           </button>
         </div>
 
-        <!-- Botão justificativa -->
-        <button class="btn btn-outline" id="btnJustificativa" style="display:none;margin-top:12px;width:100%" onclick="openJustificativaModal()">
+        <!-- Justificativas -->
+        <button class="btn btn-outline" id="btnJustificativa" style="display:none;margin-top:12px;width:100%" onclick="openJustificativaModal('falta')">
           <span class="material-symbols-outlined" style="font-size:18px">note_add</span>
-          Registrar Justificativa
+          Justificar falta
+        </button>
+        <button class="btn btn-outline" id="btnJustificativaSaida" style="display:none;margin-top:8px;width:100%;border-color:var(--orange);color:#c2410c" onclick="openJustificativaModal('saida_mais_cedo')">
+          <span class="material-symbols-outlined" style="font-size:18px">logout</span>
+          Justificar saída mais cedo
         </button>
 
         <!-- Botão apagar registro -->
@@ -1023,6 +1027,23 @@ input, select, textarea { font-family: var(--font); }
           </button>
         </div>
 
+        <div class="card" style="margin-bottom:16px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+            <span class="material-symbols-outlined" style="color:var(--text-muted);font-size:18px">more_time</span>
+            <div class="label-section" style="margin-bottom:0">Horas Extras</div>
+          </div>
+          <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer">
+            <input type="checkbox" id="cfgHorasExtras" checked style="width:18px;height:18px;margin-top:2px;accent-color:var(--emerald)">
+            <span>
+              <strong style="display:block;font-size:13px">Habilitar contagem de horas extras</strong>
+              <small style="display:block;color:var(--text-muted);font-size:11px;margin-top:3px">Quando desabilitada, o sistema não calcula nem exibe horas extras nos registros, painéis e folhas.</small>
+            </span>
+          </label>
+          <button class="btn btn-primary btn-sm" style="margin-top:14px" onclick="salvarHorasExtras()">
+            <span class="material-symbols-outlined" style="font-size:16px">save</span> Salvar configuração
+          </button>
+        </div>
+
         <div class="card">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px">
             <span class="material-symbols-outlined" style="color:var(--text-muted);font-size:18px">event</span>
@@ -1148,8 +1169,20 @@ input, select, textarea { font-family: var(--font); }
       </div>
     </div>
     <div class="form-group">
+      <label>O que deseja justificar? *</label>
+      <select id="justCategoria" onchange="atualizarTextoJustificativa()" style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:6px;font-size:14px">
+        <option value="falta">Falta / ausência no dia</option>
+        <option value="saida_mais_cedo">Saída mais cedo</option>
+      </select>
+    </div>
+    <div class="form-group">
       <label>Tipo de Justificativa *</label>
-      <input type="text" id="justTipo" placeholder="Ex: FÉRIAS, ATESTADO, LICENÇA-SAÚDE, LICENÇA-PRÊMIO" style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:6px;font-size:14px">
+      <input type="text" id="justTipo" placeholder="Ex: ATESTADO MÉDICO, CONSULTA, LICENÇA-SAÚDE" style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:6px;font-size:14px">
+    </div>
+    <div class="form-group">
+      <label>Anexo (opcional)</label>
+      <input type="file" id="justAnexo" accept=".pdf,.jpg,.jpeg,.png,.webp" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:13px">
+      <small id="justAnexoAtual" style="display:block;color:var(--text-muted);font-size:11px;margin-top:5px"></small>
     </div>
     <div class="form-group">
       <label>Observação (opcional)</label>
@@ -1330,6 +1363,22 @@ function calcularHoras(entrada, inicioInt, fimInt, saida) {
   return Math.max(0, mins);
 }
 
+let horasExtrasHabilitadas = true;
+function obterHorasExtras(registro) {
+  return horasExtrasHabilitadas ? (registro?.horasExtras || 0) : 0;
+}
+
+function lerAnexo(file) {
+  return new Promise((resolve, reject) => {
+    if (!file) return resolve(null);
+    if (file.size > 5 * 1024 * 1024) return reject(new Error('O anexo deve ter no máximo 5 MB.'));
+    const reader = new FileReader();
+    reader.onload = () => resolve({ nome: file.name, tipo: file.type, tamanho: file.size, conteudo: reader.result });
+    reader.onerror = () => reject(reader.error || new Error('Não foi possível ler o anexo.'));
+    reader.readAsDataURL(file);
+  });
+}
+
 /* ========================================================================
    TOAST NOTIFICATIONS
    ======================================================================== */
@@ -1471,12 +1520,14 @@ async function onServidorPontoChange() {
     renderPontoButtons();
     document.getElementById('resumoDia').style.display = 'block';
     document.getElementById('btnJustificativa').style.display = registroHoje.justificativa ? 'none' : 'block';
+    document.getElementById('btnJustificativaSaida').style.display = registroHoje.justificativa ? 'none' : 'block';
     if (registroHoje.justificativa) {
       document.getElementById('resumoStatus').innerHTML = `<span class="badge badge-justificativa">${registroHoje.justificativa.tipo || 'JUSTIFICADO'}</span>`;
     }
   } else {
     document.getElementById('btnApagarRegistro').style.display = 'none';
     document.getElementById('btnJustificativa').style.display = 'block';
+    document.getElementById('btnJustificativaSaida').style.display = 'block';
     renderPontoButtons();
     document.getElementById('resumoDia').style.display = 'none';
   }
@@ -1535,8 +1586,9 @@ function renderPontoButtons() {
     // Show two action buttons: Editar e Remover
     const btnJust = document.getElementById('btnJustificativa');
     btnJust.style.display = 'block';
-    btnJust.innerHTML = '<span class="material-symbols-outlined" style="font-size:18px">edit_note</span> Editar Justificativa';
+    btnJust.innerHTML = `<span class="material-symbols-outlined" style="font-size:18px">edit_note</span> Editar ${registroHoje.justificativa.categoria === 'saida_mais_cedo' ? 'justificativa de saída' : 'justificativa'}`;
     btnJust.onclick = () => openJustificativaModalEdit();
+    document.getElementById('btnJustificativaSaida').style.display = 'none';
 
     const btnApagar = document.getElementById('btnApagarRegistro');
     btnApagar.style.display = 'block';
@@ -1554,7 +1606,7 @@ function renderPontoButtons() {
     document.getElementById('resumoDia').style.display = 'block';
     const horas = calcularHoras(registroHoje.entrada, registroHoje.inicioIntervalo, registroHoje.fimIntervalo, registroHoje.saida);
     document.getElementById('resumoHoras').textContent = formatarMinutos(horas);
-    document.getElementById('resumoExtras').textContent = formatarMinutos(registroHoje.horasExtras || 0);
+    document.getElementById('resumoExtras').textContent = formatarMinutos(obterHorasExtras(registroHoje));
 
     const statusEl = document.getElementById('resumoStatus');
     if (registroHoje.status === 'completo') {
@@ -1653,7 +1705,7 @@ async function registrarPonto(campo) {
   const servidor = servidores.find(s => s.id === servidorPontoSelecionado);
   if (servidor && registroHoje.entrada && registroHoje.saida) {
     const cargaMin = servidor.cargaHoraria * 60;
-    registroHoje.horasExtras = Math.max(0, horasNormais - cargaMin);
+    registroHoje.horasExtras = horasExtrasHabilitadas ? Math.max(0, horasNormais - cargaMin) : 0;
   }
 
   registroHoje.updatedAt = new Date().toISOString();
@@ -1774,7 +1826,7 @@ async function salvarEdicao() {
   const servidor = servidores.find(s => s.id === registroHoje.servidorId);
   if (servidor && registroHoje.entrada && registroHoje.saida) {
     const cargaMin = servidor.cargaHoraria * 60;
-    registroHoje.horasExtras = Math.max(0, horasNormais - cargaMin);
+    registroHoje.horasExtras = horasExtrasHabilitadas ? Math.max(0, horasNormais - cargaMin) : 0;
   }
 
   // Save audit log in observacao
@@ -1801,12 +1853,22 @@ async function salvarEdicao() {
 /* ========================================================================
    JUSTIFICATIVA
    ======================================================================== */
-function openJustificativaModal() {
-  // Pre-fill start date with selectedPontoDate
+function atualizarTextoJustificativa() {
+  const categoria = document.getElementById('justCategoria').value;
+  document.getElementById('justTipo').placeholder = categoria === 'saida_mais_cedo'
+    ? 'Ex: ATESTADO MÉDICO, CONSULTA, AUTORIZAÇÃO'
+    : 'Ex: ATESTADO MÉDICO, FÉRIAS, LICENÇA-SAÚDE';
+}
+
+function openJustificativaModal(categoria = 'falta') {
   document.getElementById('justDataInicio').value = selectedPontoDate;
   document.getElementById('justDataFim').value = selectedPontoDate;
+  document.getElementById('justCategoria').value = categoria;
   document.getElementById('justTipo').value = '';
   document.getElementById('justObservacao').value = '';
+  document.getElementById('justAnexo').value = '';
+  document.getElementById('justAnexoAtual').textContent = '';
+  atualizarTextoJustificativa();
   document.getElementById('modalJustificativa').classList.add('active');
 }
 
@@ -1816,13 +1878,21 @@ function openJustificativaModalEdit() {
     const j = registroHoje.justificativa;
     document.getElementById('justDataInicio').value = j.dataInicio || selectedPontoDate;
     document.getElementById('justDataFim').value = j.dataFim || selectedPontoDate;
+    document.getElementById('justCategoria').value = j.categoria || 'falta';
     document.getElementById('justTipo').value = j.tipo || '';
     document.getElementById('justObservacao').value = j.observacao || '';
+    document.getElementById('justAnexo').value = '';
+    document.getElementById('justAnexoAtual').textContent = j.anexo ? `Anexo atual: ${j.anexo.nome}. Escolha outro arquivo para substituir.` : '';
+    atualizarTextoJustificativa();
   } else {
     document.getElementById('justDataInicio').value = selectedPontoDate;
     document.getElementById('justDataFim').value = selectedPontoDate;
+    document.getElementById('justCategoria').value = 'falta';
     document.getElementById('justTipo').value = '';
     document.getElementById('justObservacao').value = '';
+    document.getElementById('justAnexo').value = '';
+    document.getElementById('justAnexoAtual').textContent = '';
+    atualizarTextoJustificativa();
   }
   document.getElementById('modalJustificativa').classList.add('active');
 }
@@ -1834,8 +1904,16 @@ function closeJustificativaModal() {
 async function salvarJustificativa() {
   const dataInicio = document.getElementById('justDataInicio').value;
   const dataFim = document.getElementById('justDataFim').value;
+  const categoria = document.getElementById('justCategoria').value;
   const tipo = document.getElementById('justTipo').value.trim().toUpperCase();
   const observacao = document.getElementById('justObservacao').value.trim();
+  let anexo;
+  try {
+    anexo = await lerAnexo(document.getElementById('justAnexo').files[0]);
+  } catch (e) {
+    toast(e.message, 'error');
+    return;
+  }
 
   if (!dataInicio || !dataFim) { toast('Preencha as datas', 'error'); return; }
   if (!tipo) { toast('Preencha o tipo de justificativa', 'error'); return; }
@@ -1866,11 +1944,11 @@ async function salvarJustificativa() {
 
     if (reg && reg.justificativa) {
       // Update existing justificativa record
-      reg.justificativa = { tipo, dataInicio, dataFim, observacao };
+      reg.justificativa = { ...reg.justificativa, categoria, tipo, dataInicio, dataFim, observacao, ...(anexo ? { anexo } : {}) };
       reg.observacao = (reg.observacao || '') + `\nJustificativa atualizada: ${tipo} (${dataInicio} a ${dataFim})`;
     } else if (reg) {
       // Record exists with hours — add justificativa info
-      reg.justificativa = { tipo, dataInicio, dataFim, observacao };
+      reg.justificativa = { categoria, tipo, dataInicio, dataFim, observacao, ...(anexo ? { anexo } : {}) };
       reg.observacao = (reg.observacao || '') + `\nJustificativa adicionada: ${tipo} (${dataInicio} a ${dataFim})`;
     } else {
       // Create new justificativa record (no hours)
@@ -1882,7 +1960,7 @@ async function salvarJustificativa() {
         horasExtras: 0, horasNormais: 0, horasFalta: 0,
         observacao: observacao || '',
         status: 'justificado',
-        justificativa: { tipo, dataInicio, dataFim, observacao },
+        justificativa: { categoria, tipo, dataInicio, dataFim, observacao, ...(anexo ? { anexo } : {}) },
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
@@ -1976,7 +2054,7 @@ async function renderDashboard() {
   document.getElementById('statFaltas').textContent = faltas;
   document.getElementById('statFaltasSub').textContent = `dias sem registro (${diasJustificados} justificado${diasJustificados !== 1 ? 's' : ''})`;
   document.getElementById('statHoras').textContent = formatarMinutos(totalHoras);
-  document.getElementById('statExtras').textContent = formatarMinutos(totalExtras);
+  document.getElementById('statExtras').textContent = formatarMinutos(horasExtrasHabilitadas ? totalExtras : 0);
 
   // Calendar
   document.getElementById('dashCalendar').style.display = 'block';
@@ -2060,7 +2138,7 @@ async function renderHistorico() {
       <td class="mono">${isJust ? '—' : (r.inicioIntervalo && r.fimIntervalo ? `${r.inicioIntervalo} - ${r.fimIntervalo}` : '—')}</td>
       <td class="mono">${isJust ? '—' : (r.saida || '—')}</td>
       <td class="mono" style="text-align:right;font-weight:600">${isJust ? '—' : formatarMinutos(r.horasNormais)}</td>
-      <td class="mono" style="text-align:right;color:var(--amber);font-weight:600">${isJust ? '—' : (r.horasExtras > 0 ? formatarMinutos(r.horasExtras) : '—')}</td>
+      <td class="mono" style="text-align:right;color:var(--amber);font-weight:600">${isJust ? '—' : (obterHorasExtras(r) > 0 ? formatarMinutos(obterHorasExtras(r)) : '—')}</td>
       <td>${badge}</td>
       <td style="display:flex;gap:4px;justify-content:flex-end">
         <button class="btn btn-ghost" onclick="openEditarRegistro('${r.id}')" style="padding:4px" title="Editar horário"><span class="material-symbols-outlined" style="font-size:16px">edit</span></button>
@@ -2364,7 +2442,7 @@ async function gerarPDF() {
           const mapaReg = {};
           registrosMes.forEach(r => { mapaReg[Number(r.data.split('-')[2])] = r; });
           let totalNormais = 0, totalExtras = 0;
-          registrosMes.forEach(r => { totalNormais += r.horasNormais || 0; totalExtras += r.horasExtras || 0; });
+          registrosMes.forEach(r => { totalNormais += r.horasNormais || 0; totalExtras += obterHorasExtras(r); });
 
           // Common field name patterns
           const fillValue = (name) => {
@@ -2385,7 +2463,7 @@ async function gerarPDF() {
             if (lower.includes('cidade') || lower.includes('município') || lower.includes('municipio')) return document.getElementById('cfgCidade')?.value || '';
             if (lower.includes('entidade') || lower.includes('órgão') || lower.includes('orgao')) return document.getElementById('cfgOrgao')?.value || '';
             if (lower.includes('total') || lower.includes('normais') || lower.includes('hs normal')) return formatarMinutos(totalNormais);
-            if (lower.includes('extra')) return formatarMinutos(totalExtras);
+            if (lower.includes('extra')) return formatarMinutos(horasExtrasHabilitadas ? totalExtras : 0);
 
             // Day fields (e.g., "dia01", "d1", "01", etc.)
             const dayMatch = lower.match(/(?:dia|d|day)?(\d{1,2})/);
@@ -2396,7 +2474,7 @@ async function gerarPDF() {
                 if (lower.includes('entrada') || lower.includes('entr')) return reg.entrada || '';
                 if (lower.includes('intervalo') || lower.includes('int')) return reg.inicioIntervalo ? `${reg.inicioIntervalo} - ${reg.fimIntervalo}` : '';
                 if (lower.includes('saida') || lower.includes('saída') || lower.includes('exit')) return reg.saida || '';
-                if (lower.includes('extra')) return reg.horasExtras > 0 ? formatarMinutos(reg.horasExtras) : '';
+                if (lower.includes('extra')) return obterHorasExtras(reg) > 0 ? formatarMinutos(obterHorasExtras(reg)) : '';
                 if (lower.includes('falta')) return reg.horasFalta > 0 ? formatarMinutos(reg.horasFalta) : '';
                 // Default: return entry time if no specific match
                 return reg.entrada || '';
@@ -2449,7 +2527,7 @@ async function gerarPDF() {
         const mapaReg = {};
         registrosMes.forEach(r => { mapaReg[Number(r.data.split('-')[2])] = r; });
         let totalNormais = 0, totalExtras = 0;
-        registrosMes.forEach(r => { totalNormais += r.horasNormais || 0; totalExtras += r.horasExtras || 0; });
+        registrosMes.forEach(r => { totalNormais += r.horasNormais || 0; totalExtras += obterHorasExtras(r); });
 
         // Scale positions based on page size (A4 = 595.2x841.68)
         const sx = width / 595.2;
@@ -2531,7 +2609,7 @@ async function gerarPDF() {
               if (reg.inicioIntervalo) page.drawText(reg.inicioIntervalo, { x: 108 * sx, y: textY * sy, size: fontSize * sy, font });
               if (reg.fimIntervalo) page.drawText(reg.fimIntervalo, { x: 156 * sx, y: textY * sy, size: fontSize * sy, font });
               if (reg.saida) page.drawText(reg.saida, { x: 209 * sx, y: textY * sy, size: fontSize * sy, font });
-              if (reg.horasExtras > 0) page.drawText(formatarMinutos(reg.horasExtras), { x: 255.5 * sx, y: textY * sy, size: fontSize * sy, font });
+              if (obterHorasExtras(reg) > 0) page.drawText(formatarMinutos(obterHorasExtras(reg)), { x: 255.5 * sx, y: textY * sy, size: fontSize * sy, font });
               if (reg.horasFalta > 0) page.drawText(formatarMinutos(reg.horasFalta), { x: 360.7 * sx, y: textY * sy, size: fontSize * sy, font });
             }
           }
@@ -2596,7 +2674,7 @@ async function gerarPDF() {
               if (reg.inicioIntervalo) page.drawText(reg.inicioIntervalo, { x: 108 * sx, y: textY * sy, size: fontSize * sy, font });
               if (reg.fimIntervalo) page.drawText(reg.fimIntervalo, { x: 156 * sx, y: textY * sy, size: fontSize * sy, font });
               if (reg.saida) page.drawText(reg.saida, { x: 209 * sx, y: textY * sy, size: fontSize * sy, font });
-              if (reg.horasExtras > 0) page.drawText(formatarMinutos(reg.horasExtras), { x: 255.5 * sx, y: textY * sy, size: fontSize * sy, font });
+              if (obterHorasExtras(reg) > 0) page.drawText(formatarMinutos(obterHorasExtras(reg)), { x: 255.5 * sx, y: textY * sy, size: fontSize * sy, font });
               if (reg.horasFalta > 0) page.drawText(formatarMinutos(reg.horasFalta), { x: 360.7 * sx, y: textY * sy, size: fontSize * sy, font });
             }
           }
@@ -2612,7 +2690,7 @@ async function gerarPDF() {
         // Move totals down ~15pts to sit in the data row beneath the labels
         const totalsY = (841.68 - 709.2 - fontSize * 0.35) * sy;
         page.drawText(formatarMinutos(totalNormais), { x: 44.4 * sx, y: totalsY, size: fontSize * sy, font });
-        page.drawText(formatarMinutos(totalExtras), { x: 136.1 * sx, y: totalsY, size: fontSize * sy, font });
+        page.drawText(formatarMinutos(horasExtrasHabilitadas ? totalExtras : 0), { x: 136.1 * sx, y: totalsY, size: fontSize * sy, font });
       }
     } else {
       // Generate PDF from scratch
@@ -2669,7 +2747,7 @@ async function gerarPDF() {
       const mapaReg = {};
       registrosMes.forEach(r => { mapaReg[Number(r.data.split('-')[2])] = r; });
       let totalNormais = 0, totalExtras = 0;
-      registrosMes.forEach(r => { totalNormais += r.horasNormais || 0; totalExtras += r.horasExtras || 0; });
+      registrosMes.forEach(r => { totalNormais += r.horasNormais || 0; totalExtras += obterHorasExtras(r); });
 
       for (let d = 11; d <= 31; d++) {
         // Verifica se o dia existe no mês
@@ -2701,7 +2779,7 @@ async function gerarPDF() {
             if (reg.entrada) page.drawText(reg.entrada, { x: 50, y: y-10, size: fsSmall, font });
             if (reg.inicioIntervalo && reg.fimIntervalo) page.drawText(`${reg.inicioIntervalo}/${reg.fimIntervalo}`, { x: 130, y: y-10, size: 6, font });
             if (reg.saida) page.drawText(reg.saida, { x: 230, y: y-10, size: fsSmall, font });
-            if (reg.horasExtras > 0) page.drawText(formatarMinutos(reg.horasExtras), { x: 310, y: y-10, size: fsSmall, font });
+            if (obterHorasExtras(reg) > 0) page.drawText(formatarMinutos(obterHorasExtras(reg)), { x: 310, y: y-10, size: fsSmall, font });
             if (reg.horasFalta > 0) page.drawText(formatarMinutos(reg.horasFalta), { x: 410, y: y-10, size: fsSmall, font });
           }
         }
@@ -2753,7 +2831,7 @@ async function gerarPDF() {
             if (reg.entrada) page.drawText(reg.entrada, { x: 50, y: y-10, size: fsSmall, font });
             if (reg.inicioIntervalo && reg.fimIntervalo) page.drawText(`${reg.inicioIntervalo}/${reg.fimIntervalo}`, { x: 130, y: y-10, size: 6, font });
             if (reg.saida) page.drawText(reg.saida, { x: 230, y: y-10, size: fsSmall, font });
-            if (reg.horasExtras > 0) page.drawText(formatarMinutos(reg.horasExtras), { x: 310, y: y-10, size: fsSmall, font });
+            if (obterHorasExtras(reg) > 0) page.drawText(formatarMinutos(obterHorasExtras(reg)), { x: 310, y: y-10, size: fsSmall, font });
             if (reg.horasFalta > 0) page.drawText(formatarMinutos(reg.horasFalta), { x: 410, y: y-10, size: fsSmall, font });
           }
         }
@@ -2764,7 +2842,7 @@ async function gerarPDF() {
       y -= 4;
       page.drawRectangle({ x: 20, y: y-12, width: 555, height: 14, borderColor: rgb(0,0,0), borderWidth: 0.5, fill: undefined });
       page.drawText(`HS. NORMAIS: ${formatarMinutos(totalNormais)}`, { x: 25, y: y-10, size: fsSmall, font: fontBold });
-      page.drawText(`HS. EXTRAS: ${formatarMinutos(totalExtras)}`, { x: 150, y: y-10, size: fsSmall, font: fontBold });
+      page.drawText(`HS. EXTRAS: ${formatarMinutos(horasExtrasHabilitadas ? totalExtras : 0)}`, { x: 150, y: y-10, size: fsSmall, font: fontBold });
 
       y -= 18;
       page.drawText(`OBSERVAÇÕES: ${registrosMes.map(r => r.observacao).filter(Boolean).join('; ') || ''}`, { x: 30, y: y, size: fs, font });
@@ -2798,6 +2876,10 @@ async function gerarPDF() {
    CONFIGURAÇÕES
    ======================================================================== */
 async function loadConfig() {
+  const extras = await dbGet('config', 'horas_extras_habilitadas');
+  horasExtrasHabilitadas = extras ? extras.value !== false : true;
+  const checkboxExtras = document.getElementById('cfgHorasExtras');
+  if (checkboxExtras) checkboxExtras.checked = horasExtrasHabilitadas;
   const orgao = await dbGet('config', 'nome_orgao');
   if (orgao) document.getElementById('cfgOrgao').value = orgao.value;
   const cidade = await dbGet('config', 'cidade');
@@ -2824,6 +2906,15 @@ async function salvarOrgao() {
 async function salvarTolerancia() {
   await dbPut('config', { key: 'tolerancia_minutos', value: document.getElementById('cfgTolerancia').value });
   toast('Tolerância atualizada');
+}
+
+async function salvarHorasExtras() {
+  horasExtrasHabilitadas = document.getElementById('cfgHorasExtras').checked;
+  await dbPut('config', { key: 'horas_extras_habilitadas', value: horasExtrasHabilitadas });
+  toast(horasExtrasHabilitadas ? 'Contagem de horas extras habilitada' : 'Contagem de horas extras desabilitada');
+  if (currentPage === 'ponto') await onServidorPontoChange();
+  if (currentPage === 'dashboard') await renderDashboard();
+  if (currentPage === 'historico') await renderHistorico();
 }
 
 async function addFeriado() {
@@ -2878,7 +2969,9 @@ setInterval(updateClock, 1000);
    ======================================================================== */
 async function init() {
   await openDB();
-  loadPontoPage();
+  const extras = await dbGet('config', 'horas_extras_habilitadas');
+  horasExtrasHabilitadas = extras ? extras.value !== false : true;
+  await loadPontoPage();
 
   // Set current month/year in selects
   const now = new Date();
