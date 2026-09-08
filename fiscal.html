@@ -353,6 +353,7 @@
       let sess=null, mesAtivo=null, anoAtivo=null, editandoId=null;
       const selectedIds = new Set();
       const ignoredDuplicates = new Set();
+      const agora = new Date();
 
       // ======= TIPOS DE SERVIÇO (carregados do Firestore) =======
       const TIPOS_FALLBACK = [
@@ -408,8 +409,8 @@
         $('#conteudo').style.display='block';
         $('#who').textContent = `${sess.nome} (Fiscal)`;
         $('#fData').value = new Date().toISOString().slice(0,10);
-        $('#anoFiltro').value = new Date().getFullYear();
-        anoAtivo = parseInt($('#anoFiltro').value,10);
+        $('#anoFiltro').value = agora.getFullYear();
+        anoAtivo = agora.getFullYear();
       }
       validarSessao();
 
@@ -451,6 +452,18 @@
           renderMeus();
         };
         mesBtns.appendChild(b);
+      });
+
+      // Exibe somente os lançamentos do mês atual na abertura da página.
+      mesAtivo = agora.getMonth() + 1;
+      anoAtivo = agora.getFullYear();
+      mesBtns.children[mesAtivo - 1].classList.add('is-active');
+      $('#anoFiltro').addEventListener('change', () => {
+        const ano = parseInt($('#anoFiltro').value, 10);
+        if (!Number.isNaN(ano)) {
+          anoAtivo = ano;
+          renderMeus();
+        }
       });
 
       $('#btnAdd').onclick = async ()=>{
