@@ -770,7 +770,7 @@
     "use strict";
 
     const DB_NAME = "dividaAtivaMEI_INSCOBRA";
-    const DB_VERSION = 1;
+    const DB_VERSION = 2;
 
     const STORES = {
       files: "files",
@@ -931,28 +931,95 @@
       return `${dia}/${mes}/${ano}`;
     }
 
+    // Leiaute INSCOBRA observado nos arquivos da Dívida Ativa MEI.
+    // As posições abaixo são 1-based na documentação do arquivo; JavaScript usa 0-based.
+    const LAYOUT_INSCOBRA = Object.freeze({
+      cabecalho: { versao: [2, 4], dataGeracao: [5, 12] },
+      detalhe: {
+        codigoOrigem: [2, 8],
+        identificacao: [527, 683],
+        documentoComposto: [684, 704],
+        endereco: [713, 775],
+        numeroComplemento: [776, 937],
+        bairro: [938, 987],
+        municipio: [988, 1041],
+        ufReceita: [1042, 1069],
+        valorEReferencias: [1071, 1121],
+        fundamentacaoLegal: [1184, 5182],
+        codigoFinal: [5184, 5187]
+      },
+      trailer: { quantidadeRegistros: [2, 21] }
+    });
+
+    function campo(linha, faixa) {
+      return String(linha || "").slice(faixa[0] - 1, faixa[1]);
+    }
+
+    function extrairDatas(texto) {
+      return (String(texto || "").match(/20\d{6}/g) || [])
+        .filter(data => {
+          const mes = Number(data.slice(4, 6));
+          const dia = Number(data.slice(6, 8));
+          return mes >= 1 && mes <= 12 && dia >= 0 && dia <= 31;
+        });
+    }
+
     function interpretarCabecalho(linha) {
+      const dataGeracao = campo(linha, LAYOUT_INSCOBRA.cabecalho.dataGeracao).trim();
       return {
         tipo: "0",
-        versao: linha.substring(1, 4).trim(),
-        dataGeracao: converterDataAAAAMMDD(linha.substring(4, 12).trim()),
+        versao: campo(linha, LAYOUT_INSCOBRA.cabecalho.versao).trim(),
+        dataGeracao,
         linhaOriginal: linha
       };
     }
 
     function interpretarTrailer(linha) {
-      const quantidadeTexto = linha.substring(1, 21).replace(/\D/g, "");
+      const quantidadeTexto = campo(linha, LAYOUT_INSCOBRA.trailer.quantidadeRegistros).trim();
       return {
         tipo: "2",
-        quantidadeRegistros: quantidadeTexto ? Number(quantidadeTexto) : null,
+        quantidadeRegistros: /^\d+$/.test(quantidadeTexto) ? Number(quantidadeTexto) : null,
         linhaOriginal: linha
       };
     }
 
-    function interpretarRegistroDetalhe(linha, nomeArquivo, numeroLinha) {
+    function interpretarRegistroDetalhe(linha, nomeArquivo, numeroLinha, dataGeracaoArquivo = "") {
       if (!linha || linha.charAt(0) !== "1") {
-        throw new Error("Registro de detalhe invá¬¬lido.");
+        throw new Error("Registro de detalhe inválido.");
       }
+      if (linha.length < 5187) {
+        throw new Error(`Registro curto: esperado pelo menos 5187 caracteres, recebido ${linha.length}.`);
+      }
+
+      const identificacao = campo(linha, LAYOUT_INSCOBRA.detalhe.identificacao);
+      const documentoComposto = campo(linha, LAYOUT_INSCOBRA.detalhe.documentoComposto).trim();
+      const cpfMatch = identificacao.match(/(\d{11})\s*$/);
+      const cpf = cpfMatch ? cpfMatch[1] : "";
+      const nome = limparTexto((cpfMatch ? identificacao.slice(0, cpfMatch.index) : identificacao)
+        .replace(/^\s*\d+\s*/, ""));
+
+      const cnpj = /^\d{14}/.test(documentoComposto) ? documentoComposto.slice(0, 14) : "";
+      const numeroInscricao = documentoComposto.slice(14).trim();
+      const enderecoCompleto = limparTexto(campo(linha, LAYOUT_INSCOBRA.detalhe.endereco));
+      const numeroComplemento = limparTexto(campo(linha, LAYOUT_INSCOBRA.detalhe.numeroComplemento));
+      const municipioCampo = campo(linha, LAYOUT_INSCOBRA.detalhe.municipio);
+      const codigoMunicipio = municipioCampo.slice(0, 4).trim();
+      const municipio = limparTexto(municipioCampo.slice(4));
+      const ufReceita = campo(linha, LAYOUT_INSCOBRA.detalhe.ufReceita);
+      const uf = ufReceita.slice(0, 2).trim();
+      const tributo = ufReceita.slice(2, 13).trim();
+      const modalidade = limparTexto(ufReceita.slice(13, 29));
+      const valorEReferencias = campo(linha, LAYOUT_INSCOBRA.detalhe.valorEReferencias);
+      const valorTexto = (valorEReferencias.match(/^\s*(\d{1,18},\d{2})/) || ["", ""])[1];
+      const valor = converterValorBrasileiro(valorTexto);
+      const referencias = valorEReferencias.slice((valorTexto || "").length).trim();
+      const datas = extrairDatas(`${modalidade} ${referencias}`);
+      const periodo = datas.find(data => data.slice(6, 8) === "00") || "";
+      const datasValidas = datas.filter(data => data.slice(6, 8) !== "00");
+      const vencimento = datasValidas[0] || "";
+      const dataInscricao = datasValidas[datasValidas.length - 1] || "";
+      const codigoFinal = campo(linha, LAYOUT_INSCOBRA.detalhe.codigoFinal).trim();
+      const fundamentacaoLegal = limparTexto(campo(linha, LAYOUT_INSCOBRA.detalhe.fundamentacaoLegal));
 
       const registro = {
         id: `${nomeArquivo}::${numeroLinha}`,
@@ -960,163 +1027,73 @@
         linhaOrigem: numeroLinha,
         tipoRegistro: "1",
         linhaOriginal: linha,
-        cpf: "",
-        nome: "",
-        cnpj: "",
-        endereco: "",
-        numero: "",
-        bairro: "",
-        municipio: "",
-        uf: "",
-        codigoMunicipio: "",
-        codigoReceita: "",
-        vencimento: "",
-        valor: 0,
-        valorTexto: "",
-        periodoApuracao: "",
-        numeroInscricao: "",
-        dataInscricao: "",
-        fundamentacaoLegal: "",
-        codigoFinal: ""
+        dataGeracaoArquivo,
+        codigoOrigem: campo(linha, LAYOUT_INSCOBRA.detalhe.codigoOrigem).trim(),
+        cpf,
+        nome,
+        cnpj,
+        endereco: enderecoCompleto,
+        numero: numeroComplemento,
+        bairro: limparTexto(campo(linha, LAYOUT_INSCOBRA.detalhe.bairro)),
+        municipio,
+        uf,
+        codigoMunicipio,
+        codigoReceita: tributo,
+        tributo,
+        modalidade,
+        vencimento,
+        valor,
+        valorTexto,
+        periodoApuracao: periodo ? `${periodo.slice(0, 4)}-${periodo.slice(4, 6)}` : "",
+        numeroInscricao,
+        dataInscricao,
+        fundamentacaoLegal,
+        codigoFinal,
+        datasEncontradas: datas,
+        situacaoAtual: "",
+        situacaoFonte: "Não informada no arquivo"
       };
-
-      const texto = linha.substring(1);
-
-      const finalMatch = texto.match(/(\d{4})\s*$/);
-      if (finalMatch) {
-        registro.codigoFinal = finalMatch[1];
-      }
-
-      const trechoInicial = texto.substring(0, 180);
-      const cpfMatch = trechoInicial.match(/(\d{3}\.?\d{3}\.?\d{3}-?\d{2}|\d{11})/);
-      if (cpfMatch) {
-        registro.cpf = somenteNumeros(cpfMatch[1]);
-      }
-
-      if (cpfMatch) {
-        const antesCpf = trechoInicial
-          .substring(0, cpfMatch.index)
-          .replace(/^0*\d+/, "")
-          .trim();
-        registro.nome = limparTexto(antesCpf);
-      }
-
-      const cnpjMatch = texto.match(/\b\d{14}\b/);
-      if (cnpjMatch) {
-        registro.cnpj = cnpjMatch[0];
-      }
-
-      const municipioUfMatch = texto.match(
-        /(\d{4})([A-ZÁ¬À¬Ã¬Â¬É¬Ê¬Í¬Ó¬Ô¬Õ¬Ú¬Ç¬ ]{3,})\s{2,}(MG|SP|RJ|ES|BA|GO|DF|PR|SC|RS|PE|CE|PA|AM|MA|PI|RN|PB|AL|SE|RO|AC|AP|RR|TO|MT|MS)\b/
-      );
-      if (municipioUfMatch) {
-        registro.codigoMunicipio = municipioUfMatch[1];
-        registro.municipio = limparTexto(municipioUfMatch[2]);
-        registro.uf = municipioUfMatch[3];
-      }
-
-      const receitaMatch = texto.match(/\b391\d{9}\b/);
-      if (receitaMatch) {
-        registro.codigoReceita = receitaMatch[0];
-      }
-
-      const datas = texto.match(/\b20\d{6}\b/g) || [];
-      if (datas.length >= 1) {
-        registro.vencimento = converterDataAAAAMMDD(datas[0]);
-      }
-
-      if (datas.length >= 2) {
-        registro.dataInscricao = converterDataAAAAMMDD(datas[datas.length - 1]);
-      }
-
-      const periodoMatch = texto.match(/\b20\d{2}(0[1-9]|1[0-2])00\b/);
-      if (periodoMatch) {
-        const periodo = periodoMatch[0];
-        registro.periodoApuracao = periodo.substring(0, 4) + "-" + periodo.substring(4, 6);
-      }
-
-      const valorMatch = texto.match(/0{5,}(\d{1,12},\d{2})/);
-      if (valorMatch) {
-        registro.valorTexto = valorMatch[1];
-        registro.valor = converterValorBrasileiro(valorMatch[1]);
-      }
-
-      if (cnpjMatch) {
-        const depoisCnpj = texto.substring(cnpjMatch.index + cnpjMatch[0].length);
-        const enderecoMatch = depoisCnpj.match(/\s+([A-ZÁ¬À¬Ã¬Â¬É¬Ê¬Í¬Ó¬Ô¬Õ¬Ú¬Ç¬0-9 .'-]{5,})\s{3,}\d{6}/);
-        if (enderecoMatch) {
-          registro.endereco = limparTexto(enderecoMatch[1]);
-        }
-      }
-
-      const fundamentoMatch = texto.match(/(ART\s+1[\s\S]+?)(?=\s{10,}\d{4}\s*$)/);
-      if (fundamentoMatch) {
-        registro.fundamentacaoLegal = limparTexto(fundamentoMatch[1]);
-      }
 
       registro.chaveDebito = generateDebtKey(registro);
       return registro;
     }
 
     function interpretarArquivo(nomeArquivo, conteudo) {
-      const resultado = {
-        nomeArquivo,
-        registros: [],
-        erros: [],
-        cabecalho: null,
-        trailer: null
-      };
-
-      const linhas = conteudo
+      const resultado = { nomeArquivo, registros: [], erros: [], cabecalho: null, trailer: null };
+      const linhas = String(conteudo || "")
         .replace(/^\uFEFF/, "")
         .replace(/\r/g, "")
         .split("\n")
-        .map(linha => linha.replace(/\r/g, ""))
         .filter(linha => linha.trim() !== "");
-
       if (!linhas.length) {
         resultado.erros.push("Arquivo vazio.");
         return resultado;
       }
-
-      linhas.forEach((linha, indice) => {
+      linhas.forEach((linhaOriginal, indice) => {
         const numeroLinha = indice + 1;
-        const linhaLimpa = linha.trimEnd();
-
+        const linha = linhaOriginal.padEnd(5187, " ");
         try {
-          const tipoRegistro = linhaLimpa.charAt(0);
-
+          const tipoRegistro = linha.charAt(0);
           if (tipoRegistro === "0") {
-            resultado.cabecalho = interpretarCabecalho(linhaLimpa);
-            return;
+            if (resultado.cabecalho) throw new Error("Cabeçalho duplicado.");
+            resultado.cabecalho = interpretarCabecalho(linha);
+          } else if (tipoRegistro === "1") {
+            resultado.registros.push(interpretarRegistroDetalhe(linha, nomeArquivo, numeroLinha, resultado.cabecalho?.dataGeracao || ""));
+          } else if (tipoRegistro === "2") {
+            if (resultado.trailer) throw new Error("Trailer duplicado.");
+            resultado.trailer = interpretarTrailer(linha);
+          } else {
+            resultado.erros.push({ linha: numeroLinha, mensagem: `Tipo de registro desconhecido: "${tipoRegistro}"` });
           }
-
-          if (tipoRegistro === "1") {
-            const registro = interpretarRegistroDetalhe(linhaLimpa, nomeArquivo, numeroLinha);
-            if (registro) {
-              resultado.registros.push(registro);
-            }
-            return;
-          }
-
-          if (tipoRegistro === "2") {
-            resultado.trailer = interpretarTrailer(linhaLimpa);
-            return;
-          }
-
-          resultado.erros.push({
-            linha: numeroLinha,
-            mensagem: `Tipo de registro desconhecido: "${tipoRegistro}"`
-          });
-
         } catch (erro) {
-          resultado.erros.push({
-            linha: numeroLinha,
-            mensagem: erro.message || "Erro ao interpretar registro."
-          });
+          resultado.erros.push({ linha: numeroLinha, mensagem: erro.message || "Erro ao interpretar registro." });
         }
       });
-
+      if (!resultado.cabecalho) resultado.erros.push({ linha: 1, mensagem: "Cabeçalho não encontrado." });
+      if (!resultado.trailer) resultado.erros.push({ linha: linhas.length, mensagem: "Trailer não encontrado." });
+      if (resultado.trailer?.quantidadeRegistros !== null && resultado.trailer.quantidadeRegistros !== linhas.length) {
+        resultado.erros.push({ linha: linhas.length, mensagem: `Trailer informa ${resultado.trailer.quantidadeRegistros} registros, mas foram lidas ${linhas.length} linhas.` });
+      }
       return resultado;
     }
 
@@ -1146,7 +1123,7 @@
         if (!existing || isMoreRecent(record, existing)) {
           const consolidated = {
             ...record,
-            situacaoAtual: "01",
+            situacaoAtual: record.situacaoAtual || "",
             valorOriginalAtual: record.valor,
             valorInscritoAtual: record.valor,
             ultimoArquivo: record.arquivoOrigem,
@@ -1248,13 +1225,18 @@
       }
 
       const situacoes = {
-        "01": { nome: "Em cobrançª£o", valor: 0 },
+        "": { nome: "Situação não informada", valor: 0 },
+        "01": { nome: "Em cobrança", valor: 0 },
         "02": { nome: "Garantia", valor: 0 },
-        "03": { nome: "Em negociaçª£o", valor: 0 },
-        "04": { nome: "Benefí¬¬cio fiscal", valor: 0 },
+        "03": { nome: "Em negociação", valor: 0 },
+        "04": { nome: "Benefício fiscal", valor: 0 },
         "05": { nome: "Suspenso judicial", valor: 0 },
         "06": { nome: "Extinta", valor: 0 }
       };
+      allConsolidated.forEach(item => {
+        const code = Object.prototype.hasOwnProperty.call(situacoes, item.situacaoAtual || "") ? (item.situacaoAtual || "") : "";
+        situacoes[code].valor += Number(item.valorInscritoAtual || 0);
+      });
 
       const colors = {
         "01": "#159447",
@@ -1290,9 +1272,9 @@
     }
 
     function getFilteredData() {
-      const cnpj = document.getElementById("filterCnpj").value.replace(/\D/g, "");
-      const cpf = document.getElementById("filterCpf").value.replace(/\D/g, "");
-      const municipio = document.getElementById("filterMunicipio").value.trim().toUpperCase();
+      const cnpj = document.getElementById("filterCnpj")?.value.replace(/\D/g, "") || "";
+      const cpf = document.getElementById("filterCpf")?.value.replace(/\D/g, "") || "";
+      const municipio = document.getElementById("filterMunicipio")?.value.trim().toUpperCase() || "";
       const uf = document.getElementById("filterUf").value.trim().toUpperCase();
       const periodo = document.getElementById("filterPeriodo").value.trim().replace("/", "");
       const arquivo = document.getElementById("filterArquivo").value;
@@ -1603,8 +1585,8 @@
 
     function clearFilters() {
       document.getElementById("filterCnpj").value = "";
-      document.getElementById("filterCpf").value = "";
-      document.getElementById("filterMunicipio").value = "";
+      if (document.getElementById("filterCpf")) document.getElementById("filterCpf").value = "";
+      if (document.getElementById("filterMunicipio")) document.getElementById("filterMunicipio").value = "";
       document.getElementById("filterUf").value = "";
       document.getElementById("filterPeriodo").value = "";
       document.getElementById("filterArquivo").value = "";
