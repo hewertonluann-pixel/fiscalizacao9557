@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dí�ıda Ativa MEI - Interpretaçııo INSCOBRA</title>
+  <title>Dívida Ativa MEI - Interpretaçª£o INSCOBRA</title>
   <style>
     :root {
       --primary: #145dcc;
@@ -510,13 +510,13 @@
       <div class="brand">
         <div class="brand-icon">📊</div>
         <div>
-          <strong>Dí¬¬vida Ativa MEI</strong>
-          <span>Interpretaçııo INSCOBRA</span>
+          <strong>Dí¶½vida Ativa MEI</strong>
+          <span>Interpretaçª£o INSCOBRA</span>
         </div>
       </div>
 
       <nav class="menu">
-        <button class="active" data-section="dashboard">🏠 Visa̋o geral</button>
+        <button class="active" data-section="dashboard">🏠 Visä££o geral</button>
         <button data-section="debitos">📄 Débitos</button>
         <button data-section="contribuintes">👥 Contribuintes</button>
         <button data-section="arquivos">🗂️ Arquivos</button>
@@ -525,7 +525,7 @@
 
       <div class="sidebar-info">
         <strong>Processamento local</strong><br/>
-        Os arquivos são lidos diretamente neste navegador.
+        Os arquivos sä#&o lidos diretamente neste navegador.
         Nenhum dado é enviado para servidor.
       </div>
     </aside>
@@ -533,14 +533,14 @@
     <main class="main">
       <header class="topbar">
         <div>
-          <h1>Visa̋o geral</h1>
+          <h1>Visä££o geral</h1>
           <p class="subtitle">
-            Interpretaçııo de arquivos TXT da Dí­vida Ativa do MEI (padra̋o INSCOBRA).
+            Interpretaçª£o de arquivos TXT da Dí­vida Ativa do MEI (padrä££o INSCOBRA).
           </p>
         </div>
 
         <div class="top-info">
-            Última atualizaçııo
+            Última atualizaçª£o
             <strong id="lastUpdate">Nenhum arquivo importado</strong>
         </div>
       </header>
@@ -552,7 +552,7 @@
             <div>
               <strong>Importar arquivos INSCOBRA</strong>
               <span>
-                Selecione um ou va̠rios arquivos TXT. O sistema interpreta automaticamente.
+                Selecione um ou vá#&rios arquivos TXT. O sistema interpreta automaticamente.
               </span>
             </div>
           </div>
@@ -579,7 +579,7 @@
         </div>
 
         <div id="uploadStatus" class="status">
-          Aguardando seleçııo de arquivos.
+          Aguardando seleçª£o de arquivos.
         </div>
       </section>
 
@@ -591,7 +591,7 @@
         </div>
 
         <div class="metric card green">
-          <div class="metric-label">Dé¬¬bitos va̠lidos</div>
+          <div class="metric-label">Dé¬¬bitos vá#&lidos</div>
           <div class="metric-value" id="metricValidos">0</div>
           <div class="metric-note">Registros interpretados</div>
         </div>
@@ -603,9 +603,9 @@
         </div>
 
         <div class="metric card purple">
-          <div class="metric-label">Contribuintes u̠nicos</div>
+          <div class="metric-label">Contribuintes ú#&nicos</div>
           <div class="metric-value" id="metricContribuintes">0</div>
-          <div class="metric-note">CNPJ/CPF u̠nicos</div>
+          <div class="metric-note">CNPJ/CPF ú#&nicos</div>
         </div>
       </section>
 
@@ -629,7 +629,7 @@
 
               <div>
                 <strong id="validCount">0</strong>
-                <span>registros va̠lidos</span>
+                <span>registros vá#&lidos</span>
               </div>
 
               <div>
@@ -646,7 +646,7 @@
 
         <div class="panel card">
           <div class="panel-header">
-            <h2>Resumo por situaçııo</h2>
+            <h2>Resumo por situaçª£o</h2>
           </div>
 
           <div class="bars" id="situationBars">
@@ -706,7 +706,7 @@
           <div>
             <h2>Dé¬¬bitos consolidados</h2>
             <p>
-              Cada inscriçııo é considerada uma u̠nica vez na visa̋o consolidada.
+              Cada inscriçª£o é considerada uma ú#&nica vez na visa#&o consolidada.
               O histórico mensal permanece preservado.
             </p>
           </div>
@@ -729,11 +729,11 @@
                 <th>UF</th>
                 <th>Perí¬¬odo</th>
                 <th>Vencimento</th>
-                <th>Inscriçııo</th>
+                <th>Inscriçª£o</th>
                 <th>Valor</th>
-                <th>Có¬¬�. Receita</th>
+                <th>Có¬¬¬d. Receita</th>
                 <th>Arquivo</th>
-                <th>Açııes</th>
+                <th>Açªµes</th>
               </tr>
             </thead>
 
@@ -749,7 +749,7 @@
 
         <div class="table-footer">
           <span id="tableShowing">Mostrando 0 registros</span>
-          <span>Valores consolidados por inscriçııo</span>
+          <span>Valores consolidados por inscriçª£o</span>
         </div>
       </section>
     </main>
@@ -951,7 +951,7 @@
 
     function interpretarRegistroDetalhe(linha, nomeArquivo, numeroLinha) {
       if (!linha || linha.charAt(0) !== "1") {
-        throw new Error("Registro de detalhe inva̠lido.");
+        throw new Error("Registro de detalhe invá¬¬lido.");
       }
 
       const registro = {
@@ -1248,9 +1248,9 @@
       }
 
       const situacoes = {
-        "01": { nome: "Em cobrançıı", valor: 0 },
+        "01": { nome: "Em cobrançª£o", valor: 0 },
         "02": { nome: "Garantia", valor: 0 },
-        "03": { nome: "Em negociaçııo", valor: 0 },
+        "03": { nome: "Em negociaçª£o", valor: 0 },
         "04": { nome: "Benefí¬¬cio fiscal", valor: 0 },
         "05": { nome: "Suspenso judicial", valor: 0 },
         "06": { nome: "Extinta", valor: 0 }
@@ -1391,7 +1391,7 @@
             <strong>${escapeHtml(record.uf || "-")}</strong>
           </div>
           <div class="detail-item">
-            <small>Perí¬¬odo de apuraçııo</small>
+            <small>Perí¬¬odo de apuraçª£o</small>
             <strong>${escapeHtml(formatPeriod(record.periodoApuracao) || "-")}</strong>
           </div>
           <div class="detail-item">
@@ -1399,11 +1399,11 @@
             <strong>${escapeHtml(formatDate(record.vencimento) || "-")}</strong>
           </div>
           <div class="detail-item">
-            <small>Data da inscriçııo</small>
+            <small>Data da inscriçª£o</small>
             <strong>${escapeHtml(formatDate(record.dataInscricao) || "-")}</strong>
           </div>
           <div class="detail-item">
-            <small>Nu̠mero da inscriçııo</small>
+            <small>Nu#&mero da inscriçª£o</small>
             <strong>${escapeHtml(record.numeroInscricao || "-")}</strong>
           </div>
           <div class="detail-item">
@@ -1411,16 +1411,16 @@
             <strong>${money(record.valorInscritoAtual)}</strong>
           </div>
           <div class="detail-item">
-            <small>Có¬¬�. Receita</small>
+            <small>Có¬¬¬d. Receita</small>
             <strong>${escapeHtml(record.codigoReceita || "-")}</strong>
           </div>
           <div class="detail-item">
-            <small>U̠ltimo arquivo</small>
+            <small>U#&ltimo arquivo</small>
             <strong>${escapeHtml(record.ultimoArquivo || "-")}</strong>
           </div>
         </div>
 
-        <h3 style="margin-top:25px">Histó¬¬¬rico de ocorrências</h3>
+        <h3 style="margin-top:25px">Histó¬¬¬rico de ocorrê¬¬ncias</h3>
 
         <div class="history-list">
           ${
@@ -1511,7 +1511,7 @@
         const backup = JSON.parse(text);
 
         if (!backup || !Array.isArray(backup.files) || !Array.isArray(backup.history) || !Array.isArray(backup.consolidated)) {
-          throw new Error("Formato de backup inva̠lido.");
+          throw new Error("Formato de backup invá¬¬lido.");
         }
 
         for (const item of backup.files) await putItem(STORES.files, item);
@@ -1582,7 +1582,7 @@
 
       await refreshData();
 
-      let message = `${processed} arquivo(s) processado(s). ${skipped} arquivo(s) já existente(s). ${totalValid} registro(s) vá̠lidos.`;
+      let message = `${processed} arquivo(s) processado(s). ${skipped} arquivo(s) já existente(s). ${totalValid} registro(s) vá#&lidos.`;
       if (totalErrors) message += ` ${totalErrors} erro(s) encontrado(s).`;
       if (errorMessages.length) message += ` ${errorMessages.join(" | ")}`;
 
@@ -1626,7 +1626,7 @@
       document.getElementById("exportBackupBtn").addEventListener("click", exportBackup);
       document.getElementById("exportCsvBtn").addEventListener("click", () => {
         if (!filteredConsolidated.length) {
-          alert("Na̋o há̠ registros para exportar.");
+          alert("Nä££o há#& registros para exportar.");
           return;
         }
         const csv = "\uFEFF" + convertToCsv(filteredConsolidated);
@@ -1647,9 +1647,9 @@
             ? fileRecords.map(file => {
                 return [
                   `Arquivo: ${file.nome}`,
-                  `Geraçııo: ${formatDate(file.dataGeracao)}`,
+                  `Geraçª£o: ${formatDate(file.dataGeracao)}`,
                   `Lidos: ${file.quantidadeLida}`,
-                  `Va̠lidos: ${file.quantidadeValida}`,
+                  `Vá¬¬lidos: ${file.quantidadeValida}`,
                   `Erros: ${file.quantidadeErros}`,
                   `Status: ${file.status}`
                 ].join("\n");
@@ -1674,9 +1674,9 @@
           } else if (section === "debitos") {
             document.querySelector(".table-card").scrollIntoView({ behavior: "smooth" });
           } else if (section === "contribuintes") {
-            alert("A visa̋o por contribuintes será construí¬¬da a partir do agrupamento dos CNPJs/CPFs consolidados.");
+            alert("A visa#&o por contribuintes será construí¬¬da a partir do agrupamento dos CNPJs/CPFs consolidados.");
           } else if (section === "historico") {
-            alert(`A base possui ${historyRecords.length} ocorrências históricas armazenadas.`);
+            alert(`A base possui ${historyRecords.length} ocorrê¬¬ncias históricas armazenadas.`);
           } else {
             window.scrollTo({ top: 0, behavior: "smooth" });
           }
@@ -1690,7 +1690,7 @@
         setupEvents();
         await refreshData();
       } catch (error) {
-        setStatus(`Na̋o foi possível iniciar a base local: ${error.message}`, "error");
+        setStatus(`Nä££o foi possível iniciar a base local: ${error.message}`, "error");
       }
     }
 
