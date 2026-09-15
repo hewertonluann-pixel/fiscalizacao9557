@@ -1,0 +1,1700 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dí�ıda Ativa MEI - Interpretaçııo INSCOBRA</title>
+  <style>
+    :root {
+      --primary: #145dcc;
+      --primary-dark: #0c2d52;
+      --primary-light: #eaf3ff;
+      --text: #172033;
+      --muted: #68758a;
+      --border: #dbe4ef;
+      --background: #f4f7fb;
+      --card: #ffffff;
+      --success: #159447;
+      --warning: #d58a00;
+      --danger: #d92d3d;
+      --purple: #7754c9;
+      --shadow: 0 8px 24px rgba(15, 45, 82, 0.07);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      color: var(--text);
+      background: var(--background);
+    }
+
+    button, input, select { font: inherit; }
+    button { cursor: pointer; }
+
+    .app { display: flex; min-height: 100vh; }
+
+    .sidebar {
+      width: 260px;
+      flex-shrink: 0;
+      background: linear-gradient(180deg, #102b4b, #081c33);
+      color: white;
+      padding: 24px 14px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .brand {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      padding: 0 12px 30px;
+    }
+
+    .brand-icon {
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      border-radius: 12px;
+      background: #1f70d8;
+      font-size: 22px;
+    }
+
+    .brand strong { display: block; font-size: 18px; }
+    .brand span { display: block; color: #b8cbe1; font-size: 12px; margin-top: 4px; }
+
+    .menu { display: grid; gap: 7px; }
+
+    .menu button {
+      width: 100%;
+      border: 0;
+      color: #c8d7e9;
+      background: transparent;
+      padding: 13px 14px;
+      border-radius: 9px;
+      text-align: left;
+      display: flex;
+      align-items: center;
+      gap: 11px;
+    }
+
+    .menu button:hover, .menu button.active {
+      background: #1d65b9;
+      color: white;
+    }
+
+    .sidebar-info {
+      margin-top: auto;
+      border: 1px solid rgba(255,255,255,.18);
+      border-radius: 10px;
+      padding: 14px;
+      color: #c4d4e8;
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .main {
+      flex: 1;
+      min-width: 0;
+      padding: 28px;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 20px;
+      margin-bottom: 24px;
+    }
+
+    h1, h2, h3, p { margin-top: 0; }
+    h1 { margin-bottom: 6px; font-size: 30px; }
+    h2 { font-size: 18px; margin-bottom: 5px; }
+    .subtitle { color: var(--muted); margin-bottom: 0; }
+
+    .top-info {
+      text-align: right;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .top-info strong {
+      display: block;
+      color: var(--text);
+      font-size: 14px;
+      margin-top: 5px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+    }
+
+    .upload-card {
+      padding: 20px;
+      margin-bottom: 22px;
+      border: 1px dashed #8fb7ed;
+      background: #fafdff;
+    }
+
+    .upload-area {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .upload-description {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .upload-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: 12px;
+      background: var(--primary-light);
+      color: var(--primary);
+      display: grid;
+      place-items: center;
+      font-size: 26px;
+    }
+
+    .upload-description strong { display: block; margin-bottom: 5px; }
+    .upload-description span { color: var(--muted); font-size: 13px; }
+
+    .button-group { display: flex; flex-wrap: wrap; gap: 9px; }
+
+    .btn {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      background: white;
+      color: var(--text);
+      font-weight: 600;
+      font-size: 13px;
+    }
+
+    .btn:hover { filter: brightness(.97); }
+
+    .btn-primary {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: white;
+    }
+
+    .btn-danger {
+      background: #fff1f2;
+      border-color: #ffc5ca;
+      color: var(--danger);
+    }
+
+    .btn-success {
+      background: #eaf8ef;
+      border-color: #b6e6c7;
+      color: #087a35;
+    }
+
+    .hidden { display: none !important; }
+
+    .status {
+      margin-top: 15px;
+      padding: 11px 13px;
+      border-radius: 8px;
+      background: #f0f5fb;
+      color: #41536b;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .status.success { background: #eaf8ef; color: #087a35; }
+    .status.error { background: #fff0f1; color: #a91e2d; }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(150px, 1fr));
+      gap: 14px;
+      margin-bottom: 22px;
+    }
+
+    .metric {
+      padding: 17px;
+      min-width: 0;
+    }
+
+    .metric-label {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+
+    .metric-value {
+      font-size: 22px;
+      font-weight: 700;
+      line-height: 1.2;
+      overflow-wrap: anywhere;
+    }
+
+    .metric-note {
+      color: var(--muted);
+      font-size: 11px;
+      margin-top: 10px;
+    }
+
+    .metric.blue { border-top: 4px solid var(--primary); }
+    .metric.green { border-top: 4px solid var(--success); }
+    .metric.orange { border-top: 4px solid var(--warning); }
+    .metric.purple { border-top: 4px solid var(--purple); }
+
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+      margin-bottom: 22px;
+    }
+
+    .panel { padding: 20px; min-width: 0; }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .panel-header h2 { margin-bottom: 0; }
+
+    .files-summary { display: grid; gap: 15px; }
+
+    .file-number {
+      font-size: 35px;
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    .file-number-label { color: var(--muted); font-size: 13px; }
+
+    .file-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      border-top: 1px solid var(--border);
+      padding-top: 15px;
+    }
+
+    .file-stats strong { display: block; font-size: 20px; }
+    .file-stats span { display: block; color: var(--muted); font-size: 11px; margin-top: 4px; }
+
+    .filters { padding: 20px; margin-bottom: 22px; }
+
+    .filters-grid {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(120px, 1fr));
+      gap: 12px;
+    }
+
+    .field { min-width: 0; }
+
+    .field label {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      color: #53647b;
+      margin-bottom: 6px;
+    }
+
+    .field input, .field select {
+      width: 100%;
+      min-width: 0;
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      padding: 10px;
+      background: white;
+      color: var(--text);
+      outline: none;
+    }
+
+    .field input:focus, .field select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(20,93,204,.1);
+    }
+
+    .filter-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 9px;
+      margin-top: 15px;
+      flex-wrap: wrap;
+    }
+
+    .table-card { overflow: hidden; }
+
+    .table-header {
+      padding: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .table-header h2 { margin-bottom: 4px; }
+    .table-header p { margin: 0; color: var(--muted); font-size: 12px; }
+
+    .table-wrapper { overflow-x: auto; width: 100%; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 1400px;
+    }
+
+    th, td {
+      padding: 13px 12px;
+      border-top: 1px solid var(--border);
+      text-align: left;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    th {
+      background: #f8fafc;
+      color: #52637a;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .3px;
+    }
+
+    td strong { font-weight: 700; }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 8px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .badge-success { color: #087a35; background: #e4f7eb; }
+    .badge-warning { color: #9b6100; background: #fff2d6; }
+    .badge-info { color: #1268a4; background: #e4f3ff; }
+    .badge-default { color: #52637a; background: #edf1f6; }
+
+    .table-footer {
+      padding: 15px 20px;
+      color: var(--muted);
+      font-size: 12px;
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .empty { padding: 45px 20px; text-align: center; color: var(--muted); }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(6, 24, 44, .55);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 20;
+    }
+
+    .modal-backdrop.open { display: flex; }
+
+    .modal {
+      width: min(900px, 100%);
+      max-height: 90vh;
+      overflow: auto;
+      background: white;
+      border-radius: 14px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.25);
+    }
+
+    .modal-header {
+      padding: 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      gap: 15px;
+      align-items: center;
+    }
+
+    .modal-header h2 { margin: 0; }
+    .modal-body { padding: 20px; }
+
+    .close-btn {
+      border: 0;
+      background: #f0f3f7;
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      font-size: 18px;
+    }
+
+    .detail-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 15px;
+    }
+
+    .detail-item {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+    }
+
+    .detail-item small {
+      display: block;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .detail-item strong { overflow-wrap: anywhere; }
+
+    .history-list { display: grid; gap: 10px; margin-top: 20px; }
+
+    .history-item {
+      border-left: 4px solid var(--primary);
+      background: #f7faff;
+      padding: 12px;
+      border-radius: 5px;
+      font-size: 13px;
+    }
+
+    @media (max-width: 1350px) {
+      .metrics { grid-template-columns: repeat(2, 1fr); }
+      .dashboard-grid { grid-template-columns: 1fr; }
+      .filters-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+
+    @media (max-width: 850px) {
+      .app { display: block; }
+      .sidebar { width: 100%; padding: 15px; }
+      .brand { padding-bottom: 15px; }
+      .menu { grid-template-columns: repeat(3, 1fr); }
+      .menu button { justify-content: center; font-size: 12px; }
+      .sidebar-info { display: none; }
+      .main { padding: 18px; }
+      .topbar { display: block; }
+      .top-info { text-align: left; margin-top: 15px; }
+      .metrics { grid-template-columns: repeat(2, 1fr); }
+      .filters-grid { grid-template-columns: repeat(2, 1fr); }
+      .detail-grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    @media (max-width: 520px) {
+      h1 { font-size: 25px; }
+      .metrics { grid-template-columns: 1fr; }
+      .filters-grid { grid-template-columns: 1fr; }
+      .menu { grid-template-columns: repeat(2, 1fr); }
+      .detail-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-icon">📊</div>
+        <div>
+          <strong>Dí¬¬vida Ativa MEI</strong>
+          <span>Interpretaçııo INSCOBRA</span>
+        </div>
+      </div>
+
+      <nav class="menu">
+        <button class="active" data-section="dashboard">🏠 Visa̋o geral</button>
+        <button data-section="debitos">📄 Débitos</button>
+        <button data-section="contribuintes">👥 Contribuintes</button>
+        <button data-section="arquivos">🗂️ Arquivos</button>
+        <button data-section="historico">🕘 Histórico</button>
+      </nav>
+
+      <div class="sidebar-info">
+        <strong>Processamento local</strong><br/>
+        Os arquivos são lidos diretamente neste navegador.
+        Nenhum dado é enviado para servidor.
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div>
+          <h1>Visa̋o geral</h1>
+          <p class="subtitle">
+            Interpretaçııo de arquivos TXT da Dí­vida Ativa do MEI (padra̋o INSCOBRA).
+          </p>
+        </div>
+
+        <div class="top-info">
+            Última atualizaçııo
+            <strong id="lastUpdate">Nenhum arquivo importado</strong>
+        </div>
+      </header>
+
+      <section class="upload-card card">
+        <div class="upload-area">
+          <div class="upload-description">
+            <div class="upload-icon">📥</div>
+            <div>
+              <strong>Importar arquivos INSCOBRA</strong>
+              <span>
+                Selecione um ou va̠rios arquivos TXT. O sistema interpreta automaticamente.
+              </span>
+            </div>
+          </div>
+
+          <div class="button-group">
+            <label class="btn btn-primary">
+              Selecionar arquivos
+              <input id="fileInput" type="file" accept=".txt,text/plain" multiple hidden />
+            </label>
+
+            <button class="btn btn-success" id="exportBackupBtn">
+              Exportar backup
+            </button>
+
+            <label class="btn">
+              Importar backup
+              <input id="backupInput" type="file" accept=".json,application/json" hidden />
+            </label>
+
+            <button class="btn btn-danger" id="clearDatabaseBtn">
+              Apagar base
+            </button>
+          </div>
+        </div>
+
+        <div id="uploadStatus" class="status">
+          Aguardando seleçııo de arquivos.
+        </div>
+      </section>
+
+      <section class="metrics">
+        <div class="metric card blue">
+          <div class="metric-label">Total inscrito</div>
+          <div class="metric-value" id="metricTotal">R$ 0,00</div>
+          <div class="metric-note">Soma dos valores inscritos</div>
+        </div>
+
+        <div class="metric card green">
+          <div class="metric-label">Dé¬¬bitos va̠lidos</div>
+          <div class="metric-value" id="metricValidos">0</div>
+          <div class="metric-note">Registros interpretados</div>
+        </div>
+
+        <div class="metric card orange">
+          <div class="metric-label">Arquivos processados</div>
+          <div class="metric-value" id="metricArquivos">0</div>
+          <div class="metric-note">Total de arquivos</div>
+        </div>
+
+        <div class="metric card purple">
+          <div class="metric-label">Contribuintes u̠nicos</div>
+          <div class="metric-value" id="metricContribuintes">0</div>
+          <div class="metric-note">CNPJ/CPF u̠nicos</div>
+        </div>
+      </section>
+
+      <section class="dashboard-grid">
+        <div class="panel card">
+          <div class="panel-header">
+            <h2>Estatí¬¬sticas dos arquivos</h2>
+          </div>
+
+          <div class="files-summary">
+            <div>
+              <div class="file-number" id="fileCount">0</div>
+              <div class="file-number-label">arquivos processados</div>
+            </div>
+
+            <div class="file-stats">
+              <div>
+                <strong id="readCount">0</strong>
+                <span>registros lidos</span>
+              </div>
+
+              <div>
+                <strong id="validCount">0</strong>
+                <span>registros va̠lidos</span>
+              </div>
+
+              <div>
+                <strong id="errorCount">0</strong>
+                <span>erros</span>
+              </div>
+            </div>
+
+            <button class="btn" id="viewFilesBtn">
+              Ver arquivos importados
+            </button>
+          </div>
+        </div>
+
+        <div class="panel card">
+          <div class="panel-header">
+            <h2>Resumo por situaçııo</h2>
+          </div>
+
+          <div class="bars" id="situationBars">
+            <div class="empty">Nenhum débitos importado.</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="filters card">
+        <div class="panel-header">
+          <h2>Filtros de pesquisa</h2>
+          <span id="filterResultCount" class="subtitle">0 registros</span>
+        </div>
+
+        <div class="filters-grid">
+          <div class="field">
+            <label for="filterCnpj">CNPJ</label>
+            <input id="filterCnpj" type="text" placeholder="Digite o CNPJ" />
+          </div>
+
+          <div class="field">
+            <label for="filterCpf">CPF</label>
+            <input id="filterCpf" type="text" placeholder="Digite o CPF" />
+          </div>
+
+          <div class="field">
+            <label for="filterMunicipio">Municí¬¬pio</label>
+            <input id="filterMunicipio" type="text" placeholder="Nome do municí¬¬pio" />
+          </div>
+
+          <div class="field">
+            <label for="filterUf">UF</label>
+            <input id="filterUf" type="text" placeholder="MG" maxlength="2" />
+          </div>
+
+          <div class="field">
+            <label for="filterPeriodo">Perí¬¬odo</label>
+            <input id="filterPeriodo" type="text" placeholder="MM/AAAA" />
+          </div>
+
+          <div class="field">
+            <label for="filterArquivo">Arquivo</label>
+            <select id="filterArquivo">
+              <option value="">Todos</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="filter-actions">
+          <button class="btn" id="clearFiltersBtn">Limpar filtros</button>
+          <button class="btn btn-primary" id="searchBtn">Pesquisar</button>
+        </div>
+      </section>
+
+      <section class="table-card card">
+        <div class="table-header">
+          <div>
+            <h2>Dé¬¬bitos consolidados</h2>
+            <p>
+              Cada inscriçııo é considerada uma u̠nica vez na visa̋o consolidada.
+              O histórico mensal permanece preservado.
+            </p>
+          </div>
+
+          <div class="button-group">
+            <button class="btn btn-success" id="exportCsvBtn">
+              Exportar CSV
+            </button>
+          </div>
+        </div>
+
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>CNPJ</th>
+                <th>CPF</th>
+                <th>Nome</th>
+                <th>Municí¬¬pio</th>
+                <th>UF</th>
+                <th>Perí¬¬odo</th>
+                <th>Vencimento</th>
+                <th>Inscriçııo</th>
+                <th>Valor</th>
+                <th>Có¬¬�. Receita</th>
+                <th>Arquivo</th>
+                <th>Açııes</th>
+              </tr>
+            </thead>
+
+            <tbody id="debitosTableBody">
+              <tr>
+                <td colspan="12">
+                  <div class="empty">Nenhum débitos importado.</div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="table-footer">
+          <span id="tableShowing">Mostrando 0 registros</span>
+          <span>Valores consolidados por inscriçııo</span>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="modal-backdrop" id="detailModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>Detalhes do débitos</h2>
+        <button class="close-btn" id="closeModalBtn">×¬</button>
+      </div>
+
+      <div class="modal-body" id="modalBody"></div>
+    </div>
+  </div>
+
+  <script>
+    "use strict";
+
+    const DB_NAME = "dividaAtivaMEI_INSCOBRA";
+    const DB_VERSION = 1;
+
+    const STORES = {
+      files: "files",
+      history: "history",
+      consolidated: "consolidated"
+    };
+
+    let db = null;
+    let allConsolidated = [];
+    let filteredConsolidated = [];
+    let fileRecords = [];
+    let historyRecords = [];
+
+    const money = value => {
+      return Number(value || 0).toLocaleString("pt-BR", {
+        style: "currency",
+        currency: "BRL"
+      });
+    };
+
+    const numberFormat = value => {
+      return Number(value || 0).toLocaleString("pt-BR");
+    };
+
+    const escapeHtml = value => {
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    };
+
+    const formatCnpj = value => {
+      const digits = String(value || "").replace(/\D/g, "");
+      if (digits.length !== 14) return digits;
+      return digits.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, "$1.$2.$3/$4-$5");
+    };
+
+    const formatCpf = value => {
+      const digits = String(value || "").replace(/\D/g, "");
+      if (digits.length !== 11) return digits;
+      return digits.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, "$1.$2.$3-$4");
+    };
+
+    const formatDate = value => {
+      const text = String(value || "");
+      if (!/^\d{8}$/.test(text)) return text;
+      return `${text.slice(6, 8)}/${text.slice(4, 6)}/${text.slice(0, 4)}`;
+    };
+
+    const formatPeriod = value => {
+      const text = String(value || "");
+      if (!/^\d{6}$/.test(text)) return text;
+      return `${text.slice(0, 2)}/${text.slice(2, 6)}`;
+    };
+
+    const setStatus = (message, type = "") => {
+      const element = document.getElementById("uploadStatus");
+      element.textContent = message;
+      element.className = `status ${type}`;
+    };
+
+    function openDatabase() {
+      return new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+        request.onerror = () => reject(request.error);
+
+        request.onupgradeneeded = event => {
+          const database = event.target.result;
+
+          if (!database.objectStoreNames.contains(STORES.files)) {
+            database.createObjectStore(STORES.files, { keyPath: "id" });
+          }
+
+          if (!database.objectStoreNames.contains(STORES.history)) {
+            const historyStore = database.createObjectStore(STORES.history, { keyPath: "id" });
+            historyStore.createIndex("chaveDebito", "chaveDebito", { unique: false });
+          }
+
+          if (!database.objectStoreNames.contains(STORES.consolidated)) {
+            const consolidatedStore = database.createObjectStore(STORES.consolidated, { keyPath: "chaveDebito" });
+            consolidatedStore.createIndex("cnpj", "cnpj", { unique: false });
+            consolidatedStore.createIndex("cpf", "cpf", { unique: false });
+          }
+        };
+
+        request.onsuccess = () => {
+          db = request.result;
+          resolve(db);
+        };
+      });
+    }
+
+    function transactionStore(storeName, mode = "readonly") {
+      return db.transaction(storeName, mode).objectStore(storeName);
+    }
+
+    function getAll(storeName) {
+      return new Promise((resolve, reject) => {
+        const request = transactionStore(storeName).getAll();
+        request.onsuccess = () => resolve(request.result || []);
+        request.onerror = () => reject(request.error);
+      });
+    }
+
+    function putItem(storeName, item) {
+      return new Promise((resolve, reject) => {
+        const request = transactionStore(storeName, "readwrite").put(item);
+        request.onsuccess = () => resolve();
+        request.onerror = () => reject(request.error);
+      });
+    }
+
+    function clearStore(storeName) {
+      return new Promise((resolve, reject) => {
+        const request = transactionStore(storeName, "readwrite").clear();
+        request.onsuccess = () => resolve();
+        request.onerror = () => reject(request.error);
+      });
+    }
+
+    function generateFileId(file) {
+      return [file.name, file.size, file.lastModified].join("|");
+    }
+
+    function generateDebtKey(record) {
+      return [
+        record.cnpj || "",
+        record.cpf || "",
+        record.periodoApuracao || "",
+        record.numeroInscricao || "",
+        record.valor || 0
+      ].join("|");
+    }
+
+    function somenteNumeros(valor) {
+      return String(valor || "").replace(/\D/g, "");
+    }
+
+    function limparTexto(valor) {
+      return String(valor || "").replace(/\s+/g, " ").trim();
+    }
+
+    function converterValorBrasileiro(valor) {
+      if (valor === null || valor === undefined) return 0;
+      let texto = String(valor).trim().replace(/\./g, "").replace(",", ".");
+      const numero = Number(texto);
+      return Number.isFinite(numero) ? numero : 0;
+    }
+
+    function converterDataAAAAMMDD(data) {
+      if (!data || !/^\d{8}$/.test(data)) return "";
+      const ano = data.substring(0, 4);
+      const mes = data.substring(4, 6);
+      const dia = data.substring(6, 8);
+      return `${dia}/${mes}/${ano}`;
+    }
+
+    function interpretarCabecalho(linha) {
+      return {
+        tipo: "0",
+        versao: linha.substring(1, 4).trim(),
+        dataGeracao: converterDataAAAAMMDD(linha.substring(4, 12).trim()),
+        linhaOriginal: linha
+      };
+    }
+
+    function interpretarTrailer(linha) {
+      const quantidadeTexto = linha.substring(1, 21).replace(/\D/g, "");
+      return {
+        tipo: "2",
+        quantidadeRegistros: quantidadeTexto ? Number(quantidadeTexto) : null,
+        linhaOriginal: linha
+      };
+    }
+
+    function interpretarRegistroDetalhe(linha, nomeArquivo, numeroLinha) {
+      if (!linha || linha.charAt(0) !== "1") {
+        throw new Error("Registro de detalhe inva̠lido.");
+      }
+
+      const registro = {
+        id: `${nomeArquivo}::${numeroLinha}`,
+        arquivoOrigem: nomeArquivo,
+        linhaOrigem: numeroLinha,
+        tipoRegistro: "1",
+        linhaOriginal: linha,
+        cpf: "",
+        nome: "",
+        cnpj: "",
+        endereco: "",
+        numero: "",
+        bairro: "",
+        municipio: "",
+        uf: "",
+        codigoMunicipio: "",
+        codigoReceita: "",
+        vencimento: "",
+        valor: 0,
+        valorTexto: "",
+        periodoApuracao: "",
+        numeroInscricao: "",
+        dataInscricao: "",
+        fundamentacaoLegal: "",
+        codigoFinal: ""
+      };
+
+      const texto = linha.substring(1);
+
+      const finalMatch = texto.match(/(\d{4})\s*$/);
+      if (finalMatch) {
+        registro.codigoFinal = finalMatch[1];
+      }
+
+      const trechoInicial = texto.substring(0, 180);
+      const cpfMatch = trechoInicial.match(/(\d{3}\.?\d{3}\.?\d{3}-?\d{2}|\d{11})/);
+      if (cpfMatch) {
+        registro.cpf = somenteNumeros(cpfMatch[1]);
+      }
+
+      if (cpfMatch) {
+        const antesCpf = trechoInicial
+          .substring(0, cpfMatch.index)
+          .replace(/^0*\d+/, "")
+          .trim();
+        registro.nome = limparTexto(antesCpf);
+      }
+
+      const cnpjMatch = texto.match(/\b\d{14}\b/);
+      if (cnpjMatch) {
+        registro.cnpj = cnpjMatch[0];
+      }
+
+      const municipioUfMatch = texto.match(
+        /(\d{4})([A-ZÁ¬À¬Ã¬Â¬É¬Ê¬Í¬Ó¬Ô¬Õ¬Ú¬Ç¬ ]{3,})\s{2,}(MG|SP|RJ|ES|BA|GO|DF|PR|SC|RS|PE|CE|PA|AM|MA|PI|RN|PB|AL|SE|RO|AC|AP|RR|TO|MT|MS)\b/
+      );
+      if (municipioUfMatch) {
+        registro.codigoMunicipio = municipioUfMatch[1];
+        registro.municipio = limparTexto(municipioUfMatch[2]);
+        registro.uf = municipioUfMatch[3];
+      }
+
+      const receitaMatch = texto.match(/\b391\d{9}\b/);
+      if (receitaMatch) {
+        registro.codigoReceita = receitaMatch[0];
+      }
+
+      const datas = texto.match(/\b20\d{6}\b/g) || [];
+      if (datas.length >= 1) {
+        registro.vencimento = converterDataAAAAMMDD(datas[0]);
+      }
+
+      if (datas.length >= 2) {
+        registro.dataInscricao = converterDataAAAAMMDD(datas[datas.length - 1]);
+      }
+
+      const periodoMatch = texto.match(/\b20\d{2}(0[1-9]|1[0-2])00\b/);
+      if (periodoMatch) {
+        const periodo = periodoMatch[0];
+        registro.periodoApuracao = periodo.substring(0, 4) + "-" + periodo.substring(4, 6);
+      }
+
+      const valorMatch = texto.match(/0{5,}(\d{1,12},\d{2})/);
+      if (valorMatch) {
+        registro.valorTexto = valorMatch[1];
+        registro.valor = converterValorBrasileiro(valorMatch[1]);
+      }
+
+      if (cnpjMatch) {
+        const depoisCnpj = texto.substring(cnpjMatch.index + cnpjMatch[0].length);
+        const enderecoMatch = depoisCnpj.match(/\s+([A-ZÁ¬À¬Ã¬Â¬É¬Ê¬Í¬Ó¬Ô¬Õ¬Ú¬Ç¬0-9 .'-]{5,})\s{3,}\d{6}/);
+        if (enderecoMatch) {
+          registro.endereco = limparTexto(enderecoMatch[1]);
+        }
+      }
+
+      const fundamentoMatch = texto.match(/(ART\s+1[\s\S]+?)(?=\s{10,}\d{4}\s*$)/);
+      if (fundamentoMatch) {
+        registro.fundamentacaoLegal = limparTexto(fundamentoMatch[1]);
+      }
+
+      registro.chaveDebito = generateDebtKey(registro);
+      return registro;
+    }
+
+    function interpretarArquivo(nomeArquivo, conteudo) {
+      const resultado = {
+        nomeArquivo,
+        registros: [],
+        erros: [],
+        cabecalho: null,
+        trailer: null
+      };
+
+      const linhas = conteudo
+        .replace(/^\uFEFF/, "")
+        .replace(/\r/g, "")
+        .split("\n")
+        .map(linha => linha.replace(/\r/g, ""))
+        .filter(linha => linha.trim() !== "");
+
+      if (!linhas.length) {
+        resultado.erros.push("Arquivo vazio.");
+        return resultado;
+      }
+
+      linhas.forEach((linha, indice) => {
+        const numeroLinha = indice + 1;
+        const linhaLimpa = linha.trimEnd();
+
+        try {
+          const tipoRegistro = linhaLimpa.charAt(0);
+
+          if (tipoRegistro === "0") {
+            resultado.cabecalho = interpretarCabecalho(linhaLimpa);
+            return;
+          }
+
+          if (tipoRegistro === "1") {
+            const registro = interpretarRegistroDetalhe(linhaLimpa, nomeArquivo, numeroLinha);
+            if (registro) {
+              resultado.registros.push(registro);
+            }
+            return;
+          }
+
+          if (tipoRegistro === "2") {
+            resultado.trailer = interpretarTrailer(linhaLimpa);
+            return;
+          }
+
+          resultado.erros.push({
+            linha: numeroLinha,
+            mensagem: `Tipo de registro desconhecido: "${tipoRegistro}"`
+          });
+
+        } catch (erro) {
+          resultado.erros.push({
+            linha: numeroLinha,
+            mensagem: erro.message || "Erro ao interpretar registro."
+          });
+        }
+      });
+
+      return resultado;
+    }
+
+    function isMoreRecent(record, current) {
+      const newDate = Number(record.dataGeracaoArquivo || 0);
+      const oldDate = Number(current.dataGeracaoArquivo || 0);
+      if (newDate !== oldDate) return newDate > oldDate;
+      return String(record.arquivoOrigem) > String(current.arquivoOrigem);
+    }
+
+    async function saveImportedData(fileInfo, records, errors) {
+      await putItem(STORES.files, fileInfo);
+
+      for (const record of records) {
+        const historyItem = {
+          ...record,
+          id: [record.arquivoOrigem, record.chaveDebito].join("|")
+        };
+        await putItem(STORES.history, historyItem);
+
+        const existing = await new Promise((resolve, reject) => {
+          const request = transactionStore(STORES.consolidated).get(record.chaveDebito);
+          request.onsuccess = () => resolve(request.result || null);
+          request.onerror = () => reject(request.error);
+        });
+
+        if (!existing || isMoreRecent(record, existing)) {
+          const consolidated = {
+            ...record,
+            situacaoAtual: "01",
+            valorOriginalAtual: record.valor,
+            valorInscritoAtual: record.valor,
+            ultimoArquivo: record.arquivoOrigem,
+            ultimaDataGeracao: record.dataGeracaoArquivo || fileInfo.dataGeracao,
+            historicoQuantidade: existing ? Number(existing.historicoQuantidade || 0) + 1 : 1
+          };
+          await putItem(STORES.consolidated, consolidated);
+        } else if (existing) {
+          existing.historicoQuantidade = Number(existing.historicoQuantidade || 0) + 1;
+          await putItem(STORES.consolidated, existing);
+        }
+      }
+
+      for (const error of errors) {
+        await putItem(STORES.history, {
+          id: `${fileInfo.id}|erro|${error.linha}`,
+          tipo: "erro",
+          arquivoId: fileInfo.id,
+          arquivoOrigem: fileInfo.nome,
+          ...error
+        });
+      }
+    }
+
+    async function refreshData() {
+      fileRecords = await getAll(STORES.files);
+      historyRecords = await getAll(STORES.history);
+      allConsolidated = await getAll(STORES.consolidated);
+
+      allConsolidated.sort((a, b) => {
+        return String(a.cnpj || a.cpf || "").localeCompare(String(b.cnpj || b.cpf || ""));
+      });
+
+      updateFileSelect();
+      updateDashboard();
+      applyFilters();
+    }
+
+    function updateFileSelect() {
+      const select = document.getElementById("filterArquivo");
+      const currentValue = select.value;
+      select.innerHTML = '<option value="">Todos</option>';
+
+      fileRecords
+        .sort((a, b) => String(a.nome).localeCompare(String(b.nome)))
+        .forEach(file => {
+          const option = document.createElement("option");
+          option.value = file.nome;
+          option.textContent = file.nome;
+          select.appendChild(option);
+        });
+
+      select.value = currentValue;
+    }
+
+    function updateDashboard() {
+      const total = allConsolidated.reduce(
+        (sum, item) => sum + Number(item.valorInscritoAtual || 0),
+        0
+      );
+
+      const uniqueContribuintes = new Set(
+        allConsolidated.map(item => item.cnpj || item.cpf || "")
+      ).size;
+
+      document.getElementById("metricTotal").textContent = money(total);
+      document.getElementById("metricValidos").textContent = numberFormat(allConsolidated.length);
+      document.getElementById("metricArquivos").textContent = numberFormat(fileRecords.length);
+      document.getElementById("metricContribuintes").textContent = numberFormat(uniqueContribuintes);
+
+      document.getElementById("fileCount").textContent = numberFormat(fileRecords.length);
+      document.getElementById("readCount").textContent = numberFormat(
+        fileRecords.reduce((sum, file) => sum + Number(file.quantidadeLida || 0), 0)
+      );
+      document.getElementById("validCount").textContent = numberFormat(
+        fileRecords.reduce((sum, file) => sum + Number(file.quantidadeValida || 0), 0)
+      );
+      document.getElementById("errorCount").textContent = numberFormat(
+        fileRecords.reduce((sum, file) => sum + Number(file.quantidadeErros || 0), 0)
+      );
+
+      const latestFile = fileRecords
+        .slice()
+        .sort((a, b) => String(b.ultimaImportacao).localeCompare(String(a.ultimaImportacao)))[0];
+
+      document.getElementById("lastUpdate").textContent = latestFile
+        ? new Date(latestFile.ultimaImportacao).toLocaleString("pt-BR")
+        : "Nenhum arquivo importado";
+
+      renderSituationBars();
+    }
+
+    function renderSituationBars() {
+      const container = document.getElementById("situationBars");
+
+      if (!allConsolidated.length) {
+        container.innerHTML = '<div class="empty">Nenhum débitos importado.</div>';
+        return;
+      }
+
+      const situacoes = {
+        "01": { nome: "Em cobrançıı", valor: 0 },
+        "02": { nome: "Garantia", valor: 0 },
+        "03": { nome: "Em negociaçııo", valor: 0 },
+        "04": { nome: "Benefí¬¬cio fiscal", valor: 0 },
+        "05": { nome: "Suspenso judicial", valor: 0 },
+        "06": { nome: "Extinta", valor: 0 }
+      };
+
+      const colors = {
+        "01": "#159447",
+        "02": "#7754c9",
+        "03": "#d58a00",
+        "04": "#718096",
+        "05": "#147bb5",
+        "06": "#d92d3d"
+      };
+
+      const total = allConsolidated.reduce(
+        (sum, item) => sum + Number(item.valorInscritoAtual || 0),
+        0
+      );
+
+      container.innerHTML = Object.keys(situacoes)
+        .map(code => {
+          const value = situacoes[code].valor;
+          const percentage = total > 0 ? (value / total) * 100 : 0;
+          return `
+            <div class="bar-line">
+              <div class="bar-label">
+                <span>${escapeHtml(situacoes[code].nome)}</span>
+                <span>${money(value)}</span>
+              </div>
+              <div class="bar-track">
+                <div class="bar-fill" style="width:${percentage}%;background:${colors[code]}"></div>
+              </div>
+            </div>
+          `;
+        })
+        .join("");
+    }
+
+    function getFilteredData() {
+      const cnpj = document.getElementById("filterCnpj").value.replace(/\D/g, "");
+      const cpf = document.getElementById("filterCpf").value.replace(/\D/g, "");
+      const municipio = document.getElementById("filterMunicipio").value.trim().toUpperCase();
+      const uf = document.getElementById("filterUf").value.trim().toUpperCase();
+      const periodo = document.getElementById("filterPeriodo").value.trim().replace("/", "");
+      const arquivo = document.getElementById("filterArquivo").value;
+
+      return allConsolidated.filter(item => {
+        if (cnpj && !(item.cnpj || "").includes(cnpj)) return false;
+        if (cpf && !(item.cpf || "").includes(cpf)) return false;
+        if (municipio && !(item.municipio || "").toUpperCase().includes(municipio)) return false;
+        if (uf && (item.uf || "") !== uf) return false;
+        if (periodo && (item.periodoApuracao || "").replace("-", "") !== periodo) return false;
+        if (arquivo && (item.ultimoArquivo || "") !== arquivo) return false;
+        return true;
+      });
+    }
+
+    function applyFilters() {
+      filteredConsolidated = getFilteredData();
+      renderTable();
+    }
+
+    function renderTable() {
+      const tbody = document.getElementById("debitosTableBody");
+      document.getElementById("filterResultCount").textContent = `${numberFormat(filteredConsolidated.length)} registros`;
+      document.getElementById("tableShowing").textContent = `Mostrando ${numberFormat(filteredConsolidated.length)} registros`;
+
+      if (!filteredConsolidated.length) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="12">
+              <div class="empty">Nenhum registro encontrado.</div>
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = filteredConsolidated
+        .map(item => {
+          return `
+            <tr>
+              <td><strong>${escapeHtml(formatCnpj(item.cnpj) || "-")}</strong></td>
+              <td>${escapeHtml(formatCpf(item.cpf) || "-")}</td>
+              <td>${escapeHtml(item.nome || "-")}</td>
+              <td>${escapeHtml(item.municipio || "-")}</td>
+              <td>${escapeHtml(item.uf || "-")}</td>
+              <td>${escapeHtml(formatPeriod(item.periodoApuracao) || "-")}</td>
+              <td>${escapeHtml(formatDate(item.vencimento) || "-")}</td>
+              <td>${escapeHtml(item.numeroInscricao || "-")}</td>
+              <td><strong>${money(item.valorInscritoAtual)}</strong></td>
+              <td>${escapeHtml(item.codigoReceita || "-")}</td>
+              <td>${escapeHtml(item.ultimoArquivo || item.arquivoOrigem || "-")}</td>
+              <td>
+                <button class="btn" data-detail="${escapeHtml(item.chaveDebito)}">Ver</button>
+              </td>
+            </tr>
+          `;
+        })
+        .join("");
+
+      tbody.querySelectorAll("[data-detail]").forEach(button => {
+        button.addEventListener("click", () => {
+          openDetail(button.dataset.detail);
+        });
+      });
+    }
+
+    async function openDetail(chaveDebito) {
+      const record = allConsolidated.find(item => item.chaveDebito === chaveDebito);
+      if (!record) return;
+
+      const history = historyRecords
+        .filter(item => item.chaveDebito === chaveDebito)
+        .sort((a, b) => String(b.dataGeracaoArquivo || "").localeCompare(String(a.dataGeracaoArquivo || "")));
+
+      const modalBody = document.getElementById("modalBody");
+      modalBody.innerHTML = `
+        <div class="detail-grid">
+          <div class="detail-item">
+            <small>CNPJ</small>
+            <strong>${escapeHtml(formatCnpj(record.cnpj) || "-")}</strong>
+          </div>
+          <div class="detail-item">
+            <small>CPF</small>
+            <strong>${escapeHtml(formatCpf(record.cpf) || "-")}</strong>
+          </div>
+          <div class="detail-item">
+            <small>Nome</small>
+            <strong>${escapeHtml(record.nome || "-")}</strong>
+          </div>
+          <div class="detail-item">
+            <small>Municí¬¬pio</small>
+            <strong>${escapeHtml(record.municipio || "-")}</strong>
+          </div>
+          <div class="detail-item">
+            <small>UF</small>
+            <strong>${escapeHtml(record.uf || "-")}</strong>
+          </div>
+          <div class="detail-item">
+            <small>Perí¬¬odo de apuraçııo</small>
+            <strong>${escapeHtml(formatPeriod(record.periodoApuracao) || "-")}</strong>
+          </div>
+          <div class="detail-item">
+            <small>Vencimento</small>
+            <strong>${escapeHtml(formatDate(record.vencimento) || "-")}</strong>
+          </div>
+          <div class="detail-item">
+            <small>Data da inscriçııo</small>
+            <strong>${escapeHtml(formatDate(record.dataInscricao) || "-")}</strong>
+          </div>
+          <div class="detail-item">
+            <small>Nu̠mero da inscriçııo</small>
+            <strong>${escapeHtml(record.numeroInscricao || "-")}</strong>
+          </div>
+          <div class="detail-item">
+            <small>Valor</small>
+            <strong>${money(record.valorInscritoAtual)}</strong>
+          </div>
+          <div class="detail-item">
+            <small>Có¬¬�. Receita</small>
+            <strong>${escapeHtml(record.codigoReceita || "-")}</strong>
+          </div>
+          <div class="detail-item">
+            <small>U̠ltimo arquivo</small>
+            <strong>${escapeHtml(record.ultimoArquivo || "-")}</strong>
+          </div>
+        </div>
+
+        <h3 style="margin-top:25px">Histó¬¬¬rico de ocorrências</h3>
+
+        <div class="history-list">
+          ${
+            history.length
+              ? history.map(item => `
+                <div class="history-item">
+                  <strong>${escapeHtml(formatDate(item.dataGeracaoArquivo || ""))}</strong>
+                  —
+                  ${money(item.valorInscrito)}
+                  <br/>
+                  <small>${escapeHtml(item.arquivoOrigem)}</small>
+                </div>
+              `).join("")
+              : '<div class="empty">Nenhum histórico encontrado.</div>'
+          }
+        </div>
+      `;
+
+      document.getElementById("detailModal").classList.add("open");
+    }
+
+    function closeModal() {
+      document.getElementById("detailModal").classList.remove("open");
+    }
+
+    function convertToCsv(records) {
+      const headers = [
+        "CNPJ", "CPF", "Nome", "Municipio", "UF", "Periodo de apuracao",
+        "Vencimento", "Inscricao", "Data da inscricao", "Valor",
+        "Codigo de Receita", "Ultimo arquivo", "Data de geracao"
+      ];
+
+      const rows = records.map(item => [
+        formatCnpj(item.cnpj || ""),
+        formatCpf(item.cpf || ""),
+        item.nome || "",
+        item.municipio || "",
+        item.uf || "",
+        formatPeriod(item.periodoApuracao || ""),
+        formatDate(item.vencimento || ""),
+        item.numeroInscricao || "",
+        formatDate(item.dataInscricao || ""),
+        item.valorInscritoAtual || 0,
+        item.codigoReceita || "",
+        item.ultimoArquivo || "",
+        formatDate(item.ultimaDataGeracao || "")
+      ]);
+
+      const escapeCsv = value => {
+        return `"${String(value ?? "").replaceAll('"', '""')}"`;
+      };
+
+      return [
+        headers.map(escapeCsv).join(";"),
+        ...rows.map(row => row.map(escapeCsv).join(";"))
+      ].join("\n");
+    }
+
+    function downloadText(filename, content, type) {
+      const blob = new Blob([content], { type: `${type};charset=utf-8` });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    async function exportBackup() {
+      const backup = {
+        version: 1,
+        exportedAt: new Date().toISOString(),
+        files: fileRecords,
+        history: historyRecords,
+        consolidated: allConsolidated
+      };
+
+      downloadText(
+        `backup-divida-ativa-mei-${new Date().toISOString().slice(0, 10)}.json`,
+        JSON.stringify(backup, null, 2),
+        "application/json"
+      );
+    }
+
+    async function importBackup(file) {
+      try {
+        const text = await file.text();
+        const backup = JSON.parse(text);
+
+        if (!backup || !Array.isArray(backup.files) || !Array.isArray(backup.history) || !Array.isArray(backup.consolidated)) {
+          throw new Error("Formato de backup inva̠lido.");
+        }
+
+        for (const item of backup.files) await putItem(STORES.files, item);
+        for (const item of backup.history) await putItem(STORES.history, item);
+        for (const item of backup.consolidated) await putItem(STORES.consolidated, item);
+
+        await refreshData();
+        setStatus(`Backup importado. ${backup.consolidated.length} débitos consolidados disponíveis.`, "success");
+      } catch (error) {
+        setStatus(`Erro ao importar backup: ${error.message}`, "error");
+      }
+    }
+
+    async function processFiles(files) {
+      if (!files.length) return;
+
+      let totalRead = 0;
+      let totalValid = 0;
+      let totalErrors = 0;
+      let processed = 0;
+      let skipped = 0;
+      const errorMessages = [];
+
+      setStatus("Processando arquivos. Aguarde...");
+
+      for (const file of files) {
+        const fileId = generateFileId(file);
+        const alreadyImported = fileRecords.some(item => item.id === fileId);
+
+        if (alreadyImported) {
+          skipped++;
+          continue;
+        }
+
+        try {
+          const text = await file.text();
+          const result = interpretarArquivo(file.name, text);
+
+          const fileInfo = {
+            id: fileId,
+            nome: file.name,
+            tamanho: file.size,
+            ultimaImportacao: new Date().toISOString(),
+            dataGeracao: result.cabecalho?.dataGeracao || "",
+            versaoLeiaute: result.cabecalho?.versao || "",
+            quantidadeDeclarada: result.trailer?.quantidadeRegistros || 0,
+            quantidadeLida: result.registros.length + result.erros.length,
+            quantidadeValida: result.registros.length,
+            quantidadeErros: result.erros.length,
+            status: result.erros.length ? "processado_com_erros" : "processado"
+          };
+
+          await saveImportedData(fileInfo, result.registros, result.erros);
+
+          totalRead += fileInfo.quantidadeLida;
+          totalValid += fileInfo.quantidadeValida;
+          totalErrors += fileInfo.quantidadeErros;
+          processed++;
+
+          if (result.erros.length) {
+            errorMessages.push(`${file.name}: ${result.erros.length} erro(s)`);
+          }
+        } catch (error) {
+          totalErrors++;
+          errorMessages.push(`${file.name}: ${error.message}`);
+        }
+      }
+
+      await refreshData();
+
+      let message = `${processed} arquivo(s) processado(s). ${skipped} arquivo(s) já existente(s). ${totalValid} registro(s) vá̠lidos.`;
+      if (totalErrors) message += ` ${totalErrors} erro(s) encontrado(s).`;
+      if (errorMessages.length) message += ` ${errorMessages.join(" | ")}`;
+
+      setStatus(message, totalErrors ? "error" : "success");
+    }
+
+    async function clearDatabase() {
+      const confirmed = confirm("Tem certeza que deseja apagar todos os arquivos, histórico e débitos da base?");
+      if (!confirmed) return;
+
+      await clearStore(STORES.files);
+      await clearStore(STORES.history);
+      await clearStore(STORES.consolidated);
+
+      await refreshData();
+      setStatus("Base apagada com sucesso.", "success");
+    }
+
+    function clearFilters() {
+      document.getElementById("filterCnpj").value = "";
+      document.getElementById("filterCpf").value = "";
+      document.getElementById("filterMunicipio").value = "";
+      document.getElementById("filterUf").value = "";
+      document.getElementById("filterPeriodo").value = "";
+      document.getElementById("filterArquivo").value = "";
+      applyFilters();
+    }
+
+    function setupEvents() {
+      document.getElementById("fileInput").addEventListener("change", event => {
+        processFiles(Array.from(event.target.files));
+        event.target.value = "";
+      });
+
+      document.getElementById("backupInput").addEventListener("change", event => {
+        const file = event.target.files[0];
+        if (file) importBackup(file);
+        event.target.value = "";
+      });
+
+      document.getElementById("exportBackupBtn").addEventListener("click", exportBackup);
+      document.getElementById("exportCsvBtn").addEventListener("click", () => {
+        if (!filteredConsolidated.length) {
+          alert("Na̋o há̠ registros para exportar.");
+          return;
+        }
+        const csv = "\uFEFF" + convertToCsv(filteredConsolidated);
+        downloadText(
+          `debitos-consolidados-mei-${new Date().toISOString().slice(0, 10)}.csv`,
+          csv,
+          "text/csv"
+        );
+      });
+
+      document.getElementById("clearDatabaseBtn").addEventListener("click", clearDatabase);
+      document.getElementById("searchBtn").addEventListener("click", applyFilters);
+      document.getElementById("clearFiltersBtn").addEventListener("click", clearFilters);
+
+      document.getElementById("viewFilesBtn").addEventListener("click", () => {
+        alert(
+          fileRecords.length
+            ? fileRecords.map(file => {
+                return [
+                  `Arquivo: ${file.nome}`,
+                  `Geraçııo: ${formatDate(file.dataGeracao)}`,
+                  `Lidos: ${file.quantidadeLida}`,
+                  `Va̠lidos: ${file.quantidadeValida}`,
+                  `Erros: ${file.quantidadeErros}`,
+                  `Status: ${file.status}`
+                ].join("\n");
+              }).join("\n\n")
+            : "Nenhum arquivo importado."
+        );
+      });
+
+      document.getElementById("closeModalBtn").addEventListener("click", closeModal);
+      document.getElementById("detailModal").addEventListener("click", event => {
+        if (event.target.id === "detailModal") closeModal();
+      });
+
+      document.querySelectorAll("[data-section]").forEach(button => {
+        button.addEventListener("click", () => {
+          document.querySelectorAll("[data-section]").forEach(item => item.classList.remove("active"));
+          button.classList.add("active");
+
+          const section = button.dataset.section;
+          if (section === "arquivos") {
+            document.getElementById("viewFilesBtn").click();
+          } else if (section === "debitos") {
+            document.querySelector(".table-card").scrollIntoView({ behavior: "smooth" });
+          } else if (section === "contribuintes") {
+            alert("A visa̋o por contribuintes será construí¬¬da a partir do agrupamento dos CNPJs/CPFs consolidados.");
+          } else if (section === "historico") {
+            alert(`A base possui ${historyRecords.length} ocorrências históricas armazenadas.`);
+          } else {
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          }
+        });
+      });
+    }
+
+    async function initialize() {
+      try {
+        await openDatabase();
+        setupEvents();
+        await refreshData();
+      } catch (error) {
+        setStatus(`Na̋o foi possível iniciar a base local: ${error.message}`, "error");
+      }
+    }
+
+    initialize();
+  </script>
+</body>
+</html>
