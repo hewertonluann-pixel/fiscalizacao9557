@@ -535,7 +535,7 @@
         <div>
           <h1>Visão geral</h1>
           <p class="subtitle">
-            Interpretação de arquivos TXT da Dí­vida Ativa do MEI (padrão INSCOBRA).
+            Interpretação de arquivos TXT da Dívida Ativa do MEI (padrão INSCOBRA).
           </p>
         </div>
 
@@ -766,11 +766,37 @@
     </div>
   </div>
 
-  <script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+    import {
+      getFirestore, collection, doc, setDoc, getDocs, deleteDoc, writeBatch
+    } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+
     "use strict";
 
+    const firebaseConfig = {
+      apiKey: "AIzaSyANrr4R5JtJ9GmO0j-1X8-9CvBmYkC4oCI",
+      authDomain: "fiscalizacao9557.firebaseapp.com",
+      projectId: "fiscalizacao9557",
+      storageBucket: "fiscalizacao9557.firebasestorage.app",
+      messagingSenderId: "98041336495",
+      appId: "1:98041336495:web:0475dfd9c0490cc0a17a5a",
+      measurementId: "G-7PY1G1JTKL"
+    };
+    const firebaseApp = initializeApp(firebaseConfig);
+    const firebaseAuth = getAuth(firebaseApp);
+    const firestore = getFirestore(firebaseApp);
     const DB_NAME = "dividaAtivaMEI_INSCOBRA";
     const DB_VERSION = 2;
+    const FIRESTORE_COLLECTIONS = Object.freeze({
+      files: "divida_ativa_mei_arquivos",
+      history: "divida_ativa_mei_historico",
+      consolidated: "divida_ativa_mei"
+    });
+    let currentUser = null;
+    let currentSession = null;
+    let firestoreEnabled = false;
 
     const STORES = {
       files: "files",
@@ -870,7 +896,24 @@
       return db.transaction(storeName, mode).objectStore(storeName);
     }
 
-    function getAll(storeName) {
+    function firestoreId(value) {
+      return String(value || "").replace(/[\\/#?]/g, "_").slice(0, 1_500) || `registro-${Date.now()}`;
+    }
+
+    function withCloudMetadata(item) {
+      return {
+        ...item,
+        usuarioImportacao: currentUser?.email || currentSession?.email || "",
+        nomeUsuarioImportacao: currentSession?.nome || currentUser?.displayName || "",
+        atualizadoEm: new Date().toISOString()
+      };
+    }
+
+    async function getAll(storeName) {
+      if (firestoreEnabled) {
+        const snapshot = await getDocs(collection(firestore, FIRESTORE_COLLECTIONS[storeName]));
+        return snapshot.docs.map(item => ({ ...item.data(), id: item.id }));
+      }
       return new Promise((resolve, reject) => {
         const request = transactionStore(storeName).getAll();
         request.onsuccess = () => resolve(request.result || []);
@@ -878,7 +921,12 @@
       });
     }
 
-    function putItem(storeName, item) {
+    async function putItem(storeName, item) {
+      if (firestoreEnabled) {
+        const cloudItem = withCloudMetadata(item);
+        await setDoc(doc(firestore, FIRESTORE_COLLECTIONS[storeName], firestoreId(cloudItem.id || cloudItem.chaveDebito)), cloudItem, { merge: true });
+        return;
+      }
       return new Promise((resolve, reject) => {
         const request = transactionStore(storeName, "readwrite").put(item);
         request.onsuccess = () => resolve();
@@ -886,10 +934,55 @@
       });
     }
 
-    function clearStore(storeName) {
+    async function clearStore(storeName) {
+      if (firestoreEnabled) {
+        const snapshot = await getDocs(collection(firestore, FIRESTORE_COLLECTIONS[storeName]));
+        let batch = writeBatch(firestore);
+        let count = 0;
+        for (const item of snapshot.docs) {
+          batch.delete(item.ref);
+          count++;
+          if (count === 400) {
+            await batch.commit();
+            batch = writeBatch(firestore);
+            count = 0;
+          }
+        }
+        if (count) await batch.commit();
+        return;
+      }
       return new Promise((resolve, reject) => {
         const request = transactionStore(storeName, "readwrite").clear();
         request.onsuccess = () => resolve();
+        request.onerror = () => reject(request.error);
+      });
+    }
+
+    async function loadCloudData() {
+      fileRecords = await getAll(STORES.files);
+      historyRecords = await getAll(STORES.history);
+      allConsolidated = await getAll(STORES.consolidated);
+    }
+
+    async function migrateLocalDataToCloud() {
+      if (!firestoreEnabled) return 0;
+      const localFiles = await getAllLocal(STORES.files);
+      if (!localFiles.length) return 0;
+      const cloudFiles = await getAll(STORES.files);
+      const existing = new Set(cloudFiles.map(item => item.id));
+      const localHistory = await getAllLocal(STORES.history);
+      const localConsolidated = await getAllLocal(STORES.consolidated);
+      let migrated = 0;
+      for (const item of localFiles) if (!existing.has(item.id)) { await putItem(STORES.files, item); migrated++; }
+      for (const item of localHistory) await putItem(STORES.history, item);
+      for (const item of localConsolidated) await putItem(STORES.consolidated, item);
+      return migrated;
+    }
+
+    function getAllLocal(storeName) {
+      return new Promise((resolve, reject) => {
+        const request = transactionStore(storeName).getAll();
+        request.onsuccess = () => resolve(request.result || []);
         request.onerror = () => reject(request.error);
       });
     }
@@ -1114,11 +1207,7 @@
         };
         await putItem(STORES.history, historyItem);
 
-        const existing = await new Promise((resolve, reject) => {
-          const request = transactionStore(STORES.consolidated).get(record.chaveDebito);
-          request.onsuccess = () => resolve(request.result || null);
-          request.onerror = () => reject(request.error);
-        });
+        const existing = allConsolidated.find(item => item.chaveDebito === record.chaveDebito) || null;
 
         if (!existing || isMoreRecent(record, existing)) {
           const consolidated = {
@@ -1131,9 +1220,14 @@
             historicoQuantidade: existing ? Number(existing.historicoQuantidade || 0) + 1 : 1
           };
           await putItem(STORES.consolidated, consolidated);
+          const index = allConsolidated.findIndex(item => item.chaveDebito === record.chaveDebito);
+          if (index >= 0) allConsolidated[index] = consolidated;
+          else allConsolidated.push(consolidated);
         } else if (existing) {
           existing.historicoQuantidade = Number(existing.historicoQuantidade || 0) + 1;
           await putItem(STORES.consolidated, existing);
+          const index = allConsolidated.findIndex(item => item.chaveDebito === record.chaveDebito);
+          if (index >= 0) allConsolidated[index] = existing;
         }
       }
 
@@ -1473,7 +1567,8 @@
 
     async function exportBackup() {
       const backup = {
-        version: 1,
+        version: 2,
+        storage: firestoreEnabled ? "firebase-firestore" : "indexeddb",
         exportedAt: new Date().toISOString(),
         files: fileRecords,
         history: historyRecords,
@@ -1572,7 +1667,9 @@
     }
 
     async function clearDatabase() {
-      const confirmed = confirm("Tem certeza que deseja apagar todos os arquivos, histórico e débitos da base?");
+      const confirmed = confirm(firestoreEnabled
+        ? "Tem certeza que deseja apagar todos os arquivos, histórico e débitos compartilhados do projeto?"
+        : "Tem certeza que deseja apagar todos os arquivos, histórico e débitos da base local?");
       if (!confirmed) return;
 
       await clearStore(STORES.files);
@@ -1666,13 +1763,36 @@
       });
     }
 
+    function waitForFirebaseUser() {
+      return new Promise(resolve => {
+        const unsubscribe = onAuthStateChanged(firebaseAuth, user => {
+          unsubscribe();
+          resolve(user || null);
+        });
+      });
+    }
+
     async function initialize() {
       try {
         await openDatabase();
+        currentSession = JSON.parse(localStorage.getItem("sessao_usuario") || "null");
+        currentUser = await waitForFirebaseUser();
+        if (!currentUser || !currentSession || !["fiscal", "gerente"].includes(currentSession.tipo)) {
+          setStatus("Faça login para acessar a base compartilhada.", "error");
+          setTimeout(() => { window.location.href = "login.html"; }, 900);
+          return;
+        }
+        firestoreEnabled = true;
         setupEvents();
+        const migrated = await migrateLocalDataToCloud();
         await refreshData();
+        setStatus(
+          migrated ? `Base compartilhada conectada. ${migrated} arquivo(s) local(is) sincronizado(s).` : "Base compartilhada conectada ao projeto Fiscalização.",
+          "success"
+        );
       } catch (error) {
-        setStatus(`Não foi possível iniciar a base local: ${error.message}`, "error");
+        console.error("Erro ao iniciar a base compartilhada:", error);
+        setStatus(`Não foi possível conectar à base compartilhada: ${error.message}`, "error");
       }
     }
 
